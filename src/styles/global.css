@@ -652,10 +652,9 @@ textarea {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+/* Fixed so clipping containers can't cut it off; Popover sets left/top/bottom. */
 .picker-pop {
-  position: absolute;
-  left: 0;
-  top: calc(100% + 6px);
+  position: fixed;
   z-index: 40;
   width: 260px;
   max-width: calc(100vw - 32px);

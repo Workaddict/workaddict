@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useMemo, useRef, useState, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { isNameTaken } from '../domain/ids'
 import type { Project, Tag } from '../domain/types'
 import { Icon } from './Icon'
+
+/** Distance between the picker button and its popover, in px. */
+const GAP = 6
 
 function usePopover() {
   const [open, setOpen] = useState(false)
@@ -49,9 +52,39 @@ function Popover({
     if (wasOpen.current && !open) onCloseRef.current?.()
     wasOpen.current = open
   }, [open])
+
+  // The popover is position: fixed so containers that clip overflow (day groups, modals) can't
+  // cut it off. Place it under the button, or above it when there isn't enough room below.
+  const btnRef = useRef<HTMLButtonElement>(null)
+  const popRef = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    if (!open) return
+    const place = () => {
+      const btn = btnRef.current
+      const pop = popRef.current
+      if (!btn || !pop) return
+      const r = btn.getBoundingClientRect()
+      const margin = 16
+      const left = Math.max(margin, Math.min(r.left, window.innerWidth - pop.offsetWidth - margin))
+      const spaceBelow = window.innerHeight - r.bottom
+      const above = spaceBelow < pop.offsetHeight + GAP + margin && r.top > spaceBelow
+      pop.style.left = `${left}px`
+      pop.style.top = above ? '' : `${r.bottom + GAP}px`
+      pop.style.bottom = above ? `${window.innerHeight - r.top + GAP}px` : ''
+    }
+    place()
+    window.addEventListener('scroll', place, true)
+    window.addEventListener('resize', place)
+    return () => {
+      window.removeEventListener('scroll', place, true)
+      window.removeEventListener('resize', place)
+    }
+  }, [open])
+
   return (
     <div className="picker" ref={ref}>
       <button
+        ref={btnRef}
         type="button"
         className={`picker-btn${hasValue ? ' has-value' : ''}`}
         aria-haspopup="listbox"
@@ -63,7 +96,11 @@ function Popover({
       >
         {button}
       </button>
-      {open && <div className="picker-pop">{children(() => setOpen(false))}</div>}
+      {open && (
+        <div className="picker-pop" ref={popRef}>
+          {children(() => setOpen(false))}
+        </div>
+      )}
     </div>
   )
 }
