@@ -26,7 +26,8 @@ interface AuthContextValue {
   logout(reason?: 'sessionExpired'): Promise<void>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+/** Exported for tests, which provide a ready session directly. */
+export const AuthContext = createContext<AuthContextValue | null>(null)
 
 function createAdapter(session: Session): StorageAdapter {
   if (session.mode === 'demo') return createDemoAdapter()

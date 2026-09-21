@@ -261,6 +261,12 @@ textarea {
   background: var(--surface);
   color: var(--text);
 }
+.select.select-compact {
+  width: auto;
+  min-height: 34px;
+  padding: 4px 8px;
+  font-size: 0.875rem;
+}
 .input::placeholder {
   color: var(--text-faint);
 }
@@ -348,6 +354,10 @@ textarea {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+.role-chip.role-leader {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 .project-chip {
   display: inline-flex;
@@ -749,6 +759,82 @@ textarea {
   gap: 0;
 }
 
+/* Click-to-edit fields: look like text, show an outline on hover/focus. */
+.inline-edit {
+  min-height: 32px;
+  max-width: 100%;
+  margin: 0 -6px;
+  padding: 0 6px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: text;
+}
+.inline-edit:hover {
+  border-color: var(--border);
+  background: var(--surface-2);
+}
+.inline-edit:focus-visible {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+button.entry-desc {
+  display: block;
+  font-weight: 550;
+}
+button.entry-desc.empty {
+  font-weight: 400;
+}
+button.entry-duration {
+  font-weight: 700;
+  text-align: right;
+}
+.inline-edit-wrap {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.inline-edit-wrap.entry-desc {
+  display: flex;
+  overflow: visible;
+}
+.input.inline-input {
+  min-height: 32px;
+  margin: 0 -7px;
+  padding: 3px 6px;
+  font: inherit;
+}
+.entry-time .input.inline-input {
+  width: 7.5em;
+}
+.entry-duration .input.inline-input {
+  width: 5em;
+  text-align: right;
+}
+/* In the flow (cards clip overflow); only shown while a value is invalid. */
+.inline-error {
+  margin-top: 4px;
+  max-width: min(220px, 70vw);
+  font-size: 0.8rem;
+  font-weight: 400;
+  text-align: left;
+  white-space: normal;
+}
+.entry-meta .picker-btn {
+  min-height: 32px;
+  padding: 2px 8px;
+  font-size: 0.85rem;
+}
+.entry-meta .picker-btn:not(.has-value):not(:hover):not(:focus-visible) {
+  border-color: transparent;
+  color: var(--text-faint);
+}
+
 /* ---------- Tables ---------- */
 .table-wrap {
   overflow-x: auto;
@@ -1016,6 +1102,10 @@ textarea {
   display: flex;
   flex-direction: column;
   gap: 18px;
+}
+.login-top {
+  gap: 6px;
+  flex-wrap: wrap;
 }
 .login-card details {
   border: 1px solid var(--border);

@@ -1,6 +1,8 @@
 import { format } from 'date-fns'
 import { useState, type FormEvent } from 'react'
 import { Icon } from '../../components/Icon'
+import { LanguageSwitch } from '../../components/LanguageSwitch'
+import { ThemeToggle } from '../../components/ThemeToggle'
 import { useI18n } from '../../i18n'
 import { checkLogin } from '../../storage'
 import { useAuth } from './AuthContext'
@@ -48,9 +50,14 @@ export function LoginPage() {
     <div className="login-page">
       <form className="card login-card" onSubmit={submit}>
         <div className="stack" style={{ gap: 6 }}>
-          <div className="brand">
-            <img src="./favicon.svg" width={28} height={28} alt="" />
-            {t('common.appName')}
+          <div className="row login-top">
+            <div className="brand">
+              <img src="./favicon.svg" width={28} height={28} alt="" />
+              {t('common.appName')}
+            </div>
+            <span className="spacer" />
+            <LanguageSwitch />
+            <ThemeToggle />
           </div>
           <p className="muted">{t('login.subtitle')}</p>
         </div>

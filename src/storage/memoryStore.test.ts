@@ -3,9 +3,12 @@ import { createMemoryAdapter, MemoryFileStore } from './memoryStore'
 
 runAdapterContract('memory', async () => {
   const store = new MemoryFileStore()
+  const alice = { login: 'alice', avatarUrl: null }
+  const bob = { login: 'bob', avatarUrl: null }
+  const team = { store, collaborators: [alice, bob], admins: ['alice'] }
   return {
-    alice: createMemoryAdapter({ login: 'alice', avatarUrl: null }, { store }),
-    bob: createMemoryAdapter({ login: 'bob', avatarUrl: null }, { store }),
+    alice: createMemoryAdapter(alice, team),
+    bob: createMemoryAdapter(bob, team),
     newerSchema: async () =>
       createMemoryAdapter(
         { login: 'alice', avatarUrl: null },
@@ -21,6 +24,16 @@ describe('members fallback', () => {
     expect((await a.listMembers()).map((m) => m.login)).toEqual(['alice', 'carol', 'dave'])
   })
 
+  it('also includes logins from roles.json and knows only the own owner status', async () => {
+    const store = new MemoryFileStore({ 'roles.json': { roles: { erin: 'editor' } } })
+    const a = createMemoryAdapter({ login: 'alice', avatarUrl: null }, { store, admins: ['alice'] })
+    const team = await a.listRoles()
+    expect(team.members.map((m) => [m.login, m.role, m.owner])).toEqual([
+      ['alice', 'leader', true],
+      ['erin', 'editor', false],
+    ])
+  })
+
   it('uses collaborators when available', async () => {
     const a = createMemoryAdapter(
       { login: 'alice', avatarUrl: null },
@@ -33,7 +46,7 @@ describe('members fallback', () => {
 describe('memory import layout', () => {
   it('groups imported entries by login and UTC start month', async () => {
     const store = new MemoryFileStore()
-    const a = createMemoryAdapter({ login: 'alice', avatarUrl: null }, { store })
+    const a = createMemoryAdapter({ login: 'alice', avatarUrl: null }, { store, admins: ['alice'] })
     await a.init()
     const e = (login: string, start: string) => ({
       id: crypto.randomUUID(),

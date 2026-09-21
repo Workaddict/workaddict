@@ -10,6 +10,8 @@ export class FakeGitHub {
   users: Record<string, string> = {} // token → login
   collaboratorsForbidden = false
   push = true
+  /** Logins with admin permission on the repository (owners). */
+  admins = new Set<string>()
   log: string[] = []
   /** Called before a PUT is applied; may mutate the repo to simulate a concurrent write. */
   beforePut: ((path: string) => void) | null = null
@@ -65,7 +67,7 @@ export class FakeGitHub {
         full_name: `${this.owner}/${this.repo}`,
         default_branch: 'main',
         private: true,
-        permissions: { push: this.push, pull: true },
+        permissions: { push: this.push, pull: true, admin: this.admins.has(login) },
       })
     }
     if (!path.startsWith(base)) return res(404, { message: 'Not Found' })
@@ -75,7 +77,12 @@ export class FakeGitHub {
       if (this.collaboratorsForbidden) return res(403, { message: 'Must have push access' })
       return res(
         200,
-        Object.values(this.users).map((l) => ({ login: l, avatar_url: `https://avatars/${l}` })),
+        Object.values(this.users).map((l) => ({
+          login: l,
+          avatar_url: `https://avatars/${l}`,
+          permissions: { push: true, pull: true, admin: this.admins.has(l) },
+          role_name: this.admins.has(l) ? 'admin' : 'write',
+        })),
       )
     }
     if (sub === '/git/trees/main') {

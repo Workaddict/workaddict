@@ -1,6 +1,6 @@
 import type { Member } from '../domain/types'
 import { RepoAdapter } from './repoAdapter'
-import type { FileStore, Identity } from './types'
+import type { Collaborator, FileStore, Identity } from './types'
 
 /** In-memory FileStore: used by tests and the local demo mode. */
 export class MemoryFileStore implements FileStore {
@@ -52,21 +52,25 @@ export class StaticIdentity implements Identity {
   constructor(
     private readonly me: Member,
     private readonly collaborators: Member[] | null = null,
+    private readonly admins: ReadonlySet<string> = new Set(),
   ) {}
   async getCurrentUser() {
     return this.me
   }
-  async listCollaborators() {
-    return this.collaborators
+  async listCollaborators(): Promise<Collaborator[] | null> {
+    return this.collaborators?.map((m) => ({ ...m, admin: this.admins.has(m.login) })) ?? null
+  }
+  async isAdmin() {
+    return this.admins.has(this.me.login)
   }
 }
 
 export function createMemoryAdapter(
   me: Member,
-  opts?: { store?: MemoryFileStore; collaborators?: Member[] | null },
+  opts?: { store?: MemoryFileStore; collaborators?: Member[] | null; admins?: string[] },
 ): RepoAdapter {
   return new RepoAdapter(
     opts?.store ?? new MemoryFileStore(),
-    new StaticIdentity(me, opts?.collaborators ?? null),
+    new StaticIdentity(me, opts?.collaborators ?? null, new Set(opts?.admins ?? [])),
   )
 }

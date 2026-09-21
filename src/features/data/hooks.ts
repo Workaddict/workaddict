@@ -6,10 +6,13 @@ import {
   type QueryKey,
 } from '@tanstack/react-query'
 import { useMemo } from 'react'
+import { can, type Action } from '../../domain/permissions'
 import type {
+  Access,
   DateRange,
   Member,
   Project,
+  Role,
   RunningTimer,
   Tag,
   TimeEntry,
@@ -27,6 +30,8 @@ export const keys = {
   entriesRange: (r: DateRange) => ['entries', r.from.toISOString(), r.to.toISOString()] as const,
   entriesAll: ['entries', 'all'] as const,
   timers: ['timers'] as const,
+  access: ['access'] as const,
+  roles: ['roles'] as const,
 }
 
 export const TIMER_POLL_MS = 30_000
@@ -280,5 +285,49 @@ export function useUpdateWorkspace() {
     onSuccess: (ws) => qc.setQueryData(keys.workspace, ws),
     onError: (_e, _v, snap) => restore(qc, snap),
     onSettled: () => qc.invalidateQueries({ queryKey: keys.workspace }),
+  })
+}
+
+// ---- roles -----------------------------------------------------------------
+
+/**
+ * The current user's role and permissions. Until it is loaded, the user is treated as a worker
+ * (least privilege); the storage layer enforces the same checks on every write.
+ */
+export function useAccess() {
+  const { adapter, user } = useSessionData()
+  const { data } = useQuery({
+    queryKey: keys.access,
+    queryFn: () => adapter.getAccess(),
+    refetchInterval: TIMER_POLL_MS,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: 'always',
+  })
+  return useMemo(() => {
+    const access: Access = data ?? { login: user.login, role: 'worker', owner: false }
+    return { ...access, can: (action: Action) => can(access, action) }
+  }, [data, user.login])
+}
+
+export function useTeamRoles(opts?: { enabled?: boolean }) {
+  const { adapter } = useSessionData()
+  return useQuery({
+    queryKey: keys.roles,
+    queryFn: () => adapter.listRoles(),
+    enabled: opts?.enabled ?? true,
+  })
+}
+
+export function useSetRole(feedback?: MutationFeedback<void>) {
+  const { adapter } = useSessionData()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ login, role }: { login: string; role: Role }) => adapter.setRole(login, role),
+    onSuccess: () => feedback?.onSuccess?.(undefined),
+    onError: (e) => feedback?.onError?.(e),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: keys.roles })
+      void qc.invalidateQueries({ queryKey: keys.access })
+    },
   })
 }

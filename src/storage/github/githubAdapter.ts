@@ -1,7 +1,7 @@
 import type { Member } from '../../domain/types'
 import { isStorageError, StorageError } from '../errors'
 import { RepoAdapter } from '../repoAdapter'
-import type { Identity } from '../types'
+import type { Collaborator, Identity } from '../types'
 import { createBlobCache, type BlobCache } from './blobCache'
 import { GitHubClient } from './client'
 import { GitHubFileStore } from './githubStore'
@@ -18,29 +18,80 @@ export interface GitHubRepoInfo {
   permissions?: { push?: boolean; pull?: boolean; admin?: boolean }
 }
 
+/** How long a fetched admin permission is reused before asking GitHub again. */
+const ADMIN_TTL_MS = 60_000
+
 export class GitHubIdentity implements Identity {
+  private admin: { value: boolean; at: number } | null = null
+  private login: string | null = null
+
   constructor(
     private readonly client: GitHubClient,
     private readonly owner: string,
     private readonly repo: string,
+    private readonly now: () => number = Date.now,
   ) {}
+
+  private get base() {
+    return `/repos/${encodeURIComponent(this.owner)}/${encodeURIComponent(this.repo)}`
+  }
 
   async getCurrentUser(): Promise<Member> {
     const u = await this.client.get<GitHubUser>('/user')
     return { login: u.login, avatarUrl: u.avatar_url }
   }
 
-  async listCollaborators(): Promise<Member[] | null> {
+  private async myLogin(): Promise<string> {
+    this.login ??= (await this.getCurrentUser()).login
+    return this.login
+  }
+
+  async listCollaborators(): Promise<Collaborator[] | null> {
     try {
-      const users = await this.client.get<GitHubUser[]>(
-        `/repos/${encodeURIComponent(this.owner)}/${encodeURIComponent(this.repo)}/collaborators?per_page=100`,
-      )
-      return users.map((u) => ({ login: u.login, avatarUrl: u.avatar_url }))
+      const users = await this.client.get<GitHubCollaborator[]>(`${this.base}/collaborators?per_page=100`)
+      return users.map((u) => ({
+        login: u.login,
+        avatarUrl: u.avatar_url,
+        admin: isAdminOf(this.owner, u.login, u.permissions, u.role_name),
+      }))
     } catch (e) {
       if (isStorageError(e, 'forbidden') || isStorageError(e, 'notFound')) return null
       throw e
     }
   }
+
+  async isAdmin(): Promise<boolean> {
+    if (this.admin && this.now() - this.admin.at < ADMIN_TTL_MS) return this.admin.value
+    const [login, repo] = await Promise.all([
+      this.myLogin(),
+      this.client.get<GitHubRepoInfo>(this.base),
+    ])
+    const value = isAdminOf(this.owner, login, repo.permissions)
+    this.admin = { value, at: this.now() }
+    return value
+  }
+}
+
+interface GitHubCollaborator extends GitHubUser {
+  permissions?: GitHubRepoInfo['permissions']
+  role_name?: string
+}
+
+/**
+ * Owner = admin permission on the repository. The account owning a personal repository is
+ * always its admin, which also covers responses that omit the permissions object.
+ */
+function isAdminOf(
+  repoOwner: string,
+  login: string,
+  permissions?: GitHubRepoInfo['permissions'],
+  roleName?: string,
+): boolean {
+  return (
+    permissions?.admin === true ||
+    roleName === 'admin' ||
+    repoOwner.toLowerCase() === login.toLowerCase()
+  )
 }
 
 export interface GitHubCredentials {

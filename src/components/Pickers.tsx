@@ -28,15 +28,27 @@ function Popover({
   button,
   hasValue,
   disabled,
+  onClose,
   children,
 }: {
   label: string
   button: ReactNode
   hasValue: boolean
   disabled?: boolean
+  /** Called whenever the popover closes (outside click, Escape, or the toggle button). */
+  onClose?: () => void
   children: (close: () => void) => ReactNode
 }) {
   const { open, setOpen, ref } = usePopover()
+  const wasOpen = useRef(false)
+  const onCloseRef = useRef(onClose)
+  useEffect(() => {
+    onCloseRef.current = onClose
+  })
+  useEffect(() => {
+    if (wasOpen.current && !open) onCloseRef.current?.()
+    wasOpen.current = open
+  }, [open])
   return (
     <div className="picker" ref={ref}>
       <button
@@ -148,12 +160,14 @@ export function TagPicker({
   value,
   onChange,
   onCreate,
+  onClose,
   disabled,
 }: {
   tags: Tag[]
   value: string[]
   onChange: (ids: string[]) => void
   onCreate?: (name: string) => Promise<string>
+  onClose?: () => void
   disabled?: boolean
 }) {
   const { t } = useTranslation()
@@ -183,6 +197,7 @@ export function TagPicker({
       label={t('stats.tags')}
       hasValue={selected.length > 0}
       disabled={disabled}
+      onClose={onClose}
       button={
         <>
           <Icon name="tag" size={16} />

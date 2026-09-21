@@ -1,4 +1,5 @@
 import {
+  applyInlineTime,
   durationMs,
   formatClock,
   formatHM,
@@ -102,5 +103,56 @@ describe('formatting', () => {
     expect(formatClock(-5)).toBe('0:00:00')
     expect(formatHM(2 * H + 15 * M)).toBe('2:15')
     expect(toHours(2 * H + 15 * M)).toBe(2.25)
+  })
+})
+
+describe('applyInlineTime', () => {
+  const at = (h: number, m = 0, day = 21) => new Date(2026, 8, day, h, m)
+
+  it('changes the start and keeps the end', () => {
+    expect(applyInlineTime(at(9), at(10), 'start', '08:30')).toMatchObject({
+      ok: true,
+      start: at(8, 30),
+      end: at(10),
+    })
+  })
+
+  it('changes the end on the same day', () => {
+    expect(applyInlineTime(at(9), at(10), 'end', '11:15')).toMatchObject({ ok: true, end: at(11, 15) })
+  })
+
+  it('moves an end before the start to the next day', () => {
+    expect(applyInlineTime(at(22), at(23), 'end', '01:00')).toMatchObject({
+      ok: true,
+      end: at(1, 0, 22),
+      overnight: true,
+    })
+  })
+
+  it('changes the duration and keeps the start', () => {
+    expect(applyInlineTime(at(9), at(10), 'duration', '2:15')).toMatchObject({
+      ok: true,
+      start: at(9),
+      end: at(11, 15),
+    })
+  })
+
+  it('rejects durations over 24 hours', () => {
+    expect(applyInlineTime(at(9), at(10), 'duration', '25:00')).toEqual({ ok: false, error: 'invalidDuration' })
+  })
+
+  it('rejects a start after the end', () => {
+    expect(applyInlineTime(at(9), at(10), 'start', '10:30')).toEqual({ ok: false, error: 'invalidDuration' })
+  })
+
+  it('rejects malformed times', () => {
+    expect(applyInlineTime(at(9), at(10), 'start', '25:00')).toEqual({ ok: false, error: 'invalidStart' })
+    expect(applyInlineTime(at(9), at(10), 'end', 'x')).toEqual({ ok: false, error: 'invalidEnd' })
+  })
+
+  it('keeps sub-minute precision of an untouched start', () => {
+    const start = new Date(2026, 8, 21, 9, 0, 42)
+    const r = applyInlineTime(start, at(10), 'duration', '1:00')
+    expect(r).toMatchObject({ ok: true, start, end: new Date(2026, 8, 21, 10, 0, 42) })
   })
 })

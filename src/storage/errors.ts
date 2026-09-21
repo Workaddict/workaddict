@@ -8,7 +8,8 @@ export type StorageErrorKind =
   | 'conflict' // write conflict persisted after retries
   | 'schemaTooNew' // data written by a newer app version
   | 'readOnly' // write attempted in read-only mode
-  | 'notOwner' // tried to modify another member's data
+  | 'notOwner' // tried to modify another member's timer
+  | 'forbiddenRole' // the user's role does not allow this change
   | 'invalid' // validation failed
   | 'notEmpty' // import attempted into a repository that already has data
   | 'unknown'

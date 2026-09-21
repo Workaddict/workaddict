@@ -1,6 +1,7 @@
 /**
  * Behavioral contract every StorageAdapter must satisfy.
- * `setup` returns two adapters (alice, bob) sharing one data store.
+ * `setup` returns two adapters sharing one data store: alice is an owner (repository admin),
+ * bob a member without an assigned role.
  */
 import { SCHEMA_VERSION, type TimeEntry } from '../domain/types'
 import { isStorageError } from './errors'
@@ -91,14 +92,26 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       expect(await alice.listAllEntries()).toHaveLength(0)
     })
 
-    it("refuses to modify another member's entries", async () => {
-      const e = await bob.saveEntry(entry('bob', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z'))
-      await expect(alice.deleteEntry(e)).rejects.toSatisfy((x: unknown) =>
-        isStorageError(x, 'notOwner'),
+    it("refuses a worker's changes to another member's entries", async () => {
+      const e = await alice.saveEntry(entry('alice', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z'))
+      await expect(bob.deleteEntry(e)).rejects.toSatisfy((x: unknown) =>
+        isStorageError(x, 'forbiddenRole'),
       )
-      await expect(alice.saveEntry({ ...e, description: 'x' }, e.start)).rejects.toSatisfy(
-        (x: unknown) => isStorageError(x, 'notOwner'),
+      await expect(bob.saveEntry({ ...e, description: 'x' }, e.start)).rejects.toSatisfy(
+        (x: unknown) => isStorageError(x, 'forbiddenRole'),
       )
+      expect((await alice.listAllEntries())[0]).toMatchObject({ description: 'Work' })
+    })
+
+    it("lets an editor change another member's entry in that member's file", async () => {
+      await alice.setRole('bob', 'editor')
+      const e = await alice.saveEntry(entry('alice', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z'))
+      await bob.saveEntry({ ...e, description: 'Edited', start: '2026-08-21T08:00:00Z', end: '2026-08-21T09:00:00Z' }, e.start)
+      const all = await alice.listAllEntries()
+      expect(all).toHaveLength(1)
+      expect(all[0]).toMatchObject({ login: 'alice', description: 'Edited' })
+      await bob.deleteEntry(all[0]!)
+      expect(await alice.listAllEntries()).toHaveLength(0)
     })
 
     it('rejects entries that end before they start', async () => {
@@ -157,6 +170,7 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
     })
 
     it('keeps workspace changes from several members', async () => {
+      await alice.setRole('bob', 'editor')
       await alice.updateWorkspace(
         (ws) => ({ ...ws, projects: [...ws.projects, { id: 'p1', name: 'A', color: '#000', archived: false }] }),
         'add project A',
@@ -181,6 +195,49 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       expect(backup.schemaVersion).toBe(SCHEMA_VERSION)
       expect(backup.entries.map((e) => e.login)).toEqual(['bob', 'alice'])
       expect(backup.workspace).toEqual({ projects: [], tags: [] })
+    })
+
+    describe('roles', () => {
+      it('treats the owner as team leader and others as workers without roles.json', async () => {
+        expect(await alice.getAccess()).toEqual({ login: 'alice', role: 'leader', owner: true })
+        expect(await bob.getAccess()).toEqual({ login: 'bob', role: 'worker', owner: false })
+        const team = await bob.listRoles()
+        expect(team.configured).toBe(false)
+        expect(team.members.find((m) => m.login === 'alice')).toMatchObject({ role: 'leader', owner: true })
+      })
+
+      it('lets the owner assign roles and names member, role, and owner in the commit', async () => {
+        await alice.setRole('bob', 'editor')
+        expect(await bob.getAccess()).toMatchObject({ role: 'editor', owner: false })
+        const team = await alice.listRoles()
+        expect(team.configured).toBe(true)
+        expect(team.members.find((m) => m.login === 'bob')).toMatchObject({ role: 'editor' })
+      })
+
+      it('refuses role changes by non-owners, even team leaders', async () => {
+        await alice.setRole('bob', 'leader')
+        await expect(bob.setRole('bob', 'worker')).rejects.toSatisfy((x: unknown) =>
+          isStorageError(x, 'forbiddenRole'),
+        )
+        expect(await bob.getAccess()).toMatchObject({ role: 'leader' })
+      })
+
+      it('never demotes an owner', async () => {
+        await expect(alice.setRole('alice', 'worker')).rejects.toSatisfy((x: unknown) =>
+          isStorageError(x, 'invalid'),
+        )
+        expect(await alice.getAccess()).toMatchObject({ role: 'leader', owner: true })
+      })
+
+      it('refuses workspace changes by workers and writes nothing', async () => {
+        await expect(
+          bob.updateWorkspace(
+            (ws) => ({ ...ws, tags: [{ id: 't', name: 'x', archived: false }] }),
+            'add tag x',
+          ),
+        ).rejects.toSatisfy((x: unknown) => isStorageError(x, 'forbiddenRole'))
+        expect((await alice.getWorkspace()).tags).toEqual([])
+      })
     })
 
     describe('import', () => {
@@ -221,20 +278,30 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
         expect(await alice.listEntries(oct)).toHaveLength(2)
       })
 
-      it('leaves imported entries of other members read-only', async () => {
+      it('lets only editors and team leaders change imported entries of other members', async () => {
         await alice.importData(data(), 'test import')
-        const bobs = (await alice.listAllEntries()).find((e) => e.login === 'bob')!
-        await expect(alice.deleteEntry(bobs)).rejects.toSatisfy((x: unknown) =>
-          isStorageError(x, 'notOwner'),
-        )
         const jane = (await bob.listAllEntries()).find((e) => e.login === 'clockify.jane-doe')!
         await expect(bob.saveEntry({ ...jane, description: 'x' }, jane.start)).rejects.toSatisfy(
-          (x: unknown) => isStorageError(x, 'notOwner'),
+          (x: unknown) => isStorageError(x, 'forbiddenRole'),
         )
+        await alice.saveEntry({ ...jane, description: 'fixed' }, jane.start)
+        const after = (await bob.listAllEntries()).find((e) => e.id === jane.id)
+        expect(after).toMatchObject({ login: 'clockify.jane-doe', description: 'fixed' })
+      })
+
+      it('refuses the import for non-leaders', async () => {
+        await alice.setRole('bob', 'editor')
+        await expect(bob.importData(data(), 'test import')).rejects.toSatisfy((x: unknown) =>
+          isStorageError(x, 'forbiddenRole'),
+        )
+        expect(await alice.isEmpty()).toBe(true)
+        await alice.setRole('bob', 'leader')
+        await bob.importData(data(), 'test import')
+        expect(await alice.listAllEntries()).toHaveLength(4)
       })
 
       it('refuses to import when the workspace has a project', async () => {
-        await bob.updateWorkspace(
+        await alice.updateWorkspace(
           (ws) => ({ ...ws, projects: [{ id: 'x', name: 'X', color: '#000', archived: false }] }),
           'add X',
         )
@@ -246,7 +313,7 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       })
 
       it('replaces existing entries, projects, and tags when overwriting, keeping timers', async () => {
-        await bob.updateWorkspace(
+        await alice.updateWorkspace(
           (ws) => ({ ...ws, projects: [{ id: 'x', name: 'X', color: '#000', archived: false }] }),
           'add X',
         )

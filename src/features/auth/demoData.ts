@@ -91,6 +91,7 @@ export function createDemoAdapter() {
         { login: 'you', avatarUrl: null },
         { login: 'sam', avatarUrl: null },
       ],
+      admins: ['you'],
     },
   )
 }

@@ -7,7 +7,7 @@ import { durationMs, formatHM } from '../../domain/time'
 import { PROJECT_COLORS, type Project, type Tag, type TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
-import { useAllEntries, useWorkspace } from '../data/hooks'
+import { useAccess, useAllEntries, useWorkspace } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { nextProjectColor, useWorkspaceActions } from '../data/workspaceActions'
 
@@ -123,9 +123,18 @@ function NameForm({
   )
 }
 
-function ProjectRow({ project, usage, items }: { project: Project; usage?: Usage; items: Project[] }) {
+function ProjectRow({
+  project,
+  usage,
+  items,
+  canManage,
+}: {
+  project: Project
+  usage?: Usage
+  items: Project[]
+  canManage: boolean
+}) {
   const { t } = useI18n()
-  const { adapter } = useSessionData()
   const confirm = useConfirm()
   const onError = useErrorToast()
   const { updateProject, deleteProject } = useWorkspaceActions()
@@ -163,34 +172,47 @@ function ProjectRow({ project, usage, items }: { project: Project; usage?: Usage
       <span className="num muted small" title={t('workGroups.totalHours')}>
         {formatHM(usage?.ms ?? 0)}
       </span>
-      <RowActions
-        archived={project.archived}
-        disabled={adapter.readOnly}
-        onEdit={() => {
-          setColor(project.color)
-          setEditing(true)
-        }}
-        onArchive={() =>
-          updateProject(
-            project.id,
-            { archived: !project.archived },
-            `${project.archived ? 'restore' : 'archive'} project "${project.name}"`,
-          ).catch(onError)
-        }
-        onDelete={async () => {
-          const ok = await confirm({
-            message: t('workGroups.deleteProjectConfirm', { name: project.name, count: usage?.count ?? 0 }),
-          })
-          if (ok) deleteProject(project).catch(onError)
-        }}
-      />
+      {canManage && (
+        <RowActions
+          archived={project.archived}
+          onEdit={() => {
+            setColor(project.color)
+            setEditing(true)
+          }}
+          onArchive={() =>
+            updateProject(
+              project.id,
+              { archived: !project.archived },
+              `${project.archived ? 'restore' : 'archive'} project "${project.name}"`,
+            ).catch(onError)
+          }
+          onDelete={async () => {
+            const ok = await confirm({
+              message: t('workGroups.deleteProjectConfirm', {
+                name: project.name,
+                count: usage?.count ?? 0,
+              }),
+            })
+            if (ok) deleteProject(project).catch(onError)
+          }}
+        />
+      )}
     </div>
   )
 }
 
-function TagRow({ tag, usage, items }: { tag: Tag; usage?: Usage; items: Tag[] }) {
+function TagRow({
+  tag,
+  usage,
+  items,
+  canManage,
+}: {
+  tag: Tag
+  usage?: Usage
+  items: Tag[]
+  canManage: boolean
+}) {
   const { t } = useI18n()
-  const { adapter } = useSessionData()
   const confirm = useConfirm()
   const onError = useErrorToast()
   const { updateTag, deleteTag } = useWorkspaceActions()
@@ -225,31 +247,34 @@ function TagRow({ tag, usage, items }: { tag: Tag; usage?: Usage; items: Tag[] }
       <span className="num muted small" title={t('workGroups.totalHours')}>
         {formatHM(usage?.ms ?? 0)}
       </span>
-      <RowActions
-        archived={tag.archived}
-        disabled={adapter.readOnly}
-        onEdit={() => setEditing(true)}
-        onArchive={() =>
-          updateTag(
-            tag.id,
-            { archived: !tag.archived },
-            `${tag.archived ? 'restore' : 'archive'} tag "${tag.name}"`,
-          ).catch(onError)
-        }
-        onDelete={async () => {
-          const ok = await confirm({
-            message: t('workGroups.deleteTagConfirm', { name: tag.name, count: usage?.count ?? 0 }),
-          })
-          if (ok) deleteTag(tag).catch(onError)
-        }}
-      />
+      {canManage && (
+        <RowActions
+          archived={tag.archived}
+          onEdit={() => setEditing(true)}
+          onArchive={() =>
+            updateTag(
+              tag.id,
+              { archived: !tag.archived },
+              `${tag.archived ? 'restore' : 'archive'} tag "${tag.name}"`,
+            ).catch(onError)
+          }
+          onDelete={async () => {
+            const ok = await confirm({
+              message: t('workGroups.deleteTagConfirm', {
+                name: tag.name,
+                count: usage?.count ?? 0,
+              }),
+            })
+            if (ok) deleteTag(tag).catch(onError)
+          }}
+        />
+      )}
     </div>
   )
 }
 
 function RowActions(props: {
   archived: boolean
-  disabled: boolean
   onEdit: () => void
   onArchive: () => void
   onDelete: () => void
@@ -258,13 +283,28 @@ function RowActions(props: {
   const archiveLabel = props.archived ? t('workGroups.unarchive') : t('workGroups.archive')
   return (
     <div className="entry-actions">
-      <button className="btn btn-icon" title={t('common.edit')} aria-label={t('common.edit')} disabled={props.disabled} onClick={props.onEdit}>
+      <button
+        className="btn btn-icon"
+        title={t('common.edit')}
+        aria-label={t('common.edit')}
+        onClick={props.onEdit}
+      >
         <Icon name="edit" size={16} />
       </button>
-      <button className="btn btn-icon" title={archiveLabel} aria-label={archiveLabel} disabled={props.disabled} onClick={props.onArchive}>
+      <button
+        className="btn btn-icon"
+        title={archiveLabel}
+        aria-label={archiveLabel}
+        onClick={props.onArchive}
+      >
         <Icon name={props.archived ? 'restore' : 'archive'} size={16} />
       </button>
-      <button className="btn btn-icon" title={t('common.delete')} aria-label={t('common.delete')} disabled={props.disabled} onClick={props.onDelete}>
+      <button
+        className="btn btn-icon"
+        title={t('common.delete')}
+        aria-label={t('common.delete')}
+        onClick={props.onDelete}
+      >
         <Icon name="trash" size={16} />
       </button>
     </div>
@@ -274,6 +314,8 @@ function RowActions(props: {
 export default function WorkGroupsPage() {
   const { t } = useI18n()
   const { adapter } = useSessionData()
+  const access = useAccess()
+  const canManage = !adapter.readOnly && access.can('manageWorkspace')
   const ws = useWorkspace()
   const entries = useAllEntries()
   const { createProject, createTag } = useWorkspaceActions()
@@ -311,12 +353,14 @@ export default function WorkGroupsPage() {
         </label>
       </div>
 
+      {!adapter.readOnly && !canManage && <p className="muted small">{t('workGroups.roleHint')}</p>}
+
       <div className="wg-grid">
         <section className="card">
           <div className="card-head">
             <h2>{t('workGroups.projects')}</h2>
           </div>
-          {!adapter.readOnly && (
+          {canManage && (
             <NameForm
               items={projects}
               placeholder={t('workGroups.newProject')}
@@ -330,10 +374,20 @@ export default function WorkGroupsPage() {
             />
           )}
           {visibleProjects.length === 0 ? (
-            <EmptyState icon="folder" title={t('workGroups.projects')} hint={t('workGroups.emptyProjects')} />
+            <EmptyState
+              icon="folder"
+              title={t('workGroups.projects')}
+              hint={t('workGroups.emptyProjects')}
+            />
           ) : (
             visibleProjects.map((p) => (
-              <ProjectRow key={p.id} project={p} usage={projectUsage.get(p.id)} items={projects} />
+              <ProjectRow
+                key={p.id}
+                project={p}
+                usage={projectUsage.get(p.id)}
+                items={projects}
+                canManage={canManage}
+              />
             ))
           )}
         </section>
@@ -342,7 +396,7 @@ export default function WorkGroupsPage() {
           <div className="card-head">
             <h2>{t('workGroups.tags')}</h2>
           </div>
-          {!adapter.readOnly && (
+          {canManage && (
             <NameForm
               items={tags}
               placeholder={t('workGroups.newTag')}
@@ -354,7 +408,13 @@ export default function WorkGroupsPage() {
             <EmptyState icon="tag" title={t('workGroups.tags')} hint={t('workGroups.emptyTags')} />
           ) : (
             visibleTags.map((x) => (
-              <TagRow key={x.id} tag={x} usage={tagUsage.get(x.id)} items={tags} />
+              <TagRow
+                key={x.id}
+                tag={x}
+                usage={tagUsage.get(x.id)}
+                items={tags}
+                canManage={canManage}
+              />
             ))
           )}
         </section>

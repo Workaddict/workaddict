@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet } from 'react-router-dom'
 import { Avatar } from '../components/bits'
 import { Icon, type IconName } from '../components/Icon'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { formatClock } from '../domain/time'
 import { useI18n } from '../i18n'
 import { useAuth, useSessionData } from '../features/auth/AuthContext'
 import { useNow } from '../features/tracker/useNow'
 import { useTimerActions } from '../features/tracker/useTimerActions'
+import { useAccess, useTeamRoles } from '../features/data/hooks'
+import { RoleBadge, TEAM_SECTION_ID } from '../features/settings/TeamRoles'
 
 const NAV: { to: string; key: string; icon: IconName }[] = [
   { to: '/', key: 'nav.tracker', icon: 'clock' },
@@ -43,6 +46,7 @@ function UserMenu() {
   const { t } = useI18n()
   const { logout } = useAuth()
   const { user, session } = useSessionData()
+  const access = useAccess()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -67,7 +71,7 @@ function UserMenu() {
       {open && (
         <div className="menu" role="menu">
           <div className="menu-label">
-            <strong>{user.login}</strong>
+            <strong>{user.login}</strong> <RoleBadge role={access.role} owner={access.owner} />
             <br />
             {session.mode === 'github' ? session.repo : 'demo'}
           </div>
@@ -81,6 +85,53 @@ function UserMenu() {
           </button>
         </div>
       )}
+    </div>
+  )
+}
+
+const ROLES_HINT_KEY = 'workaddict.rolesHintDismissed'
+
+function readDismissed(): boolean {
+  try {
+    return localStorage.getItem(ROLES_HINT_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+/** Reminds owners to assign roles until roles.json exists or the hint is dismissed. */
+function RolesHint() {
+  const { t } = useI18n()
+  const { adapter } = useSessionData()
+  const access = useAccess()
+  const [dismissed, setDismissed] = useState(readDismissed)
+  const show = access.owner && !adapter.readOnly && !dismissed
+  const team = useTeamRoles({ enabled: show })
+  if (!show || team.data?.configured !== false) return null
+
+  const dismiss = () => {
+    setDismissed(true)
+    try {
+      localStorage.setItem(ROLES_HINT_KEY, '1')
+    } catch {
+      // storage unavailable: hidden for this session only
+    }
+  }
+  return (
+    <div className="banner banner-info row">
+      <span>{t('roles.banner')}</span>
+      <span className="spacer" />
+      <Link className="btn btn-sm" to="/settings" state={{ scrollTo: TEAM_SECTION_ID }}>
+        {t('roles.bannerAction')}
+      </Link>
+      <button
+        className="btn btn-icon btn-sm"
+        onClick={dismiss}
+        aria-label={t('common.close')}
+        title={t('common.close')}
+      >
+        <Icon name="x" size={14} />
+      </button>
     </div>
   )
 }
@@ -106,11 +157,13 @@ export function Layout() {
         </nav>
         <span className="spacer" />
         <HeaderTimer />
+        <ThemeToggle />
         <UserMenu />
       </header>
 
       <main className="main">
         {adapter.readOnly && <div className="banner banner-warning">{t('readOnly')}</div>}
+        <RolesHint />
         <Outlet />
       </main>
 

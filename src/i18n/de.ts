@@ -20,6 +20,9 @@ const de: Resources = {
     all: 'Alle',
     selectedCount: '{{count}} ausgewählt',
     none: 'Keine',
+    language: 'Sprache',
+    switchToDark: 'Zum dunklen Design wechseln',
+    switchToLight: 'Zum hellen Design wechseln',
   },
   nav: {
     tracker: 'Zeiterfassung',
@@ -110,6 +113,10 @@ const de: Resources = {
     added: 'Eintrag hinzugefügt.',
   },
   entries: {
+    editDescription: 'Beschreibung bearbeiten',
+    editStart: 'Startzeit bearbeiten',
+    editEnd: 'Endzeit bearbeiten',
+    editDuration: 'Dauer bearbeiten',
     today: 'Heute',
     yesterday: 'Gestern',
     me: 'Ich',
@@ -126,6 +133,7 @@ const de: Resources = {
     total: 'Gesamt',
   },
   workGroups: {
+    roleHint: 'Nur Bearbeiter und die Teamleitung können Projekte und Tags ändern.',
     title: 'Projekte & Tags',
     projects: 'Projekte',
     tags: 'Tags',
@@ -220,6 +228,24 @@ const de: Resources = {
       'Lade eine vollständige Sicherung aller Einträge aller Mitglieder, Projekte und Tags als JSON-Datei herunter.',
     downloadBackup: 'Sicherung herunterladen',
     logoutHint: 'Entfernt dein Token und zwischengespeicherte Daten aus diesem Browser.',
+  },
+  roles: {
+    title: 'Team & Rollen',
+    owner: 'Besitzer',
+    leader: 'Teamleitung',
+    editor: 'Bearbeiter',
+    worker: 'Mitarbeiter',
+    roleOf: 'Rolle von {{login}}',
+    saved: 'Rolle gespeichert.',
+    ownerHint:
+      'Als Besitzer vergibst du die Rollen. Besitzer (Admins des Daten-Repositorys) sind immer Teamleitung.',
+    readOnlyHint: 'Nur Besitzer (Admins des Daten-Repositorys) können Rollen ändern.',
+    matrix:
+      'Mitarbeiter erfassen ihre eigene Zeit. Bearbeiter können zusätzlich die Einträge aller ändern und Projekte und Tags verwalten. Die Teamleitung kann zusätzlich aus Clockify importieren.',
+    enforcement:
+      'Rollen werden von dieser App durchgesetzt, nicht von GitHub. Wer Schreibzugriff auf das Daten-Repository hat, kann dessen Dateien weiterhin direkt auf GitHub ändern. Jede Änderung bleibt in der Commit-Historie des Repositorys sichtbar.',
+    banner: 'Bis du Rollen vergibst, sind alle außer den Besitzern Mitarbeiter.',
+    bannerAction: 'Rollen vergeben',
   },
   import: {
     title: 'Import aus Clockify',
@@ -317,7 +343,8 @@ const de: Resources = {
     conflict: 'Jemand anderes hat gleichzeitig dieselben Daten geändert. Bitte versuche es erneut.',
     schemaTooNew: 'Die Daten wurden von einer neueren App-Version gespeichert.',
     readOnly: 'Änderungen sind deaktiviert, weil die Daten von einer neueren App-Version stammen.',
-    notOwner: 'Du kannst nur deine eigenen Einträge ändern.',
+    notOwner: 'Du kannst nur deinen eigenen Timer ändern.',
+    forbiddenRole: 'Deine Rolle erlaubt das nicht. Frag eine Teamleitung oder den Besitzer.',
     invalid: 'Bitte prüfe deine Eingaben.',
     notEmpty: 'Inzwischen wurden Daten hinzugefügt, daher wurde nichts importiert. Prüfe den Hinweis und versuche es erneut.',
     unknown: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',

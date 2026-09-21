@@ -42,3 +42,33 @@ export function useThemePref(): ThemePref {
     () => current,
   )
 }
+
+export type ResolvedTheme = 'light' | 'dark'
+const DARK_QUERY = '(prefers-color-scheme: dark)'
+
+function systemTheme(): ResolvedTheme {
+  return typeof window !== 'undefined' && window.matchMedia?.(DARK_QUERY).matches ? 'dark' : 'light'
+}
+
+/** The theme actually rendered: the explicit preference, or the OS setting for "system". */
+export function resolveTheme(pref: ThemePref = current): ResolvedTheme {
+  return pref === 'system' ? systemTheme() : pref
+}
+
+/** Switches to the opposite of the rendered theme and remembers it explicitly. */
+export function toggleTheme() {
+  setTheme(resolveTheme() === 'dark' ? 'light' : 'dark')
+}
+
+export function useResolvedTheme(): ResolvedTheme {
+  const pref = useThemePref()
+  const system = useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia?.(DARK_QUERY)
+      mq?.addEventListener('change', cb)
+      return () => mq?.removeEventListener('change', cb)
+    },
+    systemTheme,
+  )
+  return pref === 'system' ? system : pref
+}

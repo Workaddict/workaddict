@@ -1,16 +1,18 @@
 import { format, isToday, isYesterday, startOfDay } from 'date-fns'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { MemberLabel, ProjectChip } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { useConfirm } from '../../components/Modal'
 import { useToast } from '../../components/Toasts'
-import { durationMs, formatHM } from '../../domain/time'
+import { applyInlineTime, durationMs, formatHM, type InlineTimeField } from '../../domain/time'
 import type { TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
-import { useDeleteEntry, useLookups } from '../data/hooks'
-import { useErrorToast } from '../data/useErrorText'
+import { useAccess, useDeleteEntry, useLookups, useSaveEntry } from '../data/hooks'
+import { useErrorText, useErrorToast } from '../data/useErrorText'
 import { EntryEditModal } from './EntryEditModal'
+import { useCreateTag } from './EntryFields'
+import { InlineEdit, InlineProject, InlineTags } from './InlineFields'
 import { useTimerActions } from './useTimerActions'
 
 interface DayGroup {
@@ -33,37 +35,109 @@ export function groupByDay(entries: TimeEntry[]): DayGroup[] {
     .map((g) => ({ ...g, entries: g.entries.sort((a, b) => b.start.localeCompare(a.start)) }))
 }
 
+type InlineField = 'description' | InlineTimeField
+
+/** The one field being edited inline in the whole list. */
+interface Editing {
+  entryId: string
+  field: InlineField
+}
+
 function EntryRow({
   entry,
   showMember,
   onEdit,
+  editing,
+  setEditing,
 }: {
   entry: TimeEntry
   showMember: boolean
   onEdit: (e: TimeEntry) => void
+  editing: InlineField | null
+  setEditing: (field: InlineField, active: boolean) => void
 }) {
   const { t, locale } = useI18n()
   const { user, adapter } = useSessionData()
-  const { project, tag, member } = useLookups()
+  const { project, tag, member, workspace } = useLookups()
   const confirm = useConfirm()
   const toast = useToast()
   const onError = useErrorToast()
+  const errorText = useErrorText()
   const del = useDeleteEntry({ onSuccess: () => toast.info(t('entries.deleted')), onError })
+  const save = useSaveEntry()
+  const onCreateTag = useCreateTag()
   const { startTimer, busy } = useTimerActions()
-  const own = entry.login === user.login
+  const access = useAccess()
+  const editable =
+    !adapter.readOnly && (entry.login === user.login || access.can('editOthersEntries'))
   const tags = entry.tagIds.map(tag).filter((x) => x !== undefined)
   const time = (iso: string) => format(new Date(iso), 'p', { locale })
+  const inputTime = (iso: string) => format(new Date(iso), 'HH:mm')
+
+  /** Saves a change; resolves to an error message for the field, or null on success. */
+  const saveFields = async (patch: Partial<TimeEntry>): Promise<string | null> => {
+    try {
+      await save.mutateAsync({ entry: { ...entry, ...patch }, previousStart: entry.start })
+      return null
+    } catch (e) {
+      onError(e)
+      return errorText(e)
+    }
+  }
+
+  const saveTime = (field: InlineTimeField) => (value: string) => {
+    const r = applyInlineTime(new Date(entry.start), new Date(entry.end), field, value)
+    if (!r.ok) return Promise.resolve(t(`manual.errors.${r.error}`))
+    return saveFields({ start: r.start.toISOString(), end: r.end.toISOString() })
+  }
+
+  const field = (name: InlineField) => ({
+    editable,
+    editing: editing === name,
+    onStart: () => setEditing(name, true),
+    onDone: () => setEditing(name, false),
+  })
 
   return (
     <div className="entry">
-      <div className={`entry-desc${entry.description ? '' : ' empty'}`}>
-        {entry.description || t('common.noDescription')}
-      </div>
+      <InlineEdit
+        {...field('description')}
+        className={`entry-desc${entry.description ? '' : ' empty'}`}
+        display={entry.description || t('common.noDescription')}
+        initial={entry.description}
+        label={t('entries.editDescription')}
+        placeholder={t('timer.placeholder')}
+        onCommit={(v) => saveFields({ description: v.trim() })}
+      />
       <div className="entry-side">
         <span className="entry-time">
-          {time(entry.start)} – {time(entry.end)}
+          <InlineEdit
+            {...field('start')}
+            type="time"
+            display={time(entry.start)}
+            initial={inputTime(entry.start)}
+            label={t('entries.editStart')}
+            onCommit={saveTime('start')}
+          />
+          {' – '}
+          <InlineEdit
+            {...field('end')}
+            type="time"
+            display={time(entry.end)}
+            initial={inputTime(entry.end)}
+            label={t('entries.editEnd')}
+            onCommit={saveTime('end')}
+          />
         </span>
-        <span className="entry-duration">{formatHM(durationMs(entry.start, entry.end))}</span>
+        <InlineEdit
+          {...field('duration')}
+          className="entry-duration"
+          inputMode="decimal"
+          display={formatHM(durationMs(entry.start, entry.end))}
+          initial={formatHM(durationMs(entry.start, entry.end))}
+          label={t('entries.editDuration')}
+          onCommit={saveTime('duration')}
+        />
         <div className="entry-actions">
           <button
             className="btn btn-icon"
@@ -80,13 +154,12 @@ function EntryRow({
           >
             <Icon name="play" size={16} />
           </button>
-          {own && (
+          {editable && (
             <>
               <button
                 className="btn btn-icon"
                 title={t('common.edit')}
                 aria-label={t('common.edit')}
-                disabled={adapter.readOnly}
                 onClick={() => onEdit(entry)}
               >
                 <Icon name="edit" size={16} />
@@ -95,7 +168,6 @@ function EntryRow({
                 className="btn btn-icon"
                 title={t('common.delete')}
                 aria-label={t('common.delete')}
-                disabled={adapter.readOnly}
                 onClick={async () => {
                   if (await confirm({ message: t('entries.deleteConfirm') })) {
                     del.mutate(entry)
@@ -109,12 +181,30 @@ function EntryRow({
         </div>
       </div>
       <div className="entry-meta">
-        <ProjectChip project={project(entry.projectId)} />
-        {tags.map((x) => (
-          <span key={x.id} className="chip">
-            {x.name}
-          </span>
-        ))}
+        {editable ? (
+          <>
+            <InlineProject
+              projects={workspace?.projects ?? []}
+              value={entry.projectId}
+              onSave={(projectId) => void saveFields({ projectId })}
+            />
+            <InlineTags
+              tags={workspace?.tags ?? []}
+              value={entry.tagIds}
+              onCreate={onCreateTag}
+              onSave={(tagIds) => void saveFields({ tagIds })}
+            />
+          </>
+        ) : (
+          <>
+            <ProjectChip project={project(entry.projectId)} />
+            {tags.map((x) => (
+              <span key={x.id} className="chip">
+                {x.name}
+              </span>
+            ))}
+          </>
+        )}
         {showMember && <MemberLabel member={member(entry.login)} />}
       </div>
     </div>
@@ -123,8 +213,18 @@ function EntryRow({
 
 export function EntryList({ entries, showMember }: { entries: TimeEntry[]; showMember: boolean }) {
   const { t, locale } = useI18n()
-  const [editing, setEditing] = useState<TimeEntry | null>(null)
+  const [editingEntry, setEditingEntry] = useState<TimeEntry | null>(null)
+  const [inline, setInline] = useState<Editing | null>(null)
   const groups = useMemo(() => groupByDay(entries), [entries])
+
+  // Leaving a field only clears the state if no other field was opened meanwhile.
+  const setInlineFor = useCallback(
+    (entryId: string) => (field: InlineField, active: boolean) =>
+      setInline((cur) =>
+        active ? { entryId, field } : cur?.entryId === entryId && cur.field === field ? null : cur,
+      ),
+    [],
+  )
 
   const dayLabel = (d: Date) =>
     isToday(d)
@@ -144,11 +244,20 @@ export function EntryList({ entries, showMember }: { entries: TimeEntry[]; showM
             </span>
           </div>
           {g.entries.map((e) => (
-            <EntryRow key={e.id} entry={e} showMember={showMember} onEdit={setEditing} />
+            <EntryRow
+              key={e.id}
+              entry={e}
+              showMember={showMember}
+              onEdit={setEditingEntry}
+              editing={inline?.entryId === e.id ? inline.field : null}
+              setEditing={setInlineFor(e.id)}
+            />
           ))}
         </section>
       ))}
-      {editing && <EntryEditModal entry={editing} onClose={() => setEditing(null)} />}
+      {editingEntry && (
+        <EntryEditModal entry={editingEntry} onClose={() => setEditingEntry(null)} />
+      )}
     </>
   )
 }

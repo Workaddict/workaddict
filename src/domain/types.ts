@@ -45,6 +45,21 @@ export interface Member {
   avatarUrl: string | null
 }
 
+export const ROLES = ['leader', 'editor', 'worker'] as const
+export type Role = (typeof ROLES)[number]
+
+/** Content of `roles.json`: role assignments by GitHub login. */
+export interface RolesFile {
+  roles: Record<string, Role>
+}
+
+/** A member's effective role. Owners (repository admins) are always team leaders. */
+export interface Access {
+  login: string
+  role: Role
+  owner: boolean
+}
+
 export interface TrackerMeta {
   schemaVersion: number
   createdAt: IsoString

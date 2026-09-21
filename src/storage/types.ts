@@ -1,7 +1,9 @@
 import type {
+  Access,
   BackupFile,
   DateRange,
   Member,
+  Role,
   RunningTimer,
   TimeEntry,
   Workspace,
@@ -23,10 +25,20 @@ export interface StorageAdapter {
   getCurrentUser(): Promise<Member>
   listMembers(): Promise<Member[]>
 
+  /** The current user's effective role and owner status (owners = repository admins). */
+  getAccess(): Promise<Access>
+  /** All members with their effective roles; `configured` is false while `roles.json` is absent. */
+  listRoles(): Promise<TeamRoles>
+  /** Assigns a role to a non-owner member. Owners only. */
+  setRole(login: string, role: Role): Promise<void>
+
   /** Entries of all members whose start lies within the range (inclusive). */
   listEntries(range: DateRange): Promise<TimeEntry[]>
   listAllEntries(): Promise<TimeEntry[]>
-  /** Creates or updates an own entry. Pass the previously stored start when editing. */
+  /**
+   * Creates or updates an entry. Other members' entries need the editor role; the entry keeps
+   * its login. Pass the previously stored start when editing.
+   */
   saveEntry(entry: TimeEntry, previousStart?: string): Promise<TimeEntry>
   deleteEntry(entry: TimeEntry): Promise<void>
 
@@ -56,6 +68,13 @@ export interface StorageAdapter {
    * entries, projects, and tags are replaced (running timers are kept).
    */
   importData(data: ImportData, summary: string, opts?: { overwrite?: boolean }): Promise<void>
+}
+
+export interface RoleMember extends Member, Access {}
+
+export interface TeamRoles {
+  members: RoleMember[]
+  configured: boolean
 }
 
 export interface ImportData {
@@ -88,8 +107,15 @@ export interface FileStore {
   invalidate(): void
 }
 
+export interface Collaborator extends Member {
+  /** Admin permission on the data repository (= owner). */
+  admin: boolean
+}
+
 export interface Identity {
   getCurrentUser(): Promise<Member>
   /** Team members, or null if they cannot be listed with the current credentials. */
-  listCollaborators(): Promise<Member[] | null>
+  listCollaborators(): Promise<Collaborator[] | null>
+  /** Whether the current user has admin permission on the data repository. */
+  isAdmin(): Promise<boolean>
 }

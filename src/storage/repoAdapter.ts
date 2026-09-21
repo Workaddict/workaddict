@@ -1,12 +1,16 @@
 import { newId } from '../domain/ids'
+import { accessFor, can, isRole, parseRoles, type Action } from '../domain/permissions'
 import { monthKey, monthKeysInRange } from '../domain/month'
 import { durationMs, formatHM } from '../domain/time'
 import {
   EMPTY_WORKSPACE,
   SCHEMA_VERSION,
+  type Access,
   type BackupFile,
   type DateRange,
   type Member,
+  type Role,
+  type RolesFile,
   type RunningTimer,
   type TimeEntry,
   type TrackerMeta,
@@ -18,6 +22,7 @@ import type {
   Identity,
   ImportData,
   StorageAdapter,
+  TeamRoles,
   TimerFields,
   TimerPatch,
 } from './types'
@@ -25,6 +30,7 @@ import type {
 export const PATHS = {
   meta: 'tracker.json',
   workspace: 'workspace.json',
+  roles: 'roles.json',
   entries: (login: string, month: string) => `entries/${login}/${month}.json`,
   timer: (login: string) => `timers/${login}.json`,
 }
@@ -88,19 +94,83 @@ export class RepoAdapter implements StorageAdapter {
   }
 
   async listMembers(): Promise<Member[]> {
-    const me = await this.getCurrentUser()
-    const collaborators = await this.identity.listCollaborators()
+    return (await this.team()).members
+  }
+
+  /**
+   * Members with the known owners. Without the collaborator list, members come from the data
+   * files and `roles.json`, and only the current user's owner status is known.
+   */
+  private async team(): Promise<{
+    members: Member[]
+    owners: Set<string>
+    roles: Record<string, Role>
+    configured: boolean
+  }> {
+    const [me, admin, collaborators, files] = await Promise.all([
+      this.getCurrentUser(),
+      this.identity.isAdmin(),
+      this.identity.listCollaborators(),
+      this.store.listFiles(),
+    ])
+    const rolesFile = files.has(PATHS.roles)
+      ? await this.store.read<RolesFile>(PATHS.roles, files)
+      : null
+    const roles = parseRoles(rolesFile)
     const members = new Map<string, Member>()
+    const owners = new Set<string>()
     if (collaborators) {
-      for (const m of collaborators) members.set(m.login, m)
+      for (const { admin: isAdmin, ...m } of collaborators) {
+        members.set(m.login, m)
+        if (isAdmin) owners.add(m.login)
+      }
     } else {
-      for (const path of (await this.store.listFiles()).keys()) {
-        const login = ENTRY_PATH.exec(path)?.[1] ?? TIMER_PATH.exec(path)?.[1]
+      const logins = [...files.keys()].map((p) => ENTRY_PATH.exec(p)?.[1] ?? TIMER_PATH.exec(p)?.[1])
+      for (const login of [...logins, ...Object.keys(roles)]) {
         if (login && !members.has(login)) members.set(login, { login, avatarUrl: null })
       }
     }
     members.set(me.login, me)
-    return [...members.values()].sort((a, b) => a.login.localeCompare(b.login))
+    if (admin) owners.add(me.login)
+    else owners.delete(me.login)
+    return {
+      members: [...members.values()].sort((a, b) => a.login.localeCompare(b.login)),
+      owners,
+      roles,
+      configured: rolesFile !== null,
+    }
+  }
+
+  // ---- roles ---------------------------------------------------------------
+
+  async getAccess(): Promise<Access> {
+    const [me, admin, rolesFile] = await Promise.all([
+      this.getCurrentUser(),
+      this.identity.isAdmin(),
+      this.store.read<RolesFile>(PATHS.roles),
+    ])
+    return accessFor(me.login, parseRoles(rolesFile), new Set(admin ? [me.login] : []))
+  }
+
+  async listRoles(): Promise<TeamRoles> {
+    const { members, owners, roles, configured } = await this.team()
+    return {
+      members: members.map((m) => ({ ...m, ...accessFor(m.login, roles, owners) })),
+      configured,
+    }
+  }
+
+  async setRole(login: string, role: Role): Promise<void> {
+    const me = await this.assertCan('assignRoles')
+    if (!isRole(role)) throw new StorageError('invalid', `Unknown role ${String(role)}`)
+    if ((await this.team()).owners.has(login)) {
+      throw new StorageError('invalid', 'The role of an owner cannot be changed')
+    }
+    await this.store.write<RolesFile>(
+      PATHS.roles,
+      (cur) => ({ roles: { ...parseRoles(cur), [login]: role } }),
+      `role: set ${login} to ${role} (${me.login})`,
+    )
   }
 
   // ---- entries -------------------------------------------------------------
@@ -132,37 +202,48 @@ export class RepoAdapter implements StorageAdapter {
   }
 
   async saveEntry(entry: TimeEntry, previousStart?: string): Promise<TimeEntry> {
-    const me = await this.assertWritable(entry.login)
+    const actor = await this.entryActor(entry.login)
     if (durationMs(entry.start, entry.end) <= 0) {
       throw new StorageError('invalid', 'Entry must end after it starts')
     }
     const saved: TimeEntry = { ...entry, updatedAt: new Date().toISOString() }
-    const path = PATHS.entries(me.login, monthKey(saved.start))
+    const path = PATHS.entries(saved.login, monthKey(saved.start))
     const isUpdate = previousStart !== undefined
     const verb = isUpdate ? 'update' : 'add'
     await this.store.write<TimeEntry[]>(
       path,
       (cur) => [...(cur ?? []).filter((e) => e.id !== saved.id), saved],
-      `entry: ${verb} ${formatHM(durationMs(saved.start, saved.end))} ${quote(saved.description)} (${me.login})`,
+      `entry: ${verb} ${formatHM(durationMs(saved.start, saved.end))} ${quote(saved.description)}${actor}`,
     )
     // Moved to another month: remove the old copy after the new one is safely written.
     if (isUpdate && monthKey(previousStart) !== monthKey(saved.start)) {
       await this.store.write<TimeEntry[]>(
-        PATHS.entries(me.login, monthKey(previousStart)),
+        PATHS.entries(saved.login, monthKey(previousStart)),
         (cur) => (cur ?? []).filter((e) => e.id !== saved.id),
-        `entry: move ${quote(saved.description)} to ${monthKey(saved.start)} (${me.login})`,
+        `entry: move ${quote(saved.description)} to ${monthKey(saved.start)}${actor}`,
       )
     }
     return saved
   }
 
   async deleteEntry(entry: TimeEntry): Promise<void> {
-    const me = await this.assertWritable(entry.login)
+    const actor = await this.entryActor(entry.login)
     await this.store.write<TimeEntry[]>(
-      PATHS.entries(me.login, monthKey(entry.start)),
+      PATHS.entries(entry.login, monthKey(entry.start)),
       (cur) => (cur ?? []).filter((e) => e.id !== entry.id),
-      `entry: delete ${quote(entry.description)} (${me.login})`,
+      `entry: delete ${quote(entry.description)}${actor}`,
     )
+  }
+
+  /**
+   * Checks that the current user may change entries of `owner` and returns the commit message
+   * suffix: " (alice)" for own entries, " for bob (alice)" for another member's.
+   */
+  private async entryActor(owner: string): Promise<string> {
+    const me = await this.assertWritable()
+    if (owner === me.login) return ` (${me.login})`
+    await this.assertCan('editOthersEntries')
+    return ` for ${owner} (${me.login})`
   }
 
   // ---- timers --------------------------------------------------------------
@@ -272,7 +353,7 @@ export class RepoAdapter implements StorageAdapter {
   }
 
   async updateWorkspace(fn: (ws: Workspace) => Workspace, summary: string): Promise<Workspace> {
-    const me = await this.assertWritable()
+    const me = await this.assertCan('manageWorkspace')
     return this.store.write<Workspace>(
       PATHS.workspace,
       (cur) => fn(cur ?? EMPTY_WORKSPACE),
@@ -314,7 +395,7 @@ export class RepoAdapter implements StorageAdapter {
     summary: string,
     opts?: { overwrite?: boolean },
   ): Promise<void> {
-    const me = await this.assertWritable()
+    const me = await this.assertCan('import')
     if (data.entries.some((e) => durationMs(e.start, e.end) <= 0)) {
       throw new StorageError('invalid', 'Entries must end after they start')
     }
@@ -338,11 +419,16 @@ export class RepoAdapter implements StorageAdapter {
     })
   }
 
-  private async assertWritable(ownerLogin?: string): Promise<Member> {
+  /** Timers are always the current user's own, so writing them needs no role. */
+  private async assertWritable(): Promise<Member> {
     if (this.readOnly) throw new StorageError('readOnly')
-    const me = await this.getCurrentUser()
-    if (ownerLogin !== undefined && ownerLogin !== me.login) {
-      throw new StorageError('notOwner', 'Only your own entries can be changed')
+    return this.getCurrentUser()
+  }
+
+  private async assertCan(action: Action): Promise<Member> {
+    const me = await this.assertWritable()
+    if (!can(await this.getAccess(), action)) {
+      throw new StorageError('forbiddenRole', `Your role does not allow: ${action}`)
     }
     return me
   }

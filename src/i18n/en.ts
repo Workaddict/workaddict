@@ -18,6 +18,9 @@ const en = {
     all: 'All',
     selectedCount: '{{count}} selected',
     none: 'None',
+    language: 'Language',
+    switchToDark: 'Switch to dark theme',
+    switchToLight: 'Switch to light theme',
   },
   nav: {
     tracker: 'Tracker',
@@ -106,6 +109,10 @@ const en = {
     added: 'Entry added.',
   },
   entries: {
+    editDescription: 'Edit description',
+    editStart: 'Edit start time',
+    editEnd: 'Edit end time',
+    editDuration: 'Edit duration',
     today: 'Today',
     yesterday: 'Yesterday',
     me: 'Me',
@@ -122,6 +129,7 @@ const en = {
     total: 'Total',
   },
   workGroups: {
+    roleHint: 'Only editors and team leaders can change projects and tags.',
     title: 'Projects & Tags',
     projects: 'Projects',
     tags: 'Tags',
@@ -216,6 +224,24 @@ const en = {
       'Download a complete backup of all members’ entries, projects and tags as a JSON file.',
     downloadBackup: 'Download backup',
     logoutHint: 'Removes your token and cached data from this browser.',
+  },
+  roles: {
+    title: 'Team & roles',
+    owner: 'Owner',
+    leader: 'Team leader',
+    editor: 'Editor',
+    worker: 'Worker',
+    roleOf: 'Role of {{login}}',
+    saved: 'Role saved.',
+    ownerHint:
+      'As owner you assign roles. Owners (admins of the data repository) are always team leaders.',
+    readOnlyHint: 'Only owners (admins of the data repository) can change roles.',
+    matrix:
+      'Workers track their own time. Editors can also change everyone’s entries and manage projects and tags. Team leaders can also import from Clockify.',
+    enforcement:
+      'Roles are enforced by this app, not by GitHub. Anyone with write access to the data repository can still change its files directly on GitHub. Every change stays visible in the repository’s commit history.',
+    banner: 'Until you assign roles, everyone except the owners is a worker.',
+    bannerAction: 'Assign roles',
   },
   import: {
     title: 'Import from Clockify',
@@ -312,7 +338,8 @@ const en = {
     conflict: 'Someone else changed the same data at the same time. Please try again.',
     schemaTooNew: 'The data was saved by a newer app version.',
     readOnly: 'Changes are disabled because the data was saved by a newer app version.',
-    notOwner: 'You can only change your own entries.',
+    notOwner: 'You can only change your own timer.',
+    forbiddenRole: 'Your role does not allow this. Ask a team leader or the owner.',
     invalid: 'Please check your input.',
     notEmpty: 'Someone added data meanwhile, so nothing was imported. Review the warning and try again.',
     unknown: 'Something went wrong. Please try again.',

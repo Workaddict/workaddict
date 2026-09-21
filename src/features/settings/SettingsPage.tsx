@@ -5,8 +5,10 @@ import { Icon } from '../../components/Icon'
 import { LANGUAGES, setLanguage, useI18n, type Language } from '../../i18n'
 import { setTheme, useThemePref, type ThemePref } from '../../theme'
 import { useAuth, useSessionData } from '../auth/AuthContext'
+import { useAccess } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { downloadBackup } from '../export/backup'
+import { RoleBadge, TeamRolesSection } from './TeamRoles'
 
 const ImportWizard = lazy(() => import('../import/ImportWizard'))
 
@@ -15,12 +17,14 @@ export default function SettingsPage() {
   const { logout } = useAuth()
   const { user, session, adapter } = useSessionData()
   const theme = useThemePref()
+  const access = useAccess()
   const onError = useErrorToast()
   const [backingUp, setBackingUp] = useState(false)
   const [importing, setImporting] = useState(false)
   const repoEmpty = useQuery({
     queryKey: ['importAvailable'],
     queryFn: () => adapter.isEmpty(),
+    enabled: access.can('import'),
   }).data
 
   const backup = async () => {
@@ -60,6 +64,7 @@ export default function SettingsPage() {
             <span className="row">
               <Avatar member={user} />
               <strong>{user.login}</strong>
+              <RoleBadge role={access.role} owner={access.owner} />
             </span>
           </div>
         </div>
@@ -97,6 +102,8 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <TeamRolesSection />
+
       <section className="section">
         <h2>{t('settings.data')}</h2>
         <div className="card settings-list">
@@ -109,20 +116,26 @@ export default function SettingsPage() {
               {t('settings.downloadBackup')}
             </button>
           </div>
-          <div className="settings-row">
-            <span className="muted small" style={{ flex: '1 1 260px' }}>
-              {t('import.settingsHint')}
-              {repoEmpty === false && (
-                <>
-                  <br />
-                  <strong>{t('import.replaceHint')}</strong>
-                </>
-              )}
-            </span>
-            <button className="btn" onClick={() => setImporting(true)} disabled={adapter.readOnly}>
-              {t('import.start')}
-            </button>
-          </div>
+          {access.can('import') && (
+            <div className="settings-row">
+              <span className="muted small" style={{ flex: '1 1 260px' }}>
+                {t('import.settingsHint')}
+                {repoEmpty === false && (
+                  <>
+                    <br />
+                    <strong>{t('import.replaceHint')}</strong>
+                  </>
+                )}
+              </span>
+              <button
+                className="btn"
+                onClick={() => setImporting(true)}
+                disabled={adapter.readOnly}
+              >
+                {t('import.start')}
+              </button>
+            </div>
+          )}
           <div className="settings-row">
             <span className="muted small" style={{ flex: '1 1 260px' }}>
               {t('settings.logoutHint')}

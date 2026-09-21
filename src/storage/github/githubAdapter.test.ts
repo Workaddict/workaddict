@@ -31,6 +31,7 @@ function adapterFor(gh: FakeGitHub, token: string, opts?: { treeTtlMs?: number }
 function fake() {
   const gh = new FakeGitHub()
   gh.users = { 'tok-a': 'alice', 'tok-b': 'bob' }
+  gh.admins.add('alice')
   return gh
 }
 
@@ -117,6 +118,52 @@ describe('GitHub adapter specifics', () => {
       updatedAt: '',
     })
     expect(messages.at(-1)).toBe('entry: add 2:00 "Fix login" (alice)')
+
+    await a.setRole('bob', 'editor')
+    expect(messages.at(-1)).toBe('role: set bob to editor (alice)')
+
+    const b = adapterFor(gh, 'tok-b')
+    const alices = (await b.listAllEntries())[0]!
+    await b.deleteEntry(alices)
+    expect(messages.at(-1)).toBe('entry: delete "Fix login" for alice (bob)')
+    expect(gh.json('roles.json')).toEqual({ roles: { bob: 'editor' } })
+  })
+
+  it("treats a personal repository's owner as admin even without a permissions object", async () => {
+    const gh = new FakeGitHub('carol', 'data')
+    gh.users = { 'tok-c': 'carol', 'tok-b': 'bob' }
+    const orig = gh.fetch
+    gh.fetch = async (input, init) => {
+      const res = await orig(input, init)
+      if (new URL(String(input)).pathname !== '/repos/carol/data') return res
+      const body = (await res.json()) as Record<string, unknown>
+      delete body.permissions
+      return new Response(JSON.stringify(body), { status: 200 })
+    }
+    expect(await adapterFor(gh, 'tok-c').getAccess()).toEqual({ login: 'carol', role: 'leader', owner: true })
+    expect(await adapterFor(gh, 'tok-b').getAccess()).toMatchObject({ role: 'worker', owner: false })
+  })
+
+  it('marks collaborators with admin permission as owners', async () => {
+    const gh = fake()
+    const team = await adapterFor(gh, 'tok-b').listRoles()
+    expect(team.members.map((m) => [m.login, m.role, m.owner])).toEqual([
+      ['alice', 'leader', true],
+      ['bob', 'worker', false],
+    ])
+  })
+
+  it('reuses the admin permission instead of asking GitHub on every write', async () => {
+    const gh = fake()
+    const a = adapterFor(gh, 'tok-a')
+    await a.init()
+    for (const name of ['A', 'B', 'C']) {
+      await a.updateWorkspace(
+        (ws) => ({ ...ws, tags: [...ws.tags, { id: name, name, archived: false }] }),
+        `add ${name}`,
+      )
+    }
+    expect(gh.log.filter((l) => l === 'GET /repos/team/data')).toHaveLength(1)
   })
 
   it('re-applies changes after a concurrent write (conflict retry)', async () => {

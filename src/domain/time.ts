@@ -94,3 +94,50 @@ export function formatHM(ms: number): string {
 export function toHours(ms: number): number {
   return Math.round((ms / HOUR) * 100) / 100
 }
+
+export type InlineTimeField = 'start' | 'end' | 'duration'
+
+/** `base` with its local clock time replaced by "HH:mm" (seconds cleared). */
+function atLocalTime(base: Date, time: string): Date | null {
+  const t = /^(\d{1,2}):(\d{2})$/.exec(time.trim())
+  if (!t || Number(t[1]) > 23 || Number(t[2]) > 59) return null
+  const d = new Date(base)
+  d.setHours(Number(t[1]), Number(t[2]), 0, 0)
+  return d
+}
+
+/**
+ * Applies an inline change to an entry's times, validated like manual entries:
+ * a new start keeps the end, a new end lies on the start's day (or the next day when it is
+ * earlier than the start), and a new duration keeps the start.
+ */
+export function applyInlineTime(
+  start: Date,
+  end: Date,
+  field: InlineTimeField,
+  input: string,
+): ManualTimeResult {
+  let nextStart = start
+  let nextEnd = end
+  if (field === 'start') {
+    const s = atLocalTime(start, input)
+    if (!s) return { ok: false, error: 'invalidStart' }
+    nextStart = s
+  } else if (field === 'end') {
+    const e = atLocalTime(start, input)
+    if (!e) return { ok: false, error: 'invalidEnd' }
+    if (e.getTime() < start.getTime()) e.setDate(e.getDate() + 1)
+    nextEnd = e
+  } else {
+    const ms = parseDuration(input)
+    if (ms === null) return { ok: false, error: 'invalidDuration' }
+    nextEnd = new Date(start.getTime() + ms)
+  }
+  if (!isValidDuration(durationMs(nextStart, nextEnd))) return { ok: false, error: 'invalidDuration' }
+  return {
+    ok: true,
+    start: nextStart,
+    end: nextEnd,
+    overnight: nextStart.toDateString() !== nextEnd.toDateString(),
+  }
+}

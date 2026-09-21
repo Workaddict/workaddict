@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import { ProjectPicker, TagPicker } from '../../components/Pickers'
 import { durationMs, formatHM, resolveManualTimes, type ManualTimeResult } from '../../domain/time'
 import { useI18n } from '../../i18n'
-import { useWorkspace } from '../data/hooks'
+import { useAccess, useWorkspace } from '../data/hooks'
 import { useWorkspaceActions } from '../data/workspaceActions'
 import { useErrorToast } from '../data/useErrorText'
 
@@ -12,7 +12,23 @@ export interface WorkFields {
   tagIds: string[]
 }
 
-/** Project + tag pickers bound to the shared workspace (tags can be created inline). */
+/** Inline tag creation for editors and team leaders; undefined for workers. */
+export function useCreateTag(): ((name: string) => Promise<string>) | undefined {
+  const { createTag } = useWorkspaceActions()
+  const onError = useErrorToast()
+  const allowed = useAccess().can('manageWorkspace')
+  if (!allowed) return undefined
+  return async (name) => {
+    try {
+      return await createTag(name)
+    } catch (e) {
+      onError(e)
+      throw e
+    }
+  }
+}
+
+/** Project + tag pickers bound to the shared workspace (editors can create tags inline). */
 export function GroupPickers({
   value,
   onChange,
@@ -23,8 +39,7 @@ export function GroupPickers({
   disabled?: boolean
 }) {
   const ws = useWorkspace().data
-  const { createTag } = useWorkspaceActions()
-  const onError = useErrorToast()
+  const onCreate = useCreateTag()
   return (
     <>
       <ProjectPicker
@@ -37,14 +52,7 @@ export function GroupPickers({
         tags={ws?.tags ?? []}
         value={value.tagIds}
         onChange={(tagIds) => onChange({ tagIds })}
-        onCreate={async (name) => {
-          try {
-            return await createTag(name)
-          } catch (e) {
-            onError(e)
-            throw e
-          }
-        }}
+        onCreate={onCreate}
         disabled={disabled}
       />
     </>
