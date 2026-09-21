@@ -1,3 +1,17 @@
+<p align="center">
+  <img src="assets/social-preview.png" alt="Workaddict: free, private time tracking for small teams" width="720">
+</p>
+
+<p align="center">
+  <a href="https://github.com/Workaddict/workaddict/stargazers"><img src="https://img.shields.io/github/stars/Workaddict/workaddict?style=for-the-badge&logo=github&label=Stars&color=4f46e5" alt="GitHub stars"></a>
+  <img src="https://komarev.com/ghpvc/?username=Workaddict-workaddict&label=Views&color=4f46e5&style=for-the-badge" alt="Views">
+  <a href="https://workaddict.github.io/workaddict/"><img src="https://img.shields.io/badge/Live_demo-open-4f46e5?style=for-the-badge" alt="Live demo"></a>
+</p>
+
+<p align="center">
+  <b>If Workaddict saves you a Clockify subscription, please <a href="https://github.com/Workaddict/workaddict/stargazers">⭐ star the repo</a>. It helps other teams find it.</b>
+</p>
+
 # Workaddict
 
 A private, free and simple time tracker for small teams, as an alternative to Clockify.
