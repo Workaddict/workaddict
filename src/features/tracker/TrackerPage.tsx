@@ -7,6 +7,9 @@ import { useEntries } from '../data/hooks'
 import { EntryList } from './EntryList'
 import { TimerBar } from './TimerBar'
 
+/** Consecutive months without new entries after which "load older" gives up. */
+const MAX_EMPTY_MONTHS = 12
+
 export function TrackerPage() {
   const { t } = useI18n()
   const { user } = useSessionData()
@@ -27,20 +30,34 @@ export function TrackerPage() {
     [all, who, user.login],
   )
 
-  // Auto-load the previous month when the end of the list scrolls into view; stop
-  // auto-loading once a step back in time yields no additional entries.
+  // Auto-load older months when the end of the list scrolls into view. One load keeps stepping
+  // back past empty months until new visible entries appear, so a single click always shows
+  // something; after MAX_EMPTY_MONTHS empty months in a row, auto-loading stops.
   const sentinel = useRef<HTMLDivElement>(null)
-  const countBeforeLoad = useRef<number | null>(null)
+  const pendingLoad = useRef<{ count: number; emptyMonths: number } | null>(null)
   const [exhausted, setExhausted] = useState(false)
   const loadOlder = () => {
-    countBeforeLoad.current = all?.length ?? 0
+    pendingLoad.current = { count: entries.length, emptyMonths: 0 }
     setMonths((m) => m + 1)
   }
   useEffect(() => {
-    if (query.isFetching || !all || countBeforeLoad.current === null) return
-    setExhausted(all.length === countBeforeLoad.current)
-    countBeforeLoad.current = null
-  }, [all, query.isFetching])
+    const pending = pendingLoad.current
+    if (query.isFetching || !all || pending === null) return
+    if (entries.length > pending.count) {
+      pendingLoad.current = null
+      setExhausted(false)
+    } else if (pending.emptyMonths + 1 >= MAX_EMPTY_MONTHS) {
+      pendingLoad.current = null
+      setExhausted(true)
+    } else {
+      pending.emptyMonths += 1
+      setMonths((m) => m + 1)
+    }
+  }, [all, entries.length, query.isFetching])
+  const showWho = (next: 'me' | 'everyone') => {
+    setWho(next)
+    setExhausted(false)
+  }
 
   const loadOlderRef = useRef(loadOlder)
   useEffect(() => {
@@ -63,10 +80,10 @@ export function TrackerPage() {
       <div className="page-head">
         <h1>{t('nav.tracker')}</h1>
         <div className="segmented" role="group">
-          <button aria-pressed={who === 'me'} onClick={() => setWho('me')}>
+          <button aria-pressed={who === 'me'} onClick={() => showWho('me')}>
             {t('entries.me')}
           </button>
-          <button aria-pressed={who === 'everyone'} onClick={() => setWho('everyone')}>
+          <button aria-pressed={who === 'everyone'} onClick={() => showWho('everyone')}>
             {t('entries.everyone')}
           </button>
         </div>
