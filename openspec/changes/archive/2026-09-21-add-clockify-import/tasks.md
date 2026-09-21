@@ -17,7 +17,7 @@
 
 - [x] 3.1 Create `src/features/import/clockify/client.ts`: `fetch` wrapper with `X-Api-Key`, configurable base URL (default `https://api.clockify.me/api/v1`, regional options), request counter, error mapping to `invalidKey | forbidden | rateLimit (resetAt) | network | unknown` without ever including the key
 - [x] 3.2 Typed endpoints: `getUser`, `listWorkspaces`, `listUsers` (incl. deactivated), `listProjects`, `listTags`, `listTimeEntries(userId, page)` with a shared paginator (page size constant 1000, next page only when full)
-- [ ] 3.3 Verify against the real API: whether deactivated users need a status filter, regional hostnames, and how rate limiting is signalled (429 / `Retry-After`); record findings in design.md Open Questions
+- [x] 3.3 Verify against the real API: whether deactivated users need a status filter, regional hostnames, and how rate limiting is signalled (429 / `Retry-After`); record findings in design.md Open Questions
 - [x] 3.4 Unit tests with a mocked `fetch`: pagination stops on short page, 401/403/429 mapping, key absent from error messages
 
 ## 4. Resumable fetch queue
@@ -56,8 +56,8 @@
 ## 8. Verification
 
 - [x] 8.1 `npm test`, lint, and build pass
-- [ ] 8.2 Manual end-to-end run in demo mode against a real Clockify workspace: preview totals match Clockify's summary report, tracker and stats show imported data
-- [ ] 8.3 Manual check on the production build that CSP allows Clockify requests and the key is not present in local/session storage after closing the wizard
+- [x] 8.2 Manual end-to-end run (done on the production app with an existing data repo instead of demo mode) against a real Clockify workspace: preview totals match Clockify's summary report, tracker and stats show imported data
+- [x] 8.3 Manual check on the production build that CSP allows Clockify requests and the key is not present in local/session storage after closing the wizard
 
 ## 9. Replace existing data (revised after first test)
 

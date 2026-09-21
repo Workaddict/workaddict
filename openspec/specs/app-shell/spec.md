@@ -40,11 +40,15 @@ The system SHALL be usable on screens from 360 px wide to desktop, without horiz
 - **THEN** the app renders in its dark theme
 
 ### Requirement: Content Security Policy
-The system SHALL ship a Content Security Policy that restricts scripts to the app's own origin and network connections to the GitHub API.
+The system SHALL ship a Content Security Policy that restricts scripts to the app's own origin and network connections to the GitHub API and Clockify's API hosts (`*.clockify.me`).
 
 #### Scenario: Blocked foreign request
-- **WHEN** any code attempts to send a request to a host other than `api.github.com`
+- **WHEN** any code attempts to send a request to a host other than `api.github.com` or a `clockify.me` subdomain
 - **THEN** the browser blocks the request
+
+#### Scenario: Clockify import request
+- **WHEN** the Clockify import sends a request to `https://api.clockify.me`
+- **THEN** the browser allows the request
 
 ### Requirement: GitHub Pages deployment
 The repository SHALL contain a GitHub Actions workflow that, on every push to `main`, installs dependencies, runs tests, builds the app, and deploys it to GitHub Pages, failing the deployment if tests fail.
@@ -58,9 +62,9 @@ The repository SHALL contain a GitHub Actions workflow that, on every push to `m
 - **THEN** the workflow fails and the previously deployed version stays live
 
 ### Requirement: Settings page
-The system SHALL provide a settings page showing the connected data repository and user, language and theme selection, the JSON backup download, and the logout action.
+The system SHALL provide a settings page showing the connected data repository and user, language and theme selection, the JSON backup download, the Clockify import entry point, and the logout action.
 
 #### Scenario: Open settings
 - **WHEN** the user opens Settings
-- **THEN** the page shows `owner/name` of the data repository, the logged-in login, and the language, theme, backup, and logout controls
+- **THEN** the page shows `owner/name` of the data repository, the logged-in login, and the language, theme, backup, Clockify import, and logout controls
 
