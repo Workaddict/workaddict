@@ -252,7 +252,7 @@ describe('GitHub multi-file write (import)', () => {
     const { gh, a } = await setup()
     gh.beforeRefUpdate = () => {
       gh.beforeRefUpdate = null
-      gh.putRaw('entries/carol/2026-09.json', '[]')
+      gh.putRaw('entries/carol/2026-09.json', JSON.stringify([mk('carol', '2026-09')]))
     }
     await expect(a.importData(data(), 'x')).rejects.toSatisfy((e: unknown) =>
       isStorageError(e, 'notEmpty'),
