@@ -1,6 +1,11 @@
 import { ROLES, type Access, type Role } from './types'
 
-export type Action = 'editOthersEntries' | 'manageWorkspace' | 'import' | 'assignRoles'
+export type Action =
+  | 'editOthersEntries'
+  | 'manageWorkspace'
+  | 'import'
+  | 'reassignEntries'
+  | 'assignRoles'
 
 const RANK: Record<Role, number> = { worker: 0, editor: 1, leader: 2 }
 
@@ -8,6 +13,7 @@ const MIN_ROLE: Record<Exclude<Action, 'assignRoles'>, Role> = {
   editOthersEntries: 'editor',
   manageWorkspace: 'editor',
   import: 'leader',
+  reassignEntries: 'leader',
 }
 
 export function isRole(value: unknown): value is Role {

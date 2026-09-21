@@ -18,7 +18,12 @@ import {
   type ClockifyWorkspace,
 } from './clockify/client'
 import { ClockifyFetcher } from './clockify/fetcher'
-import { convertClockify, formerMemberLogins, type ConvertResult, type UserMapping } from './convert'
+import {
+  convertClockify,
+  formerMemberLogins,
+  type ConvertResult,
+  type UserMapping,
+} from './convert'
 
 const NO_USERS: ClockifyUser[] = []
 
@@ -74,9 +79,11 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
   const [mapping, setMapping] = useState<Record<string, UserMapping>>({})
   const [result, setResult] = useState<ConvertResult | null>(null)
   /** Data already in the repository (replaced by the import); null while unknown. */
-  const [existing, setExisting] = useState<{ entries: number; projects: number; tags: number } | null>(
-    null,
-  )
+  const [existing, setExisting] = useState<{
+    entries: number
+    projects: number
+    tags: number
+  } | null>(null)
   const [replaceConfirmed, setReplaceConfirmed] = useState(false)
   const [, setTick] = useState(0)
   // Held in state (mutated in place, re-rendered via `tick`) so render can read their progress.
@@ -173,8 +180,7 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
     void loadExisting()
   }
 
-  const hasExisting =
-    existing !== null && existing.entries + existing.projects + existing.tags > 0
+  const hasExisting = existing !== null && existing.entries + existing.projects + existing.tags > 0
 
   const loadEntries = async () => {
     const f = fetcher!
@@ -531,8 +537,12 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
             </table>
           </div>
           <ul className="import-list muted small">
-            {r.skippedRunning > 0 && <li>{t('import.skippedRunning', { count: r.skippedRunning })}</li>}
-            {r.skippedInvalid > 0 && <li>{t('import.skippedInvalid', { count: r.skippedInvalid })}</li>}
+            {r.skippedRunning > 0 && (
+              <li>{t('import.skippedRunning', { count: r.skippedRunning })}</li>
+            )}
+            {r.skippedInvalid > 0 && (
+              <li>{t('import.skippedInvalid', { count: r.skippedInvalid })}</li>
+            )}
             {r.unknownProjectRefs + r.droppedTagRefs > 0 && (
               <li>{t('import.unknownRefs', { count: r.unknownProjectRefs + r.droppedTagRefs })}</li>
             )}
@@ -592,6 +602,7 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
             })}
           </p>
           <div className="banner banner-info">{t('import.deleteKey')}</div>
+          <p className="muted small">{t('import.remapHint')}</p>
           <div className="modal-actions">{cancelButton}</div>
         </div>
       )

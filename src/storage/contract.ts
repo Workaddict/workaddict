@@ -329,6 +329,58 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
         expect(await alice.listTimers()).toEqual([timer])
       })
 
+      describe('reassigning entries', () => {
+        it("moves all of a former member's entries to a real member", async () => {
+          await alice.importData(data(), 'test import')
+          const own = await bob.saveEntry(entry('bob', '2025-11-05T08:00:00Z', '2025-11-05T09:00:00Z'))
+
+          expect(await alice.reassignEntries('clockify.jane-doe', 'bob')).toBe(1)
+
+          const all = await bob.listAllEntries()
+          expect(all.some((e) => e.login === 'clockify.jane-doe')).toBe(false)
+          const bobs = all.filter((e) => e.login === 'bob')
+          expect(bobs.map((e) => e.start).sort()).toEqual([
+            '2025-10-15T08:00:00Z',
+            '2025-11-02T08:00:00Z',
+            own.start,
+          ])
+        })
+
+        it('moves only entries before the cutoff', async () => {
+          await alice.importData(data(), 'test import')
+          await bob.saveEntry(entry('bob', '2026-09-21T08:00:00Z', '2026-09-21T09:00:00Z', { description: 'after import' }))
+
+          const moved = await alice.reassignEntries('bob', 'clockify.jane-doe', {
+            before: new Date('2026-01-01T00:00:00Z'),
+          })
+
+          expect(moved).toBe(1)
+          const all = await alice.listAllEntries()
+          expect(all.filter((e) => e.login === 'bob').map((e) => e.description)).toEqual(['after import'])
+          expect(all.filter((e) => e.login === 'clockify.jane-doe')).toHaveLength(2)
+        })
+
+        it('keeps the entry ids and returns 0 when nothing matches', async () => {
+          await alice.importData(data(), 'test import')
+          const jane = (await alice.listAllEntries()).find((e) => e.login === 'clockify.jane-doe')!
+          await alice.reassignEntries('clockify.jane-doe', 'alice')
+          expect((await alice.listAllEntries()).find((e) => e.id === jane.id)?.login).toBe('alice')
+          expect(await alice.reassignEntries('clockify.jane-doe', 'alice')).toBe(0)
+        })
+
+        it('refuses non-leaders and equal members', async () => {
+          await alice.importData(data(), 'test import')
+          await alice.setRole('bob', 'editor')
+          await expect(bob.reassignEntries('clockify.jane-doe', 'bob')).rejects.toSatisfy(
+            (x: unknown) => isStorageError(x, 'forbiddenRole'),
+          )
+          await expect(alice.reassignEntries('bob', 'bob')).rejects.toSatisfy((x: unknown) =>
+            isStorageError(x, 'invalid'),
+          )
+          expect((await alice.listAllEntries()).filter((e) => e.login === 'clockify.jane-doe')).toHaveLength(1)
+        })
+      })
+
       it('refuses to import when read-only', async () => {
         const a = await newerSchema()
         await a.init()

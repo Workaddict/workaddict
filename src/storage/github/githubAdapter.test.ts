@@ -295,6 +295,32 @@ describe('GitHub multi-file write (import)', () => {
     expect(gh.json('entries/bob/2025-10.json')).toHaveLength(1)
   })
 
+  it('reassigns entries in one commit and removes emptied files', async () => {
+    const { gh, a } = await setup()
+    await a.importData(data(), 'x')
+    const before = gh.commits
+    expect(await a.reassignEntries('bob', 'carol', { before: new Date(2025, 10, 1) })).toBe(1)
+    expect(gh.commits - before).toBe(1)
+    expect(gh.messages.at(-1)).toBe('reassign: 1 entry from bob to carol before 2025-11-01 (alice)')
+    expect(gh.files.has('entries/bob/2025-10.json')).toBe(false)
+    expect(gh.json('entries/carol/2025-10.json')).toMatchObject([{ login: 'carol' }])
+    expect(gh.json('entries/bob/2025-11.json')).toMatchObject([{ login: 'bob' }])
+  })
+
+  it('aborts a reassignment when the affected entries change meanwhile', async () => {
+    const { gh, a } = await setup()
+    await a.importData(data(), 'x')
+    gh.beforeRefUpdate = () => {
+      gh.beforeRefUpdate = null
+      gh.putRaw('entries/carol/2025-10.json', JSON.stringify([mk('carol', '2025-10')]))
+    }
+    await expect(a.reassignEntries('bob', 'carol')).rejects.toSatisfy((e: unknown) =>
+      isStorageError(e, 'conflict'),
+    )
+    expect(gh.json('entries/carol/2025-10.json')).toHaveLength(1)
+    expect(gh.files.has('entries/bob/2025-10.json')).toBe(true)
+  })
+
   it('writes nothing when data appears during the import', async () => {
     const { gh, a } = await setup()
     gh.beforeRefUpdate = () => {

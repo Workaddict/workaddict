@@ -6,6 +6,7 @@ const matrix: [Action, Record<Role, boolean>][] = [
   ['editOthersEntries', { worker: false, editor: true, leader: true }],
   ['manageWorkspace', { worker: false, editor: true, leader: true }],
   ['import', { worker: false, editor: false, leader: true }],
+  ['reassignEntries', { worker: false, editor: false, leader: true }],
   ['assignRoles', { worker: false, editor: false, leader: false }],
 ]
 

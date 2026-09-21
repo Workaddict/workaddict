@@ -68,6 +68,12 @@ export interface StorageAdapter {
    * entries, projects, and tags are replaced (running timers are kept).
    */
   importData(data: ImportData, summary: string, opts?: { overwrite?: boolean }): Promise<void>
+  /**
+   * Moves entries of member `from` to member `to` in one commit (e.g. to fix a Clockify user
+   * mapping after the import). With `before`, only entries starting earlier move. Team leaders
+   * only. Returns the number of moved entries; nothing is written when it is 0.
+   */
+  reassignEntries(from: string, to: string, opts?: { before?: Date }): Promise<number>
 }
 
 export interface RoleMember extends Member, Access {}

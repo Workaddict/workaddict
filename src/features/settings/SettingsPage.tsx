@@ -8,6 +8,7 @@ import { useAuth, useSessionData } from '../auth/AuthContext'
 import { useAccess } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { downloadBackup } from '../export/backup'
+import { ReassignEntriesModal } from './ReassignEntries'
 import { RoleBadge, TeamRolesSection } from './TeamRoles'
 
 const ImportWizard = lazy(() => import('../import/ImportWizard'))
@@ -21,6 +22,7 @@ export default function SettingsPage() {
   const onError = useErrorToast()
   const [backingUp, setBackingUp] = useState(false)
   const [importing, setImporting] = useState(false)
+  const [reassigning, setReassigning] = useState(false)
   const repoEmpty = useQuery({
     queryKey: ['importAvailable'],
     queryFn: () => adapter.isEmpty(),
@@ -136,6 +138,20 @@ export default function SettingsPage() {
               </button>
             </div>
           )}
+          {access.can('reassignEntries') && (
+            <div className="settings-row">
+              <span className="muted small" style={{ flex: '1 1 260px' }}>
+                {t('reassign.settingsHint')}
+              </span>
+              <button
+                className="btn"
+                onClick={() => setReassigning(true)}
+                disabled={adapter.readOnly}
+              >
+                {t('reassign.start')}
+              </button>
+            </div>
+          )}
           <div className="settings-row">
             <span className="muted small" style={{ flex: '1 1 260px' }}>
               {t('settings.logoutHint')}
@@ -153,6 +169,7 @@ export default function SettingsPage() {
           <ImportWizard onClose={() => setImporting(false)} />
         </Suspense>
       )}
+      {reassigning && <ReassignEntriesModal onClose={() => setReassigning(false)} />}
     </>
   )
 }

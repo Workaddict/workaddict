@@ -244,6 +244,8 @@ const en = {
     bannerAction: 'Assign roles',
   },
   import: {
+    remapHint:
+      'Mapped a Clockify user to the wrong member? Team leaders can move their entries later under Settings → Data → Reassign entries.',
     title: 'Import from Clockify',
     settingsHint:
       'Bring your team’s Clockify history (projects, tags and time entries) into this workspace. One-time, before you start tracking.',
@@ -327,6 +329,31 @@ const en = {
       unknown: 'Clockify returned an unexpected error. Please try again.',
       noWorkspace: 'This key has no Clockify workspace.',
     },
+  },
+  reassign: {
+    start: 'Reassign entries',
+    settingsHint:
+      'Move all time entries of one member to another, for example to change how Clockify users were mapped after the import.',
+    title: 'Reassign entries',
+    intro:
+      'All selected entries change their member in one commit. Projects, tags and times stay the same. The previous state stays in the data repository’s git history.',
+    from: 'Move entries of',
+    to: 'To member',
+    choose: 'Choose…',
+    former: '{{login}} (former member)',
+    count_one: '{{count}} entry',
+    count_other: '{{count}} entries',
+    onlyBefore: 'Only entries that started before a date',
+    cutoff: 'Before',
+    cutoffHint:
+      'Use the day of the Clockify import, so entries the member tracked in Workaddict afterwards stay with them.',
+    preview_one: '{{count}} entry ({{hours}} h) will move from {{from}} to {{to}}.',
+    preview_other: '{{count}} entries ({{hours}} h) will move from {{from}} to {{to}}.',
+    nothing: 'No entries match.',
+    confirm_one: 'Move {{count}} entry',
+    confirm_other: 'Move {{count}} entries',
+    done_one: 'Moved {{count}} entry to {{to}}.',
+    done_other: 'Moved {{count}} entries to {{to}}.',
   },
   errors: {
     auth: 'Your session has expired. Please sign in again.',

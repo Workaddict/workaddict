@@ -37,6 +37,14 @@ export const PATHS = {
 
 const ENTRY_PATH = /^entries\/([^/]+)\/(\d{4}-\d{2})\.json$/
 const TIMER_PATH = /^timers\/([^/]+)\.json$/
+/** GitHub logins and `clockify.<name>` pseudo-logins of former members. */
+const LOGIN = /^[A-Za-z0-9][A-Za-z0-9.-]*$/
+
+/** "2026-09-01" in local time. */
+function localDate(d: Date): string {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+}
 
 function quote(s: string): string {
   const t = s.trim().replace(/\s+/g, ' ')
@@ -417,6 +425,59 @@ export class RepoAdapter implements StorageAdapter {
       }
       return [...(await this.store.listFiles()).keys()].filter((p) => ENTRY_PATH.test(p))
     })
+  }
+
+  async reassignEntries(from: string, to: string, opts?: { before?: Date }): Promise<number> {
+    const me = await this.assertCan('reassignEntries')
+    if (!LOGIN.test(from) || !LOGIN.test(to) || from === to) {
+      throw new StorageError('invalid', 'Choose two different members')
+    }
+    const moves = (e: TimeEntry) =>
+      !opts?.before || new Date(e.start).getTime() < opts.before.getTime()
+
+    this.store.invalidate()
+    const snapshot = await this.store.listFiles()
+    const sources = [...snapshot.keys()].filter((p) => ENTRY_PATH.exec(p)?.[1] === from)
+    const files = new Map<string, unknown>()
+    const deletes: string[] = []
+    const touched = [...sources]
+    const now = new Date().toISOString()
+    let count = 0
+    for (const path of sources) {
+      const list = (await this.store.read<TimeEntry[]>(path, snapshot)) ?? []
+      const moving = list.filter(moves)
+      if (moving.length === 0) continue
+      count += moving.length
+      const staying = list.filter((e) => !moves(e))
+      if (staying.length > 0) files.set(path, staying)
+      else deletes.push(path)
+
+      const target = PATHS.entries(to, ENTRY_PATH.exec(path)![2]!)
+      touched.push(target)
+      const ids = new Set(moving.map((e) => e.id))
+      const existing = (await this.store.read<TimeEntry[]>(target, snapshot)) ?? []
+      files.set(target, [
+        ...existing.filter((e) => !ids.has(e.id)),
+        ...moving.map((e) => ({ ...e, login: to, updatedAt: now })),
+      ])
+    }
+    if (count === 0) return 0
+
+    const cutoff = opts?.before ? ` before ${localDate(opts.before)}` : ''
+    await this.store.writeMany(
+      files,
+      `reassign: ${count} ${count === 1 ? 'entry' : 'entries'} from ${from} to ${to}${cutoff} (${me.login})`,
+      async () => {
+        // The file contents above were computed once; abort instead of overwriting newer data.
+        this.store.invalidate()
+        const current = await this.store.listFiles()
+        if (touched.some((p) => current.get(p) !== snapshot.get(p))) {
+          throw new StorageError('conflict', 'Entries changed during the reassignment')
+        }
+        return deletes
+      },
+    )
+    return count
   }
 
   /** Timers are always the current user's own, so writing them needs no role. */

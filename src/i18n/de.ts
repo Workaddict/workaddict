@@ -248,6 +248,8 @@ const de: Resources = {
     bannerAction: 'Rollen vergeben',
   },
   import: {
+    remapHint:
+      'Einen Clockify-Nutzer falsch zugeordnet? Die Teamleitung kann die Einträge später unter Einstellungen → Daten → Einträge umhängen verschieben.',
     title: 'Import aus Clockify',
     settingsHint:
       'Übernimm den Clockify-Verlauf deines Teams (Projekte, Tags und Zeiteinträge) in diesen Arbeitsbereich. Einmalig, bevor ihr mit der Erfassung beginnt.',
@@ -332,6 +334,31 @@ const de: Resources = {
       unknown: 'Clockify hat einen unerwarteten Fehler gemeldet. Bitte versuche es erneut.',
       noWorkspace: 'Zu diesem Schlüssel gibt es keinen Clockify-Workspace.',
     },
+  },
+  reassign: {
+    start: 'Einträge umhängen',
+    settingsHint:
+      'Alle Zeiteinträge eines Mitglieds einem anderen zuordnen, z. B. um nach dem Import zu ändern, wie Clockify-Nutzer zugeordnet wurden.',
+    title: 'Einträge umhängen',
+    intro:
+      'Alle ausgewählten Einträge wechseln in einem Commit das Mitglied. Projekte, Tags und Zeiten bleiben gleich. Der vorherige Stand bleibt in der Git-Historie des Daten-Repositorys.',
+    from: 'Einträge von',
+    to: 'An Mitglied',
+    choose: 'Auswählen…',
+    former: '{{login}} (ehemaliges Mitglied)',
+    count_one: '{{count}} Eintrag',
+    count_other: '{{count}} Einträge',
+    onlyBefore: 'Nur Einträge, die vor einem Datum begonnen haben',
+    cutoff: 'Vor dem',
+    cutoffHint:
+      'Nimm den Tag des Clockify-Imports, damit Einträge, die das Mitglied danach in Workaddict erfasst hat, bei ihm bleiben.',
+    preview_one: '{{count}} Eintrag ({{hours}} h) wird von {{from}} zu {{to}} verschoben.',
+    preview_other: '{{count}} Einträge ({{hours}} h) werden von {{from}} zu {{to}} verschoben.',
+    nothing: 'Keine passenden Einträge.',
+    confirm_one: '{{count}} Eintrag verschieben',
+    confirm_other: '{{count}} Einträge verschieben',
+    done_one: '{{count}} Eintrag zu {{to}} verschoben.',
+    done_other: '{{count}} Einträge zu {{to}} verschoben.',
   },
   errors: {
     auth: 'Deine Sitzung ist abgelaufen. Bitte melde dich erneut an.',
