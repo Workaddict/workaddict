@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { lazy, Suspense, useState } from 'react'
+import { Suspense, useState } from 'react'
+import { lazyWithReload } from '../../app/lazyPage'
 import { Avatar } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { LANGUAGES, setLanguage, useI18n, type Language } from '../../i18n'
@@ -11,7 +12,7 @@ import { downloadBackup } from '../export/backup'
 import { ReassignEntriesModal } from './ReassignEntries'
 import { RoleBadge, TeamRolesSection } from './TeamRoles'
 
-const ImportWizard = lazy(() => import('../import/ImportWizard'))
+const ImportWizard = lazyWithReload(() => import('../import/ImportWizard'))
 
 export default function SettingsPage() {
   const { t, lang } = useI18n()

@@ -1,4 +1,3 @@
-import { lazy, Suspense } from 'react'
 import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Spinner } from '../components/bits'
 import { useAuth } from '../features/auth/AuthContext'
@@ -6,11 +5,12 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { TrackerPage } from '../features/tracker/TrackerPage'
 import { useI18n } from '../i18n'
 import { Layout } from './Layout'
+import { lazyWithReload } from './lazyPage'
 
 // Secondary pages are split out so the tracker loads fast.
-const StatsPage = lazy(() => import('../features/stats/StatsPage'))
-const WorkGroupsPage = lazy(() => import('../features/workgroups/WorkGroupsPage'))
-const SettingsPage = lazy(() => import('../features/settings/SettingsPage'))
+const StatsPage = lazyWithReload(() => import('../features/stats/StatsPage'))
+const WorkGroupsPage = lazyWithReload(() => import('../features/workgroups/WorkGroupsPage'))
+const SettingsPage = lazyWithReload(() => import('../features/settings/SettingsPage'))
 
 export function App() {
   const { t } = useI18n()
@@ -25,17 +25,15 @@ export function App() {
           <Route path="*" element={<LoginPage />} />
         </Routes>
       ) : (
-        <Suspense fallback={<Spinner />}>
-          <Routes>
-            <Route element={<Layout />}>
-              <Route index element={<TrackerPage />} />
-              <Route path="stats" element={<StatsPage />} />
-              <Route path="groups" element={<WorkGroupsPage />} />
-              <Route path="settings" element={<SettingsPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Route>
-          </Routes>
-        </Suspense>
+        <Routes>
+          <Route element={<Layout />}>
+            <Route index element={<TrackerPage />} />
+            <Route path="stats" element={<StatsPage />} />
+            <Route path="groups" element={<WorkGroupsPage />} />
+            <Route path="settings" element={<SettingsPage />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Route>
+        </Routes>
       )}
     </HashRouter>
   )

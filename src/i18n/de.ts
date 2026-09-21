@@ -11,6 +11,10 @@ const de: Resources = {
     close: 'Schließen',
     loading: 'Wird geladen…',
     retry: 'Erneut versuchen',
+    reload: 'Seite neu laden',
+    pageLoadError: 'Diese Seite konnte nicht geladen werden.',
+    pageLoadErrorHint:
+      'Wahrscheinlich wurde eine neue Version der App veröffentlicht. Lade die Seite neu, um weiterzumachen.',
     noDescription: '(keine Beschreibung)',
     noProject: 'Kein Projekt',
     noTag: 'Kein Tag',

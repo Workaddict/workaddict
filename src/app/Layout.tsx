@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, NavLink, Outlet } from 'react-router-dom'
-import { Avatar } from '../components/bits'
+import { Suspense, useEffect, useRef, useState } from 'react'
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
+import { Avatar, Spinner } from '../components/bits'
 import { Icon, type IconName } from '../components/Icon'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { formatClock } from '../domain/time'
@@ -10,6 +10,7 @@ import { useNow } from '../features/tracker/useNow'
 import { useTimerActions } from '../features/tracker/useTimerActions'
 import { useAccess, useTeamRoles } from '../features/data/hooks'
 import { RoleBadge, TEAM_SECTION_ID } from '../features/settings/TeamRoles'
+import { PageErrorBoundary } from './lazyPage'
 
 const NAV: { to: string; key: string; icon: IconName }[] = [
   { to: '/', key: 'nav.tracker', icon: 'clock' },
@@ -139,6 +140,7 @@ function RolesHint() {
 export function Layout() {
   const { t } = useI18n()
   const { adapter } = useSessionData()
+  const { pathname } = useLocation()
 
   return (
     <div className="app">
@@ -164,7 +166,12 @@ export function Layout() {
       <main className="main">
         {adapter.readOnly && <div className="banner banner-warning">{t('readOnly')}</div>}
         <RolesHint />
-        <Outlet />
+        {/* Keyed by path so an error on one page clears when the user navigates away. */}
+        <PageErrorBoundary key={pathname}>
+          <Suspense fallback={<Spinner />}>
+            <Outlet />
+          </Suspense>
+        </PageErrorBoundary>
       </main>
 
       <nav className="bottom-nav" aria-label="Main">
