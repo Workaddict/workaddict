@@ -11,7 +11,7 @@ The system SHALL perform all data reads and writes through a single `StorageAdap
 - **THEN** all features (tracking, work groups, stats, export) work without code changes outside the adapter module
 
 ### Requirement: Repository file layout
-The GitHub adapter SHALL store data as JSON files: `tracker.json`, `workspace.json` (projects and tags), `entries/<login>/<YYYY-MM>.json` (a user's entries whose start falls in that UTC month), and `timers/<login>.json` (the user's running timer or `null`).
+The GitHub adapter SHALL store data as JSON files: `tracker.json`, `workspace.json` (projects and tags), `roles.json` (role assignments, optional), `entries/<login>/<YYYY-MM>.json` (a user's entries whose start falls in that UTC month), and `timers/<login>.json` (the user's running timer or `null`).
 
 #### Scenario: Saving an entry
 - **WHEN** user `alice` saves an entry starting 2026-09-21T08:00:00Z
@@ -20,6 +20,14 @@ The GitHub adapter SHALL store data as JSON files: `tracker.json`, `workspace.js
 #### Scenario: Entry spanning months
 - **WHEN** an entry starts 2026-09-30T22:00:00Z and ends 2026-10-01T01:00:00Z
 - **THEN** the entry is stored only in the file for 2026-09
+
+#### Scenario: Editor saves another member's entry
+- **WHEN** editor `carol` saves `bob`'s entry starting 2026-09-21T08:00:00Z
+- **THEN** the entry is stored in `entries/bob/2026-09.json`
+
+#### Scenario: Role assignment
+- **WHEN** an owner assigns `bob` the role editor
+- **THEN** `roles.json` contains `"bob": "editor"`
 
 ### Requirement: UTC timestamps
 The system SHALL store all timestamps as ISO-8601 UTC strings and SHALL display them in the user's local time zone.
@@ -51,11 +59,15 @@ The GitHub adapter SHALL write files with the current file SHA and, on a SHA con
 - **THEN** the system shows an error and the user's change is not silently lost from the form
 
 ### Requirement: Descriptive commits
-Every write SHALL create a commit whose message states the kind of change, a short summary, and the acting user's login.
+Every write SHALL create a commit whose message states the kind of change, a short summary, and the acting user's login; when the acting user changes another member's entry, the message SHALL also name that member.
 
 #### Scenario: Entry commit message
 - **WHEN** user `alice` adds a 2-hour entry described "Fix login"
 - **THEN** the commit message contains "entry", "Fix login", and "alice"
+
+#### Scenario: Entry changed for another member
+- **WHEN** editor `carol` deletes `bob`'s entry described "Standup"
+- **THEN** the commit message contains "entry", "Standup", "bob", and "carol"
 
 ### Requirement: Error reporting
 The system SHALL show a clear, non-technical error when a read or write fails due to network errors, rate limiting, or revoked access, and SHALL keep the user's unsaved input.
@@ -97,4 +109,26 @@ The storage adapter SHALL provide an import operation that writes a workspace an
 #### Scenario: Read-only repository
 - **WHEN** an import is attempted while the adapter is read-only because of a newer schema version
 - **THEN** the adapter writes nothing and reports the read-only state
+
+### Requirement: Current user's role
+The storage adapter SHALL provide the current user's effective role and owner status and the role assignments of all members, determined from the repository admin permission and `roles.json`, and SHALL refresh them together with the other data.
+
+#### Scenario: Role after promotion
+- **WHEN** an owner promotes `bob` to editor while `bob` has the app open
+- **THEN** `bob`'s app shows editor permissions after its next data refresh without logging in again
+
+### Requirement: Entry reassignment
+The storage adapter SHALL provide an operation that moves the entries of one login to another login, optionally only entries starting before a given time, writing all changed entry files in one commit whose message states the number of entries, both logins, the cutoff, and the acting user. Moved entries SHALL keep their id, times, description, project, and tags. Source files left without entries SHALL be deleted. The operation SHALL be allowed only for team leaders, SHALL refuse equal source and target logins, SHALL write nothing when no entry matches, and SHALL write nothing and report a conflict when any affected file changed after it was read.
+
+#### Scenario: Single commit
+- **WHEN** a team leader reassigns 1 entry of `bob` before 2025-11-01 to `carol`
+- **THEN** exactly one commit with the message `reassign: 1 entry from bob to carol before 2025-11-01 (alice)` moves it into `carol`'s month file and deletes `bob`'s emptied file
+
+#### Scenario: Concurrent change
+- **WHEN** another member writes to an affected target file during the reassignment
+- **THEN** the adapter writes nothing and reports a conflict
+
+#### Scenario: Not a team leader
+- **WHEN** an editor attempts a reassignment
+- **THEN** the adapter writes nothing and throws `forbiddenRole`
 

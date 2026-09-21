@@ -1,0 +1,4 @@
+- language selection at login
+- whitemode - darkmode switch
+- you shouldnt need to click the edit stick every time, make it so i can edit the time/name/description with clicking on it (like in the original clockify)
+- implement a role system with permissions (team leader, editor, worker) the roles can only be applied by the owner of the repo who is automaticly the team leader

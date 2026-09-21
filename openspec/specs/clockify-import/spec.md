@@ -4,14 +4,18 @@
 TBD - created by archiving change add-clockify-import. Update Purpose after archive.
 ## Requirements
 ### Requirement: Import availability and replacing existing data
-The system SHALL offer the Clockify import in Settings unless the data is read-only. When the data repository already contains time entries, projects, or tags, the system SHALL warn that the import replaces them, SHALL show how many will be replaced, and SHALL require an explicit confirmation before writing.
+The system SHALL offer the Clockify import in Settings only to team leaders and only while the data is not read-only. When the data repository already contains time entries, projects, or tags, the system SHALL warn that the import replaces them, SHALL show how many will be replaced, and SHALL require an explicit confirmation before writing.
 
 #### Scenario: Empty repository
-- **WHEN** a member opens Settings in a repository without entries, projects, or tags
+- **WHEN** a team leader opens Settings in a repository without entries, projects, or tags
 - **THEN** an "Import from Clockify" action is available
 
+#### Scenario: Not a team leader
+- **WHEN** an editor or worker opens Settings
+- **THEN** no "Import from Clockify" action is shown
+
 #### Scenario: Repository already in use
-- **WHEN** a member opens Settings in a repository that contains at least one entry, project, or tag
+- **WHEN** a team leader opens Settings in a repository that contains at least one entry, project, or tag
 - **THEN** the import action is available and a hint states that importing replaces the existing data
 
 #### Scenario: Confirm replacement
@@ -61,7 +65,7 @@ The system SHALL list every Clockify user of the workspace, including deactivate
 
 #### Scenario: Former member
 - **WHEN** the user keeps Clockify user "Jane Doe" as a former member
-- **THEN** her entries are imported under the login `clockify.jane-doe`, count in statistics and exports, and cannot be edited by anyone
+- **THEN** her entries are imported under the login `clockify.jane-doe`, count in statistics and exports, and can be edited only by editors and team leaders
 
 #### Scenario: Skipped user
 - **WHEN** a Clockify user is set to skip
@@ -144,4 +148,23 @@ The system SHALL write all imported projects, tags, and entries to the data repo
 #### Scenario: Failure while writing
 - **WHEN** the write fails due to a network error
 - **THEN** the data repository is unchanged, the fetched data is kept, and the user can retry
+
+### Requirement: Changing the mapping after the import
+The system SHALL let team leaders move all time entries of one member, including former members, to another member in Settings, optionally only entries that started before a chosen date, SHALL show the number of affected entries and their hours before confirming, and SHALL point to this action at the end of the import.
+
+#### Scenario: Former member joins the team
+- **WHEN** a team leader reassigns the entries of `clockify.jane-doe` to `jane`
+- **THEN** all of those entries belong to `jane`, keep their times, projects, and tags, and `clockify.jane-doe` no longer appears in the entries
+
+#### Scenario: Wrong mapping with later own entries
+- **WHEN** Clockify user "Max" was mapped to `bob`, `bob` tracked entries in Workaddict after the import on 2026-09-01, and a team leader reassigns `bob`'s entries before 2026-09-01 to `max`
+- **THEN** only the imported entries move to `max`, and `bob` keeps the entries he tracked since the import
+
+#### Scenario: Preview
+- **WHEN** a team leader selects source, target, and cutoff
+- **THEN** the dialog shows how many entries and hours will move, and the confirm action is disabled when no entry matches
+
+#### Scenario: Not a team leader
+- **WHEN** an editor or worker opens Settings
+- **THEN** no "Reassign entries" action is shown
 
