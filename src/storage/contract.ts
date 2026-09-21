@@ -203,6 +203,14 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
         expect(await alice.isEmpty()).toBe(false)
       })
 
+      it('treats a store whose entries were all deleted as empty', async () => {
+        const e = await bob.saveEntry(entry('bob', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z'))
+        await bob.deleteEntry(e)
+        expect(await alice.isEmpty()).toBe(true)
+        await alice.importData(data(), 'test import')
+        expect(await alice.listAllEntries()).toHaveLength(4)
+      })
+
       it('imports a workspace and entries of several members into an empty store', async () => {
         await alice.importData(data(), 'test import')
         expect(await bob.getWorkspace()).toEqual(data().workspace)

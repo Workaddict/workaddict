@@ -301,10 +301,12 @@ export class RepoAdapter implements StorageAdapter {
   // ---- import --------------------------------------------------------------
 
   async isEmpty(): Promise<boolean> {
+    // Counts real entries: deleting all entries leaves empty month files ("[]") behind.
     const files = await this.store.listFiles()
-    if ([...files.keys()].some((p) => ENTRY_PATH.test(p))) return false
     const ws = await this.store.read<Workspace>(PATHS.workspace, files)
-    return !ws || (ws.projects.length === 0 && ws.tags.length === 0)
+    if (ws && (ws.projects.length > 0 || ws.tags.length > 0)) return false
+    const paths = [...files.keys()].filter((p) => ENTRY_PATH.test(p))
+    return (await this.readEntryFiles(paths, files)).length === 0
   }
 
   async importData(
