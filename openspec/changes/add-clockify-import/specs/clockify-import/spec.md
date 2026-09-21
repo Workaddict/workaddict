@@ -1,7 +1,7 @@
 ## ADDED Requirements
 
-### Requirement: Import availability
-The system SHALL offer the Clockify import only while the data repository contains no time entries, no projects, and no tags, and SHALL explain why the import is unavailable otherwise.
+### Requirement: Import availability and replacing existing data
+The system SHALL offer the Clockify import in Settings unless the data is read-only. When the data repository already contains time entries, projects, or tags, the system SHALL warn that the import replaces them, SHALL show how many will be replaced, and SHALL require an explicit confirmation before writing.
 
 #### Scenario: Empty repository
 - **WHEN** a member opens Settings in a repository without entries, projects, or tags
@@ -9,11 +9,19 @@ The system SHALL offer the Clockify import only while the data repository contai
 
 #### Scenario: Repository already in use
 - **WHEN** a member opens Settings in a repository that contains at least one entry, project, or tag
-- **THEN** the import action is unavailable and a hint states that importing is only possible into an empty workspace
+- **THEN** the import action is available and a hint states that importing replaces the existing data
+
+#### Scenario: Confirm replacement
+- **WHEN** the preview is shown for a repository with 120 entries, 3 projects, and 2 tags
+- **THEN** a warning states these counts and that they will be replaced, and the import button stays disabled until the user confirms
+
+#### Scenario: Replacing import
+- **WHEN** the user confirms the replacement and imports
+- **THEN** all previous entries, projects, and tags are removed and the imported data is written in the same single commit; running timers are kept
 
 #### Scenario: Data added during the wizard
-- **WHEN** another member creates an entry while the import wizard is open and the user then confirms the import
-- **THEN** the system writes nothing and shows that the workspace is no longer empty
+- **WHEN** the repository was empty at preview time, another member creates an entry, and the user then confirms the import
+- **THEN** the system writes nothing and shows the replacement warning
 
 ### Requirement: Clockify API key handling
 The system SHALL ask for a Clockify API key, SHALL send it only to Clockify's API, and SHALL NOT persist it in any browser storage, URL, log, or error message.

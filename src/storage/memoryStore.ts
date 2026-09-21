@@ -33,9 +33,10 @@ export class MemoryFileStore implements FileStore {
   async writeMany(
     files: Map<string, unknown>,
     _message: string,
-    validate?: () => Promise<void>,
+    prepare?: () => Promise<string[] | void>,
   ): Promise<void> {
-    await validate?.()
+    const deletes = (await prepare?.()) ?? []
+    for (const path of deletes) this.files.delete(path)
     for (const [path, data] of files) this.put(path, data)
   }
 

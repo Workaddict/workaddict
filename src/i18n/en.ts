@@ -222,8 +222,12 @@ const en = {
     settingsHint:
       'Bring your team’s Clockify history (projects, tags and time entries) into this workspace. One-time, before you start tracking.',
     start: 'Import from Clockify',
-    unavailable:
-      'Importing is only possible into an empty workspace (no entries, projects or tags).',
+    replaceHint:
+      'This workspace already has data. Importing replaces all existing entries, projects and tags.',
+    replaceWarning:
+      'This workspace already contains {{entries}} entries, {{projects}} projects and {{tags}} tags of all members. The import deletes and replaces them; running timers are kept. The old data stays in the data repository’s git history and can be restored by reverting the import commit.',
+    replaceConfirm: 'I understand that all existing data will be replaced',
+    confirmReplace: 'Replace data and import {{count}} entries',
     next: 'Continue',
     back: 'Back',
     keyIntro:
@@ -310,7 +314,7 @@ const en = {
     readOnly: 'Changes are disabled because the data was saved by a newer app version.',
     notOwner: 'You can only change your own entries.',
     invalid: 'Please check your input.',
-    notEmpty: 'The workspace is no longer empty, so nothing was imported.',
+    notEmpty: 'Someone added data meanwhile, so nothing was imported. Review the warning and try again.',
     unknown: 'Something went wrong. Please try again.',
   },
 }

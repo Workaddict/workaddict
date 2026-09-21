@@ -48,13 +48,14 @@ export interface StorageAdapter {
 
   exportBackup(): Promise<BackupFile>
 
-  /** True while the repository has no entries, projects, or tags (import is allowed). */
+  /** True while the repository has no entries, projects, or tags. */
   isEmpty(): Promise<boolean>
   /**
-   * One-time bulk import into an empty repository, in one commit. The only operation that
-   * may write entries of other logins; refuses with `notEmpty` if data exists.
+   * Bulk import in one commit. The only operation that may write entries of other logins.
+   * Refuses with `notEmpty` if data exists, unless `overwrite` is set: then all existing
+   * entries, projects, and tags are replaced (running timers are kept).
    */
-  importData(data: ImportData, summary: string): Promise<void>
+  importData(data: ImportData, summary: string, opts?: { overwrite?: boolean }): Promise<void>
 }
 
 export interface ImportData {
@@ -74,13 +75,14 @@ export interface FileStore {
    */
   write<T>(path: string, fn: (current: T | null) => T, message: string): Promise<T>
   /**
-   * Writes all files in one commit: either every file is written or none. `validate` runs
-   * before each attempt (again after a concurrent commit) and may throw to abort.
+   * Writes all files in one commit: either every change is applied or none. `prepare` runs
+   * before each attempt (again after a concurrent commit); it may throw to abort and returns
+   * the paths to delete in the same commit.
    */
   writeMany(
     files: Map<string, unknown>,
     message: string,
-    validate?: () => Promise<void>,
+    prepare?: () => Promise<string[] | void>,
   ): Promise<void>
   /** Drops any cached snapshot so the next read sees the latest remote state. */
   invalidate(): void

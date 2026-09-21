@@ -287,6 +287,18 @@ describe('GitHub multi-file write (import)', () => {
     expect([...gh.files.keys()].some((p) => p.startsWith('entries/'))).toBe(false)
   })
 
+  it('deletes old entry files in the same single commit when overwriting', async () => {
+    const { gh, a } = await setup()
+    gh.putRaw('entries/carol/2024-01.json', '[]')
+    gh.putRaw('entries/alice/2025-10.json', '[]')
+    const before = gh.commits
+    await a.importData(data(), 'x', { overwrite: true })
+    expect(gh.commits - before).toBe(1)
+    expect(gh.files.has('entries/carol/2024-01.json')).toBe(false)
+    expect(gh.json('entries/alice/2025-10.json')).toHaveLength(1)
+    expect(gh.messages.at(-1)).toBe('import (replace existing data): x (alice)')
+  })
+
   it('computes git blob SHAs like git hash-object', async () => {
     expect(await gitBlobSha('hello\n')).toBe('ce013625030ba8dba906f756967f9e9ca394464a')
   })

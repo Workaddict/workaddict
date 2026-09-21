@@ -307,7 +307,11 @@ export class RepoAdapter implements StorageAdapter {
     return !ws || (ws.projects.length === 0 && ws.tags.length === 0)
   }
 
-  async importData(data: ImportData, summary: string): Promise<void> {
+  async importData(
+    data: ImportData,
+    summary: string,
+    opts?: { overwrite?: boolean },
+  ): Promise<void> {
     const me = await this.assertWritable()
     if (data.entries.some((e) => durationMs(e.start, e.end) <= 0)) {
       throw new StorageError('invalid', 'Entries must end after they start')
@@ -320,10 +324,15 @@ export class RepoAdapter implements StorageAdapter {
       list.push(e)
       files.set(path, list)
     }
-    await this.store.writeMany(files, `import: ${summary} (${me.login})`, async () => {
-      // Re-checked on every attempt: someone may have started using the workspace meanwhile.
+    const verb = opts?.overwrite ? 'import (replace existing data)' : 'import'
+    await this.store.writeMany(files, `${verb}: ${summary} (${me.login})`, async () => {
+      // Re-checked on every attempt: someone may have written data meanwhile.
       this.store.invalidate()
-      if (!(await this.isEmpty())) throw new StorageError('notEmpty')
+      if (!opts?.overwrite) {
+        if (!(await this.isEmpty())) throw new StorageError('notEmpty')
+        return []
+      }
+      return [...(await this.store.listFiles()).keys()].filter((p) => ENTRY_PATH.test(p))
     })
   }
 

@@ -8,6 +8,7 @@ import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
 import { keys, useMembers } from '../data/hooks'
 import { useErrorText } from '../data/useErrorText'
+import { isStorageError } from '../../storage'
 import {
   CLOCKIFY_REGIONS,
   ClockifyClient,
@@ -72,6 +73,11 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
   const [workspaceId, setWorkspaceId] = useState('')
   const [mapping, setMapping] = useState<Record<string, UserMapping>>({})
   const [result, setResult] = useState<ConvertResult | null>(null)
+  /** Data already in the repository (replaced by the import); null while unknown. */
+  const [existing, setExisting] = useState<{ entries: number; projects: number; tags: number } | null>(
+    null,
+  )
+  const [replaceConfirmed, setReplaceConfirmed] = useState(false)
   const [, setTick] = useState(0)
   // Held in state (mutated in place, re-rendered via `tick`) so render can read their progress.
   const [client, setClient] = useState<ClockifyClient | null>(null)
@@ -151,11 +157,24 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
     }
   }
 
+  const loadExisting = async () => {
+    try {
+      const [entries, ws] = await Promise.all([adapter.listAllEntries(), adapter.getWorkspace()])
+      setExisting({ entries: entries.length, projects: ws.projects.length, tags: ws.tags.length })
+    } catch (err) {
+      setError(storageErrorText(err))
+    }
+  }
+
   const toPreview = (f = fetcher!) => {
     setError(null)
     setResult(convertClockify(f.result(), mapping, new Date()))
     setStep('preview')
+    void loadExisting()
   }
+
+  const hasExisting =
+    existing !== null && existing.entries + existing.projects + existing.tags > 0
 
   const loadEntries = async () => {
     const f = fetcher!
@@ -181,12 +200,15 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
       await adapter.importData(
         { workspace: result.workspace, entries: result.entries },
         `Clockify workspace "${ws}" – ${result.entries.length} entries, ${memberCount} members`,
+        { overwrite: hasExisting && replaceConfirmed },
       )
       await qc.invalidateQueries()
       setStep('done')
     } catch (err) {
       setError(storageErrorText(err))
       setStep('preview')
+      // Data may have appeared meanwhile: refresh so the replace warning shows up.
+      if (isStorageError(err, 'notEmpty')) void loadExisting()
     }
   }
 
@@ -526,16 +548,32 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
             )}
             <li>{t('import.timeZone')}</li>
           </ul>
+          {hasExisting && (
+            <div className="banner banner-error stack" role="alert">
+              <span>{t('import.replaceWarning', existing!)}</span>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={replaceConfirmed}
+                  onChange={(e) => setReplaceConfirmed(e.target.checked)}
+                  disabled={step === 'write'}
+                />
+                <strong>{t('import.replaceConfirm')}</strong>
+              </label>
+            </div>
+          )}
           {errorBanner}
           {step === 'write' && <Spinner label={t('import.writing')} />}
           <div className="modal-actions">
             {cancelButton}
             <button
-              className="btn btn-primary"
+              className={`btn ${hasExisting ? 'btn-danger' : 'btn-primary'}`}
               onClick={() => void write()}
-              disabled={step === 'write'}
+              disabled={step === 'write' || existing === null || (hasExisting && !replaceConfirmed)}
             >
-              {error ? t('common.retry') : t('import.confirm', { count: result!.entries.length })}
+              {hasExisting
+                ? t('import.confirmReplace', { count: result!.entries.length })
+                : t('import.confirm', { count: result!.entries.length })}
             </button>
           </div>
         </div>

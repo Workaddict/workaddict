@@ -18,11 +18,10 @@ export default function SettingsPage() {
   const onError = useErrorToast()
   const [backingUp, setBackingUp] = useState(false)
   const [importing, setImporting] = useState(false)
-  const importAvailable = useQuery({
+  const repoEmpty = useQuery({
     queryKey: ['importAvailable'],
     queryFn: () => adapter.isEmpty(),
   }).data
-  const canImport = importAvailable === true && !adapter.readOnly
 
   const backup = async () => {
     setBackingUp(true)
@@ -112,9 +111,15 @@ export default function SettingsPage() {
           </div>
           <div className="settings-row">
             <span className="muted small" style={{ flex: '1 1 260px' }}>
-              {importAvailable === false ? t('import.unavailable') : t('import.settingsHint')}
+              {t('import.settingsHint')}
+              {repoEmpty === false && (
+                <>
+                  <br />
+                  <strong>{t('import.replaceHint')}</strong>
+                </>
+              )}
             </span>
-            <button className="btn" onClick={() => setImporting(true)} disabled={!canImport}>
+            <button className="btn" onClick={() => setImporting(true)} disabled={adapter.readOnly}>
               {t('import.start')}
             </button>
           </div>

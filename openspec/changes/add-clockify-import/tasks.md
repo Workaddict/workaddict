@@ -58,3 +58,10 @@
 - [x] 8.1 `npm test`, lint, and build pass
 - [ ] 8.2 Manual end-to-end run in demo mode against a real Clockify workspace: preview totals match Clockify's summary report, tracker and stats show imported data
 - [ ] 8.3 Manual check on the production build that CSP allows Clockify requests and the key is not present in local/session storage after closing the wizard
+
+## 9. Replace existing data (revised after first test)
+
+- [x] 9.1 `writeMany` accepts paths to delete (from the per-attempt `prepare` callback); GitHub deletes via tree entries with `sha: null`
+- [x] 9.2 `importData(..., { overwrite })` deletes all `entries/**` files and replaces `workspace.json` in one commit, keeping timers; tests for memory and GitHub
+- [x] 9.3 Settings row always enabled (except read-only) with "replaces existing data" hint
+- [x] 9.4 Preview shows counts of existing entries/projects/tags, danger warning, confirmation checkbox; `notEmpty` during write refreshes the warning

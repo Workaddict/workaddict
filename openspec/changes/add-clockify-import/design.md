@@ -14,7 +14,7 @@ The production CSP currently allows `connect-src https://api.github.com` only.
 ## Goals / Non-Goals
 
 **Goals:**
-- One-time, in-app import of a Clockify workspace (projects, tags, completed entries of all selected users) into an empty data repository.
+- One-time, in-app import of a Clockify workspace (projects, tags, completed entries of all selected users) into the data repository, replacing any existing data after confirmation.
 - Stay within the Clockify Free rate limit for a typical team (target: ≤ 25 requests for 8 users × 1 year).
 - Write the whole import as one commit.
 - Handle a Clockify rate-limit hit without losing already fetched data.
@@ -61,9 +61,12 @@ The fetch phase is a sequential queue of pending requests. On HTTP 429 (or an eq
 For each Clockify user the wizard offers: *a GitHub login* (dropdown from `listMembers()`, pre-selected when the Clockify name or email local part matches a login case-insensitively), *keep as former member*, or *skip*. Former members get the pseudo-login `clockify.<slug-of-name>`; the dot makes it impossible to collide with a GitHub login (GitHub logins contain only alphanumerics and hyphens). Two Clockify users cannot be mapped to the same login.
 - Former members appear in stats and exports like any login without avatar. They can never log in, so their entries are effectively read-only — the existing `notOwner` rule already guarantees that.
 
-### 6. Import only into an empty repository
-`importData` refuses (`StorageError('notEmpty')`) if any `entries/**` file exists or `workspace.json` has projects or tags. Running timers are ignored for this check. This removes merging, name conflicts with existing data, and the question of overwriting.
-- *Alternative:* merge by project/tag name. Deferred; the wizard is an onboarding step.
+### 6. Replace instead of merge
+*Revised 2026-09-21 after first test:* teams that already tried Workaddict must be able to import too. `importData(data, summary, { overwrite })`:
+- without `overwrite` it refuses (`StorageError('notEmpty')`) if any `entries/**` file exists or `workspace.json` has projects or tags;
+- with `overwrite` it deletes every `entries/**` file and replaces `workspace.json` in the same single commit (tree entries with `sha: null`). Running timers are kept (their project/tag may then show as "No project").
+The wizard shows how many entries, projects, and tags exist, a danger warning, and requires a confirmation checkbox; only then is `overwrite` passed. If data appears while the wizard is open without confirmed overwrite, the write fails with `notEmpty` and the warning appears. Old data stays recoverable by reverting the import commit.
+- *Alternative:* merge by project/tag name. Deferred; brings name conflicts and duplicates.
 
 ### 7. Atomic multi-file write: `FileStore.writeMany`
 New method `writeMany(files: Map<path, unknown>, message: string): Promise<void>`.
@@ -73,13 +76,13 @@ New method `writeMany(files: Map<path, unknown>, message: string): Promise<void>
 - *Alternative:* existing per-file `write()` for ~100 month files (≈ 200+ requests, ~100 commits, non-atomic partial imports on failure). Rejected.
 
 ### 8. `StorageAdapter.importData(data, summary)`
-`importData({ workspace, entries }, summary)` validates emptiness, groups entries into `entries/<login>/<YYYY-MM>.json` by UTC start month (same rule as `saveEntry`), writes `workspace.json` plus all entry files via `writeMany`, commit message e.g. `import: Clockify workspace "Acme" – 7,850 entries, 6 members (alice)`. This is the only path allowed to write entries of other logins; the exemption is justified because it runs once, into an empty repository, initiated by a member with push access.
+`importData({ workspace, entries }, summary)` validates emptiness (or collects files to delete when overwriting), groups entries into `entries/<login>/<YYYY-MM>.json` by UTC start month (same rule as `saveEntry`), writes `workspace.json` plus all entry files via `writeMany`, commit message e.g. `import: Clockify workspace "Acme" – 7,850 entries, 6 members (alice)`. This is the only path allowed to write entries of other logins; the exemption is justified because it is an explicit, confirmed one-time action by a member with push access.
 
 ### 9. Key handling and CSP
 The API key lives in React state of the wizard only: not in `localStorage`, session storage, URL, logs, or error messages (errors are mapped to kinds before display). Closing the wizard clears it. The final step recommends deleting the key in Clockify's profile settings. CSP `connect-src` becomes `https://api.github.com https://*.clockify.me` (covers `api.clockify.me` and regional hosts).
 
 ### 10. UI placement
-A new "Import from Clockify" row in Settings ▸ Data opens a full-screen modal wizard (`src/features/import/`), lazy-loaded like the export libraries. The row is shown only while the repository is empty; otherwise it shows a short hint why import is unavailable.
+A new "Import from Clockify" row in Settings ▸ Data opens a full-screen modal wizard (`src/features/import/`), lazy-loaded like the export libraries. The row is always available (except read-only); when data exists it states that importing replaces it.
 
 ```
 Key ─▶ Workspace ─▶ Fetch meta ─▶ Map users ─▶ Fetch entries ─▶ Preview ─▶ Write ─▶ Done
@@ -101,7 +104,7 @@ Key ─▶ Workspace ─▶ Fetch meta ─▶ Map users ─▶ Fetch entries ─
 
 ## Migration Plan
 
-Purely additive. Existing repositories are unaffected; the import is available only for empty repositories. Rollback: revert the release; any imported data remains ordinary Workaddict data (or can be removed by reverting the single import commit in the data repository).
+Additive. Existing repositories are unaffected unless a member confirms a replacing import. Rollback: revert the release; any imported data remains ordinary Workaddict data (or can be removed by reverting the single import commit in the data repository).
 
 ## Open Questions
 

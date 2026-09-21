@@ -18,7 +18,7 @@ export class FakeGitHub {
   /** Number of commits on the branch (every contents PUT, putRaw, and ref update). */
   commits = 0
   head = 'c0'
-  private trees = new Map<string, { path: string; content: string }[]>()
+  private trees = new Map<string, { path: string; content?: string; sha?: null }[]>()
   private pendingCommits = new Map<string, { tree: string; parent: string; message: string }>()
   messages: string[] = []
   private n = 0
@@ -99,7 +99,9 @@ export class FakeGitHub {
       return res(200, { sha, tree: { sha: `tree-of-${sha}` } })
     }
     if (sub === '/git/trees' && method === 'POST') {
-      const body = JSON.parse(String(init?.body)) as { tree: { path: string; content: string }[] }
+      const body = JSON.parse(String(init?.body)) as {
+        tree: { path: string; content?: string; sha?: null }[]
+      }
       const sha = `tree${++this.n}`
       this.trees.set(sha, body.tree)
       return res(201, { sha })
@@ -119,6 +121,11 @@ export class FakeGitHub {
         return res(422, { message: 'Update is not a fast forward' })
       }
       for (const f of this.trees.get(commit.tree) ?? []) {
+        if (f.sha === null) {
+          this.files.delete(f.path)
+          continue
+        }
+        if (f.content === undefined) continue
         const blobSha = `sha${++this.n}`
         this.files.set(f.path, { sha: blobSha, text: f.content })
         this.blobs.set(blobSha, f.content)

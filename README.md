@@ -89,9 +89,9 @@ Open the Pages URL, paste your token, enter the data repo as `owner/name`, and o
 
 ### 5. Optional: import your Clockify history
 
-Switching from Clockify? Right after setup, while the data repo is still empty, open **Settings → Data → Import from Clockify**. The wizard imports projects (name, color, archived), tags, and all completed time entries of the users you select, in a **single commit**.
+Switching from Clockify? Open **Settings → Data → Import from Clockify**. The wizard imports projects (name, color, archived), tags, and all completed time entries of the users you select, in a **single commit**.
 
-- **Only into an empty workspace.** The import is unavailable once the data repo has any entries, projects, or tags. There is no merging or re-import.
+- **Replaces existing data.** If the data repo already has entries, projects, or tags, the wizard shows how many and asks for confirmation; the import then **replaces all of them** (running timers are kept). There is no merging. The old data stays in the data repo's git history and can be restored by reverting the import commit.
 - **API key.** Create one in Clockify under _Profile settings → API_. To import the whole team, it must be the key of a **Clockify workspace admin**; other keys can only read their own entries. The key is kept in memory only, sent only to Clockify, and never saved. **Delete it in Clockify after the import.**
 - **User mapping.** Map each Clockify user to a GitHub login of the team, keep them as a **former member** (read-only pseudo-login `clockify.<name>`, so yearly totals stay correct), or skip them.
 - **Free plan limits.** Clockify Free allows only 30 API requests per hour. The import uses large pages (about 5 requests plus 1–2 per user), shows a request counter, and if the limit is hit it pauses and lets you **continue later** without re-fetching what was already loaded. Keep the tab open until the import is done.

@@ -226,8 +226,12 @@ const de: Resources = {
     settingsHint:
       'Übernimm den Clockify-Verlauf deines Teams (Projekte, Tags und Zeiteinträge) in diesen Arbeitsbereich. Einmalig, bevor ihr mit der Erfassung beginnt.',
     start: 'Aus Clockify importieren',
-    unavailable:
-      'Ein Import ist nur in einen leeren Arbeitsbereich möglich (keine Einträge, Projekte oder Tags).',
+    replaceHint:
+      'Dieser Arbeitsbereich enthält bereits Daten. Der Import ersetzt alle vorhandenen Einträge, Projekte und Tags.',
+    replaceWarning:
+      'Dieser Arbeitsbereich enthält bereits {{entries}} Einträge, {{projects}} Projekte und {{tags}} Tags aller Mitglieder. Der Import löscht und ersetzt sie; laufende Timer bleiben erhalten. Die alten Daten bleiben in der Git-Historie des Daten-Repositorys und lassen sich durch Zurücksetzen des Import-Commits wiederherstellen.',
+    replaceConfirm: 'Mir ist klar, dass alle vorhandenen Daten ersetzt werden',
+    confirmReplace: 'Daten ersetzen und {{count}} Einträge importieren',
     next: 'Weiter',
     back: 'Zurück',
     keyIntro:
@@ -315,7 +319,7 @@ const de: Resources = {
     readOnly: 'Änderungen sind deaktiviert, weil die Daten von einer neueren App-Version stammen.',
     notOwner: 'Du kannst nur deine eigenen Einträge ändern.',
     invalid: 'Bitte prüfe deine Eingaben.',
-    notEmpty: 'Der Arbeitsbereich ist nicht mehr leer, daher wurde nichts importiert.',
+    notEmpty: 'Inzwischen wurden Daten hinzugefügt, daher wurde nichts importiert. Prüfe den Hinweis und versuche es erneut.',
     unknown: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
   },
 }

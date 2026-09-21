@@ -146,12 +146,12 @@ export class GitHubFileStore implements FileStore {
   /**
    * One commit via the Git Data API (ref → commit → tree → commit → ref), i.e. a constant
    * number of requests. The ref update is never forced, so a concurrent commit makes it fail
-   * (422) and the whole write is re-validated and retried.
+   * (422) and the whole write is re-prepared and retried.
    */
   async writeMany(
     files: Map<string, unknown>,
     message: string,
-    validate?: () => Promise<void>,
+    prepare?: () => Promise<string[] | void>,
   ): Promise<void> {
     const texts = [...files].map(([path, data]) => ({
       path,
@@ -159,14 +159,18 @@ export class GitHubFileStore implements FileStore {
     }))
     const branch = encodeURIComponent(this.opts.branch)
     for (let attempt = 0; ; attempt++) {
-      await validate?.()
+      const deletes = ((await prepare?.()) ?? []).filter((p) => !files.has(p))
       const ref = await this.opts.client.get<RefResponse>(`${this.base}/git/ref/heads/${branch}`)
       const parent = await this.opts.client.get<CommitResponse>(
         `${this.base}/git/commits/${ref.object.sha}`,
       )
       const tree = await this.opts.client.request<{ sha: string }>('POST', `${this.base}/git/trees`, {
         base_tree: parent.tree.sha,
-        tree: texts.map((f) => ({ path: f.path, mode: '100644', type: 'blob', content: f.text })),
+        tree: [
+          ...texts.map((f) => ({ path: f.path, mode: '100644', type: 'blob', content: f.text })),
+          // sha: null removes the file from the base tree
+          ...deletes.map((path) => ({ path, mode: '100644', type: 'blob', sha: null })),
+        ],
       })
       const commit = await this.opts.client.request<{ sha: string }>(
         'POST',

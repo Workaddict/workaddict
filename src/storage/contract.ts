@@ -237,6 +237,23 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
         expect((await alice.getWorkspace()).projects.map((p) => p.name)).toEqual(['X'])
       })
 
+      it('replaces existing entries, projects, and tags when overwriting, keeping timers', async () => {
+        await bob.updateWorkspace(
+          (ws) => ({ ...ws, projects: [{ id: 'x', name: 'X', color: '#000', archived: false }] }),
+          'add X',
+        )
+        await bob.saveEntry(entry('bob', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z', { description: 'old' }))
+        const { timer } = await bob.startTimer({ description: 'running', projectId: null, tagIds: [] })
+
+        await alice.importData(data(), 'test import', { overwrite: true })
+
+        expect(await alice.getWorkspace()).toEqual(data().workspace)
+        const all = await alice.listAllEntries()
+        expect(all).toHaveLength(4)
+        expect(all.some((e) => e.description === 'old')).toBe(false)
+        expect(await alice.listTimers()).toEqual([timer])
+      })
+
       it('refuses to import when read-only', async () => {
         const a = await newerSchema()
         await a.init()
