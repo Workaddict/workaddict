@@ -16,6 +16,7 @@ import { StorageError } from './errors'
 import type {
   FileStore,
   Identity,
+  ImportData,
   StorageAdapter,
   TimerFields,
   TimerPatch,
@@ -295,6 +296,35 @@ export class RepoAdapter implements StorageAdapter {
       members,
       entries: entries.sort((a, b) => a.start.localeCompare(b.start)),
     }
+  }
+
+  // ---- import --------------------------------------------------------------
+
+  async isEmpty(): Promise<boolean> {
+    const files = await this.store.listFiles()
+    if ([...files.keys()].some((p) => ENTRY_PATH.test(p))) return false
+    const ws = await this.store.read<Workspace>(PATHS.workspace, files)
+    return !ws || (ws.projects.length === 0 && ws.tags.length === 0)
+  }
+
+  async importData(data: ImportData, summary: string): Promise<void> {
+    const me = await this.assertWritable()
+    if (data.entries.some((e) => durationMs(e.start, e.end) <= 0)) {
+      throw new StorageError('invalid', 'Entries must end after they start')
+    }
+    const files = new Map<string, unknown>([[PATHS.workspace, data.workspace]])
+    const sorted = [...data.entries].sort((a, b) => a.start.localeCompare(b.start))
+    for (const e of sorted) {
+      const path = PATHS.entries(e.login, monthKey(e.start))
+      const list = (files.get(path) as TimeEntry[] | undefined) ?? []
+      list.push(e)
+      files.set(path, list)
+    }
+    await this.store.writeMany(files, `import: ${summary} (${me.login})`, async () => {
+      // Re-checked on every attempt: someone may have started using the workspace meanwhile.
+      this.store.invalidate()
+      if (!(await this.isEmpty())) throw new StorageError('notEmpty')
+    })
   }
 
   private async assertWritable(ownerLogin?: string): Promise<Member> {

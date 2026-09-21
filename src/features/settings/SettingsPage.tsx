@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
+import { lazy, Suspense, useState } from 'react'
 import { Avatar } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { LANGUAGES, setLanguage, useI18n, type Language } from '../../i18n'
@@ -7,6 +8,8 @@ import { useAuth, useSessionData } from '../auth/AuthContext'
 import { useErrorToast } from '../data/useErrorText'
 import { downloadBackup } from '../export/backup'
 
+const ImportWizard = lazy(() => import('../import/ImportWizard'))
+
 export default function SettingsPage() {
   const { t, lang } = useI18n()
   const { logout } = useAuth()
@@ -14,6 +17,12 @@ export default function SettingsPage() {
   const theme = useThemePref()
   const onError = useErrorToast()
   const [backingUp, setBackingUp] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const importAvailable = useQuery({
+    queryKey: ['importAvailable'],
+    queryFn: () => adapter.isEmpty(),
+  }).data
+  const canImport = importAvailable === true && !adapter.readOnly
 
   const backup = async () => {
     setBackingUp(true)
@@ -103,6 +112,14 @@ export default function SettingsPage() {
           </div>
           <div className="settings-row">
             <span className="muted small" style={{ flex: '1 1 260px' }}>
+              {importAvailable === false ? t('import.unavailable') : t('import.settingsHint')}
+            </span>
+            <button className="btn" onClick={() => setImporting(true)} disabled={!canImport}>
+              {t('import.start')}
+            </button>
+          </div>
+          <div className="settings-row">
+            <span className="muted small" style={{ flex: '1 1 260px' }}>
               {t('settings.logoutHint')}
             </span>
             <button className="btn" onClick={() => void logout()}>
@@ -112,6 +129,12 @@ export default function SettingsPage() {
           </div>
         </div>
       </section>
+
+      {importing && (
+        <Suspense fallback={null}>
+          <ImportWizard onClose={() => setImporting(false)} />
+        </Suspense>
+      )}
     </>
   )
 }

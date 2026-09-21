@@ -925,6 +925,9 @@ textarea {
   flex-direction: column;
   gap: 16px;
 }
+.modal-wide {
+  max-width: 760px;
+}
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -1066,6 +1069,30 @@ textarea {
 .settings-row .select {
   width: auto;
   min-width: 160px;
+}
+
+/* ---------- Import wizard ---------- */
+.import-map-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+  border-top: 1px solid var(--border);
+}
+.import-map-row:first-child {
+  border-top: 0;
+}
+.import-list {
+  margin: 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 560px) {
+  .import-map-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
 }
 
 /* ---------- Responsive ---------- */

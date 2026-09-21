@@ -30,6 +30,15 @@ export class MemoryFileStore implements FileStore {
     return JSON.parse(JSON.stringify(next)) as T
   }
 
+  async writeMany(
+    files: Map<string, unknown>,
+    _message: string,
+    validate?: () => Promise<void>,
+  ): Promise<void> {
+    await validate?.()
+    for (const [path, data] of files) this.put(path, data)
+  }
+
   invalidate(): void {}
 
   /** Raw file contents, for tests and debugging. */

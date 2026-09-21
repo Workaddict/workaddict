@@ -14,10 +14,15 @@ export function Modal({
   title,
   onClose,
   children,
+  wide,
+  dismissible = true,
 }: {
   title: string
   onClose: () => void
   children: ReactNode
+  wide?: boolean
+  /** When false, Escape and backdrop clicks do not close (use for dialogs holding unsaved work). */
+  dismissible?: boolean
 }) {
   const titleId = useId()
   const ref = useRef<HTMLDivElement>(null)
@@ -28,17 +33,20 @@ export function Modal({
       'input, select, textarea, button:not([data-autofocus-skip])',
     )
     first?.focus()
-    const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose()
+    const onKey = (e: KeyboardEvent) => dismissible && e.key === 'Escape' && onClose()
     document.addEventListener('keydown', onKey)
     return () => {
       document.removeEventListener('keydown', onKey)
       prev?.focus?.()
     }
-  }, [onClose])
+  }, [onClose, dismissible])
 
   return (
-    <div className="modal-backdrop" onMouseDown={(e) => e.target === e.currentTarget && onClose()}>
-      <div ref={ref} className="modal" role="dialog" aria-modal="true" aria-labelledby={titleId}>
+    <div
+      className="modal-backdrop"
+      onMouseDown={(e) => dismissible && e.target === e.currentTarget && onClose()}
+    >
+      <div ref={ref} className={`modal${wide ? ' modal-wide' : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId}>
         <h2 id={titleId}>{title}</h2>
         {children}
       </div>

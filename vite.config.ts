@@ -3,14 +3,14 @@ import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // Strict CSP for the production build only (the dev server relies on inline scripts).
-// Scripts only from our own origin, network only to the GitHub API.
+// Scripts only from our own origin, network only to the GitHub API and Clockify (one-time import).
 const CSP = [
   "default-src 'self'",
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://avatars.githubusercontent.com",
   "font-src 'self' data:",
-  'connect-src https://api.github.com',
+  'connect-src https://api.github.com https://*.clockify.me',
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'none'",

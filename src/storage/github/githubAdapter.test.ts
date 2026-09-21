@@ -3,6 +3,7 @@ import { isStorageError } from '../errors'
 import type { BlobCache } from './blobCache'
 import { GitHubClient } from './client'
 import { FakeGitHub } from './fakeGitHub'
+import { gitBlobSha } from './githubStore'
 import { checkLogin, createGitHubAdapter } from './githubAdapter'
 
 function memoryCache(): BlobCache {
@@ -167,6 +168,127 @@ describe('GitHub adapter specifics', () => {
       'add tag',
     )
     expect((await adapterFor(gh, 'tok-b').getWorkspace()).tags[0]?.name).toBe('Überstunden 🚀')
+  })
+})
+
+describe('GitHub multi-file write (import)', () => {
+  const mk = (login: string, month: string) => ({
+    id: crypto.randomUUID(),
+    login,
+    start: `${month}-10T08:00:00.000Z`,
+    end: `${month}-10T09:00:00.000Z`,
+    description: '',
+    projectId: null,
+    tagIds: [],
+    createdAt: '',
+    updatedAt: '',
+  })
+  const data = () => ({
+    workspace: { projects: [{ id: 'p', name: 'P', color: '#000', archived: false }], tags: [] },
+    entries: ['alice', 'bob'].flatMap((l) => [mk(l, '2025-10'), mk(l, '2025-11')]),
+  })
+
+  async function setup(wrap?: (orig: typeof fetch) => typeof fetch) {
+    const gh = fake()
+    if (wrap) gh.fetch = wrap(gh.fetch)
+    const a = adapterFor(gh, 'tok-a')
+    await a.init()
+    gh.log = []
+    return { gh, a }
+  }
+
+  it('writes all files in exactly one commit with a constant number of requests', async () => {
+    const { gh, a } = await setup()
+    const before = gh.commits
+    const entries = Array.from({ length: 100 }, (_, i) => mk(`user${i}`, '2025-10'))
+    await a.importData({ workspace: data().workspace, entries }, 'Clockify workspace "Acme"')
+    expect(gh.commits - before).toBe(1)
+    expect(gh.count('PUT')).toBe(0)
+    expect(gh.count('POST /repos/team/data/git/trees')).toBe(1)
+    expect(gh.count('PATCH /repos/team/data/git/refs/heads/main')).toBe(1)
+    expect(gh.messages.at(-1)).toBe('import: Clockify workspace "Acme" (alice)')
+    expect([...gh.files.keys()].filter((p) => p.startsWith('entries/'))).toHaveLength(100)
+  })
+
+  it('stores entries by login and month, pretty-printed', async () => {
+    const { gh, a } = await setup()
+    await a.importData(data(), 'x')
+    for (const p of [
+      'entries/alice/2025-10.json',
+      'entries/alice/2025-11.json',
+      'entries/bob/2025-10.json',
+      'entries/bob/2025-11.json',
+    ]) {
+      expect(gh.json(p)).toHaveLength(1)
+    }
+    expect(gh.files.get('workspace.json')!.text).toMatch(/^\{\n {2}"projects"/)
+  })
+
+  it('serves imported files from the cache afterwards', async () => {
+    const { gh, a } = await setup()
+    await a.importData(data(), 'x')
+    gh.log = []
+    // The fake uses synthetic blob SHAs, so only the tree is compared here.
+    expect(await a.listAllEntries()).toHaveLength(4)
+    expect(gh.count('GET /repos/team/data/git/trees')).toBe(1)
+  })
+
+  it('retries after a concurrent commit and re-validates', async () => {
+    const { gh, a } = await setup()
+    let injected = false
+    gh.beforeRefUpdate = () => {
+      if (!injected) {
+        injected = true
+        gh.putRaw('timers/bob.json', 'null')
+      }
+    }
+    await a.importData(data(), 'x')
+    expect(gh.count('PATCH')).toBe(2)
+    expect(gh.json('timers/bob.json')).toBeNull()
+    expect(gh.json('entries/bob/2025-10.json')).toHaveLength(1)
+  })
+
+  it('writes nothing when data appears during the import', async () => {
+    const { gh, a } = await setup()
+    gh.beforeRefUpdate = () => {
+      gh.beforeRefUpdate = null
+      gh.putRaw('entries/carol/2026-09.json', '[]')
+    }
+    await expect(a.importData(data(), 'x')).rejects.toSatisfy((e: unknown) =>
+      isStorageError(e, 'notEmpty'),
+    )
+    expect(gh.files.has('entries/alice/2025-10.json')).toBe(false)
+  })
+
+  it('reports a conflict after repeated concurrent commits, never forcing', async () => {
+    const forced: unknown[] = []
+    const { gh, a } = await setup((orig) => async (input, init) => {
+      if (init?.method === 'PATCH') forced.push(JSON.parse(String(init.body)).force)
+      return orig(input, init)
+    })
+    gh.beforeRefUpdate = () => gh.putRaw('timers/bob.json', 'null')
+    await expect(a.importData(data(), 'x')).rejects.toSatisfy((e: unknown) =>
+      isStorageError(e, 'conflict'),
+    )
+    expect(forced).toEqual([false, false, false, false])
+    expect(gh.json('workspace.json')).toEqual({ projects: [], tags: [] })
+  })
+
+  it('writes nothing when a request fails', async () => {
+    const { gh, a } = await setup((orig) => async (input, init) => {
+      if (init?.method === 'POST' && String(input).endsWith('/git/commits')) {
+        throw new TypeError('Failed to fetch')
+      }
+      return orig(input, init)
+    })
+    await expect(a.importData(data(), 'x')).rejects.toSatisfy(
+      (e: unknown) => isStorageError(e, 'network') || isStorageError(e, 'offline'),
+    )
+    expect([...gh.files.keys()].some((p) => p.startsWith('entries/'))).toBe(false)
+  })
+
+  it('computes git blob SHAs like git hash-object', async () => {
+    expect(await gitBlobSha('hello\n')).toBe('ce013625030ba8dba906f756967f9e9ca394464a')
   })
 })
 

@@ -87,6 +87,16 @@ The build uses a relative base path and hash routing (`#/stats`), so it works un
 
 Open the Pages URL, paste your token, enter the data repo as `owner/name`, and optionally tick **"Remember me on this device"**.
 
+### 5. Optional: import your Clockify history
+
+Switching from Clockify? Right after setup, while the data repo is still empty, open **Settings → Data → Import from Clockify**. The wizard imports projects (name, color, archived), tags, and all completed time entries of the users you select, in a **single commit**.
+
+- **Only into an empty workspace.** The import is unavailable once the data repo has any entries, projects, or tags. There is no merging or re-import.
+- **API key.** Create one in Clockify under _Profile settings → API_. To import the whole team, it must be the key of a **Clockify workspace admin**; other keys can only read their own entries. The key is kept in memory only, sent only to Clockify, and never saved. **Delete it in Clockify after the import.**
+- **User mapping.** Map each Clockify user to a GitHub login of the team, keep them as a **former member** (read-only pseudo-login `clockify.<name>`, so yearly totals stay correct), or skip them.
+- **Free plan limits.** Clockify Free allows only 30 API requests per hour. The import uses large pages (about 5 requests plus 1–2 per user), shows a request counter, and if the limit is hit it pauses and lets you **continue later** without re-fetching what was already loaded. Keep the tab open until the import is done.
+- **Not imported:** clients, tasks, billable flags, rates, custom fields, and running timers. The preview shows how many entries are affected and lists hours per member and project so you can compare them with Clockify's summary report.
+
 ---
 
 ## Security notes
@@ -99,7 +109,7 @@ Read this before you use the app with real data.
   - don't use "Remember me" on shared computers;
   - **log out** (Settings → Log out) to remove the token and cached data;
   - if a token leaks, revoke it on GitHub right away.
-- **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com`. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
+- **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com` and, for the one-time Clockify import, `https://*.clockify.me`. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
 - **The app repo contains no data or secrets.** It is safe for it to be public.
 
 ---

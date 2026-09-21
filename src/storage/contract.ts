@@ -182,5 +182,68 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       expect(backup.entries.map((e) => e.login)).toEqual(['bob', 'alice'])
       expect(backup.workspace).toEqual({ projects: [], tags: [] })
     })
+
+    describe('import', () => {
+      const data = () => ({
+        workspace: {
+          projects: [{ id: 'p1', name: 'Website', color: '#000', archived: false }],
+          tags: [{ id: 't1', name: 'meeting', archived: true }],
+        },
+        entries: [
+          entry('alice', '2025-10-01T08:00:00Z', '2025-10-01T09:00:00Z', { projectId: 'p1' }),
+          entry('alice', '2025-11-30T23:30:00Z', '2025-12-01T00:30:00Z', { tagIds: ['t1'] }),
+          entry('bob', '2025-10-15T08:00:00Z', '2025-10-15T10:00:00Z'),
+          entry('clockify.jane-doe', '2025-11-02T08:00:00Z', '2025-11-02T09:00:00Z'),
+        ],
+      })
+
+      it('reports an initialized store as empty, and not after an entry was saved', async () => {
+        expect(await alice.isEmpty()).toBe(true)
+        await bob.saveEntry(entry('bob', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z'))
+        expect(await alice.isEmpty()).toBe(false)
+      })
+
+      it('imports a workspace and entries of several members into an empty store', async () => {
+        await alice.importData(data(), 'test import')
+        expect(await bob.getWorkspace()).toEqual(data().workspace)
+        const all = await bob.listAllEntries()
+        expect(all.map((e) => e.login).sort()).toEqual(['alice', 'alice', 'bob', 'clockify.jane-doe'])
+        expect(await alice.isEmpty()).toBe(false)
+        const oct = { from: new Date('2025-10-01T00:00:00Z'), to: new Date('2025-10-31T23:59:59Z') }
+        expect(await alice.listEntries(oct)).toHaveLength(2)
+      })
+
+      it('leaves imported entries of other members read-only', async () => {
+        await alice.importData(data(), 'test import')
+        const bobs = (await alice.listAllEntries()).find((e) => e.login === 'bob')!
+        await expect(alice.deleteEntry(bobs)).rejects.toSatisfy((x: unknown) =>
+          isStorageError(x, 'notOwner'),
+        )
+        const jane = (await bob.listAllEntries()).find((e) => e.login === 'clockify.jane-doe')!
+        await expect(bob.saveEntry({ ...jane, description: 'x' }, jane.start)).rejects.toSatisfy(
+          (x: unknown) => isStorageError(x, 'notOwner'),
+        )
+      })
+
+      it('refuses to import when the workspace has a project', async () => {
+        await bob.updateWorkspace(
+          (ws) => ({ ...ws, projects: [{ id: 'x', name: 'X', color: '#000', archived: false }] }),
+          'add X',
+        )
+        await expect(alice.importData(data(), 'test import')).rejects.toSatisfy((x: unknown) =>
+          isStorageError(x, 'notEmpty'),
+        )
+        expect(await alice.listAllEntries()).toHaveLength(0)
+        expect((await alice.getWorkspace()).projects.map((p) => p.name)).toEqual(['X'])
+      })
+
+      it('refuses to import when read-only', async () => {
+        const a = await newerSchema()
+        await a.init()
+        await expect(a.importData(data(), 'test import')).rejects.toSatisfy((x: unknown) =>
+          isStorageError(x, 'readOnly'),
+        )
+      })
+    })
   })
 }

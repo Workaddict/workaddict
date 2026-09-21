@@ -18,6 +18,26 @@ interface PutResponse {
   content: { sha: string }
 }
 
+interface RefResponse {
+  object: { sha: string }
+}
+
+interface CommitResponse {
+  sha: string
+  tree: { sha: string }
+}
+
+/** Git blob SHA-1 of a text, as GitHub computes it ("blob <bytes>\0<content>"). */
+export async function gitBlobSha(text: string): Promise<string> {
+  const body = new TextEncoder().encode(text)
+  const header = new TextEncoder().encode(`blob ${body.length}\0`)
+  const bytes = new Uint8Array(header.length + body.length)
+  bytes.set(header)
+  bytes.set(body, header.length)
+  const digest = await crypto.subtle.digest('SHA-1', bytes)
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 export const MAX_WRITE_RETRIES = 3
 
 export interface GitHubFileStoreOptions {
@@ -120,6 +140,57 @@ export class GitHubFileStore implements FileStore {
         }
         await this.sleep((attempt + 1) * 250 + Math.random() * 250)
       }
+    }
+  }
+
+  /**
+   * One commit via the Git Data API (ref → commit → tree → commit → ref), i.e. a constant
+   * number of requests. The ref update is never forced, so a concurrent commit makes it fail
+   * (422) and the whole write is re-validated and retried.
+   */
+  async writeMany(
+    files: Map<string, unknown>,
+    message: string,
+    validate?: () => Promise<void>,
+  ): Promise<void> {
+    const texts = [...files].map(([path, data]) => ({
+      path,
+      text: `${JSON.stringify(data, null, 2)}\n`,
+    }))
+    const branch = encodeURIComponent(this.opts.branch)
+    for (let attempt = 0; ; attempt++) {
+      await validate?.()
+      const ref = await this.opts.client.get<RefResponse>(`${this.base}/git/ref/heads/${branch}`)
+      const parent = await this.opts.client.get<CommitResponse>(
+        `${this.base}/git/commits/${ref.object.sha}`,
+      )
+      const tree = await this.opts.client.request<{ sha: string }>('POST', `${this.base}/git/trees`, {
+        base_tree: parent.tree.sha,
+        tree: texts.map((f) => ({ path: f.path, mode: '100644', type: 'blob', content: f.text })),
+      })
+      const commit = await this.opts.client.request<{ sha: string }>(
+        'POST',
+        `${this.base}/git/commits`,
+        { message, tree: tree.sha, parents: [ref.object.sha] },
+      )
+      try {
+        await this.opts.client.request('PATCH', `${this.base}/git/refs/heads/${branch}`, {
+          sha: commit.sha,
+          force: false,
+        })
+      } catch (e) {
+        if (!isStorageError(e, 'conflict')) throw e
+        this.invalidate()
+        if (attempt >= MAX_WRITE_RETRIES) {
+          throw new StorageError('conflict', `Could not commit after ${attempt + 1} attempts`)
+        }
+        await this.sleep((attempt + 1) * 250 + Math.random() * 250)
+        continue
+      }
+      this.invalidate()
+      // Seed the content-addressed cache so the next read does not download what we just wrote.
+      await Promise.all(texts.map(async (f) => this.opts.cache.set(await gitBlobSha(f.text), f.text)))
+      return
     }
   }
 }

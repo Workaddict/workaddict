@@ -10,6 +10,7 @@ export type StorageErrorKind =
   | 'readOnly' // write attempted in read-only mode
   | 'notOwner' // tried to modify another member's data
   | 'invalid' // validation failed
+  | 'notEmpty' // import attempted into a repository that already has data
   | 'unknown'
 
 export class StorageError extends Error {

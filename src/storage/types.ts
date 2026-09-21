@@ -47,6 +47,19 @@ export interface StorageAdapter {
   updateWorkspace(fn: (ws: Workspace) => Workspace, summary: string): Promise<Workspace>
 
   exportBackup(): Promise<BackupFile>
+
+  /** True while the repository has no entries, projects, or tags (import is allowed). */
+  isEmpty(): Promise<boolean>
+  /**
+   * One-time bulk import into an empty repository, in one commit. The only operation that
+   * may write entries of other logins; refuses with `notEmpty` if data exists.
+   */
+  importData(data: ImportData, summary: string): Promise<void>
+}
+
+export interface ImportData {
+  workspace: Workspace
+  entries: TimeEntry[]
 }
 
 /** Minimal file-level store the repository adapter is built on. */
@@ -60,6 +73,15 @@ export interface FileStore {
    * new content. It is re-applied to fresh content on conflicts, so it must be pure.
    */
   write<T>(path: string, fn: (current: T | null) => T, message: string): Promise<T>
+  /**
+   * Writes all files in one commit: either every file is written or none. `validate` runs
+   * before each attempt (again after a concurrent commit) and may throw to abort.
+   */
+  writeMany(
+    files: Map<string, unknown>,
+    message: string,
+    validate?: () => Promise<void>,
+  ): Promise<void>
   /** Drops any cached snapshot so the next read sees the latest remote state. */
   invalidate(): void
 }

@@ -1,6 +1,9 @@
 import { decodeBase64, encodeBase64 } from './base64'
 
-/** Minimal in-memory GitHub REST API for tests: user, repo, collaborators, trees, blobs, contents. */
+/**
+ * Minimal in-memory GitHub REST API for tests: user, repo, collaborators, trees, blobs, contents,
+ * and the Git Data write path (ref → commit → tree → commit → ref update).
+ */
 export class FakeGitHub {
   files = new Map<string, { sha: string; text: string }>()
   blobs = new Map<string, string>()
@@ -10,6 +13,14 @@ export class FakeGitHub {
   log: string[] = []
   /** Called before a PUT is applied; may mutate the repo to simulate a concurrent write. */
   beforePut: ((path: string) => void) | null = null
+  /** Called before a ref update is applied; may commit to simulate a concurrent write. */
+  beforeRefUpdate: (() => void) | null = null
+  /** Number of commits on the branch (every contents PUT, putRaw, and ref update). */
+  commits = 0
+  head = 'c0'
+  private trees = new Map<string, { path: string; content: string }[]>()
+  private pendingCommits = new Map<string, { tree: string; parent: string; message: string }>()
+  messages: string[] = []
   private n = 0
 
   constructor(
@@ -21,6 +32,8 @@ export class FakeGitHub {
     const sha = `sha${++this.n}`
     this.files.set(path, { sha, text })
     this.blobs.set(sha, text)
+    this.head = `c${++this.n}`
+    this.commits++
   }
 
   json(path: string): unknown {
@@ -76,6 +89,44 @@ export class FakeGitHub {
       const text = this.blobs.get(sub.slice('/git/blobs/'.length))
       if (text === undefined) return res(404, { message: 'Not Found' })
       return res(200, { content: encodeBase64(text), encoding: 'base64' })
+    }
+    if (sub === '/git/ref/heads/main' && method === 'GET') {
+      if (this.files.size === 0) return res(409, { message: 'Git Repository is empty.' })
+      return res(200, { object: { sha: this.head } })
+    }
+    if (sub.startsWith('/git/commits/') && method === 'GET') {
+      const sha = sub.slice('/git/commits/'.length)
+      return res(200, { sha, tree: { sha: `tree-of-${sha}` } })
+    }
+    if (sub === '/git/trees' && method === 'POST') {
+      const body = JSON.parse(String(init?.body)) as { tree: { path: string; content: string }[] }
+      const sha = `tree${++this.n}`
+      this.trees.set(sha, body.tree)
+      return res(201, { sha })
+    }
+    if (sub === '/git/commits' && method === 'POST') {
+      const body = JSON.parse(String(init?.body)) as { tree: string; parents: string[]; message: string }
+      const sha = `commit${++this.n}`
+      this.pendingCommits.set(sha, { tree: body.tree, parent: body.parents[0]!, message: body.message })
+      return res(201, { sha })
+    }
+    if (sub === '/git/refs/heads/main' && method === 'PATCH') {
+      this.beforeRefUpdate?.()
+      const body = JSON.parse(String(init?.body)) as { sha: string; force?: boolean }
+      const commit = this.pendingCommits.get(body.sha)
+      if (!commit) return res(422, { message: 'Object does not exist' })
+      if (commit.parent !== this.head && !body.force) {
+        return res(422, { message: 'Update is not a fast forward' })
+      }
+      for (const f of this.trees.get(commit.tree) ?? []) {
+        const blobSha = `sha${++this.n}`
+        this.files.set(f.path, { sha: blobSha, text: f.content })
+        this.blobs.set(blobSha, f.content)
+      }
+      this.head = body.sha
+      this.commits++
+      this.messages.push(commit.message)
+      return res(200, { object: { sha: body.sha } })
     }
     if (sub.startsWith('/contents/') && method === 'PUT') {
       const filePath = sub.slice('/contents/'.length)
