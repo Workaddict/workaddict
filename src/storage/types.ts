@@ -11,6 +11,11 @@ import type {
 
 export type TimerFields = Pick<RunningTimer, 'description' | 'projectId' | 'tagIds'>
 export type TimerPatch = Partial<TimerFields & Pick<RunningTimer, 'start'>>
+/** Another member's timer, identified by the id the caller saw so a newer timer stays untouched. */
+export interface TimerTarget {
+  login: string
+  timerId: string
+}
 
 /**
  * The only way the app reads or writes data. UI code must not talk to GitHub directly,
@@ -50,9 +55,14 @@ export interface StorageAdapter {
     now?: Date,
   ): Promise<{ timer: RunningTimer; stopped: TimeEntry | null }>
   updateTimer(patch: TimerPatch): Promise<RunningTimer | null>
-  /** Stops the running timer. Returns null if no timer is running (e.g. stopped elsewhere). */
-  stopTimer(end?: Date): Promise<TimeEntry | null>
-  discardTimer(): Promise<void>
+  /**
+   * Stops the running timer. Returns null if no timer is running (e.g. stopped elsewhere).
+   * With `target`, stops that member's timer (editors and team leaders for other members) and
+   * returns null when it is gone or was replaced by a timer with another id.
+   */
+  stopTimer(end?: Date, target?: TimerTarget): Promise<TimeEntry | null>
+  /** Discards the running timer; `target` as for `stopTimer`. Returns whether a timer was cleared. */
+  discardTimer(target?: TimerTarget): Promise<boolean>
 
   getWorkspace(): Promise<Workspace>
   /** Applies a pure update function; it may be re-run on write conflicts. */

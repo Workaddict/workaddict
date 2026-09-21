@@ -1,6 +1,6 @@
 import { addDays, setHours, setMinutes, startOfDay } from 'date-fns'
 import { monthKey } from '../../domain/month'
-import { SCHEMA_VERSION, type TimeEntry, type Workspace } from '../../domain/types'
+import { SCHEMA_VERSION, type RunningTimer, type TimeEntry, type Workspace } from '../../domain/types'
 import { createMemoryAdapter, MemoryFileStore, StorageError } from '../../storage'
 
 const workspace: Workspace = {
@@ -60,6 +60,30 @@ function sampleEntries(): TimeEntry[] {
   return entries
 }
 
+/** Running timers of other members, so the "Team now" block has something to show. */
+function sampleTimers(): RunningTimer[] {
+  const yesterday = addDays(startOfDay(new Date()), -1)
+  return [
+    {
+      id: 'demo-timer-sam',
+      login: 'sam',
+      start: new Date(Date.now() - 42 * 60_000).toISOString(),
+      description: 'Client call',
+      projectId: 'p-web',
+      tagIds: ['t-meet'],
+    },
+    {
+      // Forgotten since yesterday: flagged as running too long.
+      id: 'demo-timer-kim',
+      login: 'kim',
+      start: setMinutes(setHours(yesterday, 16), 30).toISOString(),
+      description: 'Support tickets',
+      projectId: 'p-int',
+      tagIds: [],
+    },
+  ]
+}
+
 /** localStorage key that makes demo writes fail (dev only), to exercise rollback paths. */
 export const DEMO_FAIL_KEY = 'workaddict.demoFailWrites'
 
@@ -83,6 +107,7 @@ export function createDemoAdapter() {
     const path = `entries/${e.login}/${monthKey(e.start)}.json`
     ;((files[path] ??= []) as TimeEntry[]).push(e)
   }
+  for (const t of sampleTimers()) files[`timers/${t.login}.json`] = t
   return createMemoryAdapter(
     { login: 'you', avatarUrl: null },
     {
@@ -90,6 +115,8 @@ export function createDemoAdapter() {
       collaborators: [
         { login: 'you', avatarUrl: null },
         { login: 'sam', avatarUrl: null },
+        { login: 'kim', avatarUrl: null },
+        { login: 'alex', avatarUrl: null },
       ],
       admins: ['you'],
     },

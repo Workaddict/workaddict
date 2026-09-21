@@ -25,6 +25,7 @@ import type {
   TeamRoles,
   TimerFields,
   TimerPatch,
+  TimerTarget,
 } from './types'
 
 export const PATHS = {
@@ -303,18 +304,18 @@ export class RepoAdapter implements StorageAdapter {
    * Idempotent stop: (1) write the entry using the timer id, (2) clear the timer.
    * If (2) failed previously, a retry finds the entry already present and only clears.
    */
-  async stopTimer(end: Date = new Date()): Promise<TimeEntry | null> {
-    const me = await this.assertWritable()
+  async stopTimer(end: Date = new Date(), target?: TimerTarget): Promise<TimeEntry | null> {
+    const { login, by } = await this.timerActor(target)
     this.store.invalidate()
-    const timer = await this.store.read<RunningTimer | null>(PATHS.timer(me.login))
-    if (!timer) return null
+    const timer = await this.store.read<RunningTimer | null>(PATHS.timer(login))
+    if (!timer || (target && timer.id !== target.timerId)) return null
 
     const startMs = new Date(timer.start).getTime()
     const endIso = new Date(Math.max(end.getTime(), startMs + 1000)).toISOString()
     const nowIso = new Date().toISOString()
     const entry: TimeEntry = {
       id: timer.id,
-      login: me.login,
+      login,
       start: timer.start,
       end: endIso,
       description: timer.description,
@@ -322,10 +323,12 @@ export class RepoAdapter implements StorageAdapter {
       tagIds: timer.tagIds,
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(by ? { stoppedBy: by } : {}),
     }
+    const suffix = by ? ` (${login}, by ${by})` : ` (${login})`
     let saved = entry
     await this.store.write<TimeEntry[]>(
-      PATHS.entries(me.login, monthKey(entry.start)),
+      PATHS.entries(login, monthKey(entry.start)),
       (cur) => {
         const existing = (cur ?? []).find((e) => e.id === entry.id)
         if (existing) {
@@ -334,24 +337,40 @@ export class RepoAdapter implements StorageAdapter {
         }
         return [...(cur ?? []), entry]
       },
-      `timer: stop ${formatHM(durationMs(entry.start, entry.end))} ${quote(entry.description)} (${me.login})`,
+      `timer: stop ${formatHM(durationMs(entry.start, entry.end))} ${quote(entry.description)}${suffix}`,
     )
     await this.store.write<RunningTimer | null>(
-      PATHS.timer(me.login),
+      PATHS.timer(login),
       // Only clear the timer we stopped, never a newer one started elsewhere meanwhile.
       (cur) => (cur && cur.id !== timer.id ? cur : null),
-      `timer: clear (${me.login})`,
+      `timer: clear${suffix}`,
     )
     return saved
   }
 
-  async discardTimer(): Promise<void> {
-    const me = await this.assertWritable()
+  async discardTimer(target?: TimerTarget): Promise<boolean> {
+    const { login, by } = await this.timerActor(target)
+    let cleared = false
     await this.store.write<RunningTimer | null>(
-      PATHS.timer(me.login),
-      () => null,
-      `timer: discard (${me.login})`,
+      PATHS.timer(login),
+      (cur) => {
+        cleared = cur !== null && (!target || cur.id === target.timerId)
+        return cleared ? null : cur
+      },
+      `timer: discard${by ? ` (${login}, by ${by})` : ` (${login})`}`,
     )
+    return cleared
+  }
+
+  /**
+   * Whose timer a stop or discard acts on. Another member's timer needs `stopOthersTimer`;
+   * `by` is then the acting member.
+   */
+  private async timerActor(target?: TimerTarget): Promise<{ login: string; by: string | null }> {
+    const me = await this.assertWritable()
+    if (!target || target.login === me.login) return { login: me.login, by: null }
+    await this.assertCan('stopOthersTimer')
+    return { login: target.login, by: me.login }
   }
 
   // ---- workspace -----------------------------------------------------------
@@ -480,7 +499,7 @@ export class RepoAdapter implements StorageAdapter {
     return count
   }
 
-  /** Timers are always the current user's own, so writing them needs no role. */
+  /** Own timers and entries need no role. */
   private async assertWritable(): Promise<Member> {
     if (this.readOnly) throw new StorageError('readOnly')
     return this.getCurrentUser()

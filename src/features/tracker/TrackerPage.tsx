@@ -3,8 +3,9 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { EmptyState, Spinner } from '../../components/bits'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
-import { useEntries } from '../data/hooks'
+import { useAccess, useEntries } from '../data/hooks'
 import { EntryList } from './EntryList'
+import { TeamNow } from './TeamNow'
 import { TimerBar } from './TimerBar'
 
 /** Consecutive months without new entries after which "load older" gives up. */
@@ -13,6 +14,7 @@ const MAX_EMPTY_MONTHS = 12
 export function TrackerPage() {
   const { t } = useI18n()
   const { user } = useSessionData()
+  const access = useAccess()
   const [who, setWho] = useState<'me' | 'everyone'>('me')
   const [months, setMonths] = useState(1)
 
@@ -76,6 +78,7 @@ export function TrackerPage() {
   return (
     <>
       <TimerBar />
+      {access.can('viewLiveActivity') && <TeamNow />}
 
       <div className="page-head">
         <h1>{t('nav.tracker')}</h1>

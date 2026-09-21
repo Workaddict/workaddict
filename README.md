@@ -18,7 +18,7 @@ A private, free and simple time tracker for small teams, as an alternative to Cl
 
 - **No server, no cost.** The app is a static website hosted on GitHub Pages.
 - **Your data stays in your own repository.** Every entry, project and tag is stored as a JSON file in a **private GitHub repository** (the "data repo") that you control. The app reads and writes it straight from your browser through the GitHub API.
-- **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF and Excel plus a full JSON backup. Team roles (worker, editor, team leader), and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
+- **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF and Excel plus a full JSON backup. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
 - **Full history.** Each change is a git commit with a readable message (`entry: add 2h "Fix login" (alice)`), so the data repo doubles as an audit log that you can revert.
 
 Try it without an account by clicking **"Try the demo"** on the login page. Demo data stays in memory and is never saved.
@@ -197,11 +197,14 @@ Every member has one of three roles:
 | Track time, run own timer, edit and delete own entries          |   ✓    |   ✓    |      ✓      |
 | See all entries and statistics, export                          |   ✓    |   ✓    |      ✓      |
 | Edit and delete other members' entries                          |        |   ✓    |      ✓      |
+| See who is tracking right now ("Team now" on the tracker page)  |        |   ✓    |      ✓      |
+| Stop or discard other members' running timers                   |        |   ✓    |      ✓      |
 | Create, rename, recolor, archive, and delete projects and tags  |        |   ✓    |      ✓      |
 | Import from Clockify                                            |        |        |      ✓      |
 
 - **Owners** are everyone with **admin** permission on the data repo. For a personal repo that is the account owner; in an organization it is the repo or organization admins. Owners are always team leaders, and **only owners assign roles** (under **Settings → Team & roles**), including making other members team leaders.
 - Members without an assigned role are **workers**. **Upgrading from an earlier version:** after the update, everyone except the owners is a worker until an owner assigns roles. The app shows owners a reminder until the first role is assigned.
+- **Team now.** Editors and team leaders see, above their entries, what every other member is tracking right now (description, project, tags, elapsed time), each member's total for today, and when idle members were last active. A timer that has run for more than 10 hours, or since before today, is flagged. They can stop such a timer at a chosen end time or discard it. The member gets a notice, the entry records who stopped it, and the commit message names both. There is no opt-out. Workers don't see the block, but the running timers in `timers/` can be read by anyone with access to the data repo.
 - Roles are enforced by the app, **not by GitHub**. See [Security notes](#security-notes).
 
 ### 6. Optional: import your Clockify history

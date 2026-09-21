@@ -98,6 +98,32 @@ const de: Resources = {
     saved: 'Zeiteintrag gespeichert.',
     runningSince: 'Läuft seit {{time}}',
   },
+  team: {
+    title: 'Team jetzt',
+    tracking: '{{count}} aktiv',
+    today: 'Heute {{time}}',
+    lastActive: 'Zuletzt aktiv {{time}}',
+    noEntriesToday: 'Heute keine Einträge',
+    tooLong: 'Läuft ungewöhnlich lange',
+    stop: 'Timer von {{login}} stoppen',
+    discard: 'Timer von {{login}} verwerfen',
+    stopTitle: 'Timer von {{login}} stoppen',
+    tooLongWarning:
+      'Dieser Timer läuft seit {{elapsed}}. Wurde er vergessen? Prüfe die Endzeit, bevor du ihn stoppst.',
+    discardConfirm:
+      'Laufenden Timer von {{login}} verwerfen? Es wird kein Zeiteintrag gespeichert.',
+    stopped: 'Der Timer von {{login}} wurde gestoppt und gespeichert.',
+    discarded: 'Der Timer wurde verworfen.',
+    timerChanged: 'Der Timer wurde inzwischen gestoppt oder neu gestartet. Nichts wurde geändert.',
+    stoppedByOther: 'Dein Timer wurde von {{login}} gestoppt.',
+    note: 'Nur Bearbeiter und Teamleiter sehen das. Die App setzt das durch, nicht GitHub: Jedes Mitglied kann laufende Timer im Daten-Repository lesen.',
+    errors: {
+      invalidEnd: 'Gib ein gültiges Datum und eine gültige Endzeit ein.',
+      beforeStart: 'Das Ende muss nach dem Start liegen.',
+      inFuture: 'Das Ende darf nicht in der Zukunft liegen.',
+      tooLongEntry: 'Ein Zeiteintrag darf höchstens 24 Stunden lang sein.',
+    },
+  },
   manual: {
     date: 'Datum',
     start: 'Beginn',

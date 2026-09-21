@@ -7,6 +7,8 @@ const matrix: [Action, Record<Role, boolean>][] = [
   ['manageWorkspace', { worker: false, editor: true, leader: true }],
   ['import', { worker: false, editor: false, leader: true }],
   ['reassignEntries', { worker: false, editor: false, leader: true }],
+  ['viewLiveActivity', { worker: false, editor: true, leader: true }],
+  ['stopOthersTimer', { worker: false, editor: true, leader: true }],
   ['assignRoles', { worker: false, editor: false, leader: false }],
 ]
 

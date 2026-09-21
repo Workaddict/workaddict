@@ -5,6 +5,8 @@ export type Action =
   | 'manageWorkspace'
   | 'import'
   | 'reassignEntries'
+  | 'viewLiveActivity'
+  | 'stopOthersTimer'
   | 'assignRoles'
 
 const RANK: Record<Role, number> = { worker: 0, editor: 1, leader: 2 }
@@ -14,6 +16,8 @@ const MIN_ROLE: Record<Exclude<Action, 'assignRoles'>, Role> = {
   manageWorkspace: 'editor',
   import: 'leader',
   reassignEntries: 'leader',
+  viewLiveActivity: 'editor',
+  stopOthersTimer: 'editor',
 }
 
 export function isRole(value: unknown): value is Role {

@@ -7,6 +7,7 @@ import { formatClock } from '../domain/time'
 import { useI18n } from '../i18n'
 import { useAuth, useSessionData } from '../features/auth/AuthContext'
 import { useNow } from '../features/tracker/useNow'
+import { useStoppedByNotice } from '../features/tracker/useStoppedByNotice'
 import { useTimerActions } from '../features/tracker/useTimerActions'
 import { useAccess, useTeamRoles } from '../features/data/hooks'
 import { RoleBadge, TEAM_SECTION_ID } from '../features/settings/TeamRoles'
@@ -141,6 +142,7 @@ export function Layout() {
   const { t } = useI18n()
   const { adapter } = useSessionData()
   const { pathname } = useLocation()
+  useStoppedByNotice()
 
   return (
     <div className="app">

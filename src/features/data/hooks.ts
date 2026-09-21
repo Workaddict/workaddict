@@ -5,6 +5,7 @@ import {
   type QueryClient,
   type QueryKey,
 } from '@tanstack/react-query'
+import { endOfDay, startOfDay } from 'date-fns'
 import { useMemo } from 'react'
 import { can, type Action } from '../../domain/permissions'
 import type {
@@ -18,7 +19,7 @@ import type {
   TimeEntry,
   Workspace,
 } from '../../domain/types'
-import type { StorageAdapter, TimerFields, TimerPatch } from '../../storage'
+import type { StorageAdapter, TimerFields, TimerPatch, TimerTarget } from '../../storage'
 
 type StartTimerResult = Awaited<ReturnType<StorageAdapter['startTimer']>>
 import { useSessionData } from '../auth/AuthContext'
@@ -64,6 +65,13 @@ export function useEntries(range: DateRange) {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: 'always',
   })
+}
+
+/** Entries of all members starting today (local time); refreshed with the timers. */
+export function useTodayEntries() {
+  const day = startOfDay(new Date()).getTime()
+  const range = useMemo(() => ({ from: new Date(day), to: endOfDay(day) }), [day])
+  return useEntries(range)
 }
 
 export function useAllEntries() {
@@ -173,7 +181,8 @@ export function useDeleteEntry(feedback?: MutationFeedback<void>) {
   })
 }
 
-function replaceMyTimer(qc: QueryClient, login: string, timer: RunningTimer | null) {
+/** Replaces (or removes) the cached timer of `login`. */
+function replaceTimer(qc: QueryClient, login: string, timer: RunningTimer | null) {
   qc.setQueryData<RunningTimer[]>(keys.timers, (old) => [
     ...(old ?? []).filter((t) => t.login !== login),
     ...(timer ? [timer] : []),
@@ -187,7 +196,7 @@ export function useStartTimer(feedback?: MutationFeedback<StartTimerResult>) {
     mutationFn: (fields: TimerFields) => adapter.startTimer(fields),
     onMutate: async (fields) => {
       const snap = await snapshot(qc, keys.timers)
-      replaceMyTimer(qc, user.login, {
+      replaceTimer(qc, user.login, {
         id: 'pending',
         login: user.login,
         start: new Date().toISOString(),
@@ -196,7 +205,7 @@ export function useStartTimer(feedback?: MutationFeedback<StartTimerResult>) {
       return snap
     },
     onSuccess: (res) => {
-      replaceMyTimer(qc, user.login, res.timer)
+      replaceTimer(qc, user.login, res.timer)
       if (res.stopped) patchEntries(qc, upsert(res.stopped))
       feedback?.onSuccess?.(res)
     },
@@ -218,7 +227,7 @@ export function useStopTimer(feedback?: MutationFeedback<TimeEntry | null>) {
     mutationFn: () => adapter.stopTimer(new Date()),
     onMutate: async () => {
       const snap = await snapshot(qc, keys.timers)
-      replaceMyTimer(qc, user.login, null)
+      replaceTimer(qc, user.login, null)
       return snap
     },
     onSuccess: (entry) => {
@@ -260,9 +269,59 @@ export function useDiscardTimer(feedback?: MutationFeedback<void>) {
     mutationFn: () => adapter.discardTimer(),
     onMutate: async () => {
       const snap = await snapshot(qc, keys.timers)
-      replaceMyTimer(qc, user.login, null)
+      replaceTimer(qc, user.login, null)
       return snap
     },
+    onError: (e, _v, snap) => {
+      restore(qc, snap)
+      feedback?.onError?.(e)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: keys.timers }),
+  })
+}
+
+/**
+ * Stops another member's timer (editors and team leaders). Resolves to null when the timer was
+ * stopped or replaced in the meantime; nothing is written then.
+ */
+export function useStopOthersTimer(feedback?: MutationFeedback<TimeEntry | null>) {
+  const { adapter } = useSessionData()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: ({ target, end }: { target: TimerTarget; end: Date }) =>
+      adapter.stopTimer(end, target),
+    onMutate: async ({ target }) => {
+      const snap = await snapshot(qc, keys.timers)
+      replaceTimer(qc, target.login, null)
+      return snap
+    },
+    onSuccess: (entry) => {
+      if (entry) patchEntries(qc, upsert(entry))
+      feedback?.onSuccess?.(entry)
+    },
+    onError: (e, _v, snap) => {
+      restore(qc, snap)
+      feedback?.onError?.(e)
+    },
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: keys.timers })
+      void qc.invalidateQueries({ queryKey: keys.entries })
+    },
+  })
+}
+
+/** Discards another member's timer; resolves to false when it was already gone or replaced. */
+export function useDiscardOthersTimer(feedback?: MutationFeedback<boolean>) {
+  const { adapter } = useSessionData()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (target: TimerTarget) => adapter.discardTimer(target),
+    onMutate: async (target) => {
+      const snap = await snapshot(qc, keys.timers)
+      replaceTimer(qc, target.login, null)
+      return snap
+    },
+    onSuccess: (cleared) => feedback?.onSuccess?.(cleared),
     onError: (e, _v, snap) => {
       restore(qc, snap)
       feedback?.onError?.(e)

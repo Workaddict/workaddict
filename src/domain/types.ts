@@ -11,6 +11,8 @@ export interface TimeEntry {
   tagIds: string[]
   createdAt: IsoString
   updatedAt: IsoString
+  /** Login of the member who stopped the timer that created this entry, if not its owner. */
+  stoppedBy?: string
 }
 
 export interface RunningTimer {

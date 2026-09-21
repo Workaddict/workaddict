@@ -169,6 +169,87 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       expect(await alice.listAllEntries()).toHaveLength(0)
     })
 
+    describe("other members' timers", () => {
+      const running = (a: StorageAdapter, at = '2026-09-21T09:00:00Z') =>
+        a.startTimer({ description: 'Support', projectId: 'p1', tagIds: ['t1'] }, new Date(at))
+
+      it("lets a team leader stop a member's timer into that member's entries", async () => {
+        const { timer } = await running(bob)
+        const e = await alice.stopTimer(new Date('2026-09-21T10:30:00Z'), {
+          login: 'bob',
+          timerId: timer.id,
+        })
+        expect(e).toMatchObject({
+          id: timer.id,
+          login: 'bob',
+          start: '2026-09-21T09:00:00.000Z',
+          end: '2026-09-21T10:30:00.000Z',
+          description: 'Support',
+          projectId: 'p1',
+          tagIds: ['t1'],
+          stoppedBy: 'alice',
+        })
+        expect(await bob.getTimer()).toBeNull()
+        expect(await bob.listAllEntries()).toEqual([e])
+      })
+
+      it('lets an editor discard a member timer', async () => {
+        await alice.setRole('bob', 'editor')
+        const { timer } = await running(alice)
+        expect(await bob.discardTimer({ login: 'alice', timerId: timer.id })).toBe(true)
+        expect(await alice.getTimer()).toBeNull()
+        expect(await alice.listAllEntries()).toHaveLength(0)
+      })
+
+      it("refuses a worker stopping or discarding another member's timer and writes nothing", async () => {
+        const { timer } = await running(alice)
+        const target = { login: 'alice', timerId: timer.id }
+        for (const act of [
+          () => bob.stopTimer(new Date(), target),
+          () => bob.discardTimer(target),
+        ]) {
+          await expect(act()).rejects.toSatisfy((x: unknown) => isStorageError(x, 'forbiddenRole'))
+        }
+        expect(await alice.getTimer()).toEqual(timer)
+        expect(await alice.listAllEntries()).toHaveLength(0)
+      })
+
+      it('leaves a newer timer running when the seen timer was replaced', async () => {
+        const first = await running(bob)
+        const second = await running(bob, '2026-09-21T10:00:00Z')
+        const target = { login: 'bob', timerId: first.timer.id }
+        expect(await alice.stopTimer(new Date('2026-09-21T11:00:00Z'), target)).toBeNull()
+        expect(await alice.discardTimer(target)).toBe(false)
+        expect(await bob.getTimer()).toEqual(second.timer)
+        expect(await bob.listAllEntries()).toHaveLength(1) // the first timer, stopped by bob
+      })
+
+      it('creates exactly one entry when the owner and a team leader both stop', async () => {
+        const { timer } = await running(bob)
+        const byOwner = await bob.stopTimer(new Date('2026-09-21T10:00:00Z'))
+        const byLeader = await alice.stopTimer(new Date('2026-09-21T10:05:00Z'), {
+          login: 'bob',
+          timerId: timer.id,
+        })
+        expect(byLeader).toBeNull()
+        expect(await bob.listAllEntries()).toEqual([byOwner])
+        expect(byOwner?.stoppedBy).toBeUndefined()
+      })
+
+      it('keeps stoppedBy when the entry is edited later', async () => {
+        const { timer } = await running(bob)
+        const e = await alice.stopTimer(new Date('2026-09-21T10:00:00Z'), {
+          login: 'bob',
+          timerId: timer.id,
+        })
+        await bob.saveEntry({ ...e!, description: 'Renamed' }, e!.start)
+        expect((await bob.listAllEntries())[0]).toMatchObject({
+          description: 'Renamed',
+          stoppedBy: 'alice',
+        })
+      })
+    })
+
     it('keeps workspace changes from several members', async () => {
       await alice.setRole('bob', 'editor')
       await alice.updateWorkspace(

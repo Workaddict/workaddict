@@ -127,6 +127,19 @@ describe('GitHub adapter specifics', () => {
     await b.deleteEntry(alices)
     expect(messages.at(-1)).toBe('entry: delete "Fix login" for alice (bob)')
     expect(gh.json('roles.json')).toEqual({ roles: { bob: 'editor' } })
+
+    const { timer } = await a.startTimer(
+      { description: 'Support', projectId: null, tagIds: [] },
+      new Date('2026-09-21T09:00:00Z'),
+    )
+    await b.stopTimer(new Date('2026-09-21T17:00:00Z'), { login: 'alice', timerId: timer.id })
+    expect(messages.slice(-2)).toEqual([
+      'timer: stop 8:00 "Support" (alice, by bob)',
+      'timer: clear (alice, by bob)',
+    ])
+    const next = await a.startTimer({ description: '', projectId: null, tagIds: [] })
+    await b.discardTimer({ login: 'alice', timerId: next.timer.id })
+    expect(messages.at(-1)).toBe('timer: discard (alice, by bob)')
   })
 
   it("treats a personal repository's owner as admin even without a permissions object", async () => {
