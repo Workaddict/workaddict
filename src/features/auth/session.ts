@@ -1,6 +1,23 @@
 export type Session =
-  | { mode: 'github'; token: string; repo: string; branch: string }
+  | {
+      mode: 'github'
+      token: string
+      repo: string
+      branch: string
+      /** OAuth scopes GitHub reported at login (classic tokens only). */
+      scopes?: string[]
+    }
   | { mode: 'demo' }
+
+export type TokenKind = 'classic' | 'fineGrained' | 'other'
+
+/** Classic personal access tokens start with `ghp_`, fine-grained ones with `github_pat_`. */
+export function tokenKind(token: string): TokenKind {
+  const t = token.trim()
+  if (t.startsWith('ghp_')) return 'classic'
+  if (t.startsWith('github_pat_')) return 'fineGrained'
+  return 'other'
+}
 
 const KEY = 'workaddict.session'
 
@@ -30,6 +47,11 @@ export function loadSession(): Session | null {
     parse(safe(() => sessionStorage.getItem(KEY), null)) ??
     parse(safe(() => localStorage.getItem(KEY), null))
   )
+}
+
+/** Whether a "Remember me" session is stored in this browser. */
+export function hasRememberedSession(): boolean {
+  return parse(safe(() => localStorage.getItem(KEY), null)) !== null
 }
 
 export function saveSession(session: Session, remember: boolean) {

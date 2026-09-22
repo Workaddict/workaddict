@@ -5,7 +5,7 @@ import type { BlobCache } from './blobCache'
 import type { GitHubClient } from './client'
 
 interface TreeResponse {
-  tree: { path: string; type: string; sha: string }[]
+  tree: { path: string; type: string; sha: string; size?: number }[]
   truncated: boolean
 }
 
@@ -38,7 +38,21 @@ export async function gitBlobSha(text: string): Promise<string> {
   return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+function parseJson<T>(text: string, path: string): T {
+  try {
+    return JSON.parse(text) as T
+  } catch {
+    throw new StorageError('corruptData', `${path} is not valid JSON`, { path })
+  }
+}
+
 export const MAX_WRITE_RETRIES = 3
+
+/**
+ * Data files above this size are never downloaded. A month of one member's entries is a few KB;
+ * a multi-MB file can only be damage or abuse and would freeze the tab and fill IndexedDB.
+ */
+export const MAX_FILE_BYTES = 2 * 1024 * 1024
 
 export interface GitHubFileStoreOptions {
   client: GitHubClient
@@ -59,6 +73,8 @@ export interface GitHubFileStoreOptions {
  */
 export class GitHubFileStore implements FileStore {
   private tree: Promise<Map<string, string>> | null = null
+  /** Blob SHA → size in bytes, from the tree listings seen so far. */
+  private readonly sizes = new Map<string, number>()
   private treeFetchedAt = 0
   private readonly base: string
   private readonly treeTtlMs: number
@@ -91,7 +107,9 @@ export class GitHubFileStore implements FileStore {
       const res = await this.opts.client.get<TreeResponse>(
         `${this.base}/git/trees/${encodeURIComponent(this.opts.branch)}?recursive=1`,
       )
-      return new Map(res.tree.filter((t) => t.type === 'blob').map((t) => [t.path, t.sha]))
+      const blobs = res.tree.filter((t) => t.type === 'blob')
+      for (const t of blobs) if (t.size !== undefined) this.sizes.set(t.sha, t.size)
+      return new Map(blobs.map((t) => [t.path, t.sha]))
     } catch (e) {
       // An empty repository (409) or a missing branch (404) simply has no files yet.
       if (isStorageError(e, 'conflict') || isStorageError(e, 'notFound')) return new Map()
@@ -99,7 +117,10 @@ export class GitHubFileStore implements FileStore {
     }
   }
 
-  private async readText(sha: string): Promise<string> {
+  private async readText(sha: string, path: string): Promise<string> {
+    if ((this.sizes.get(sha) ?? 0) > MAX_FILE_BYTES) {
+      throw new StorageError('corruptData', `${path} is too large`, { path })
+    }
     const cached = await this.opts.cache.get(sha)
     if (cached !== undefined) return cached
     const blob = await this.opts.client.get<BlobResponse>(`${this.base}/git/blobs/${sha}`)
@@ -111,15 +132,15 @@ export class GitHubFileStore implements FileStore {
   async read<T>(path: string, snapshot?: Map<string, string>): Promise<T | null> {
     const sha = (snapshot ?? (await this.listFiles())).get(path)
     if (!sha) return null
-    return JSON.parse(await this.readText(sha)) as T
+    return parseJson<T>(await this.readText(sha, path), path)
   }
 
   async write<T>(path: string, fn: (current: T | null) => T, message: string): Promise<T> {
     for (let attempt = 0; ; attempt++) {
       const files = await this.listFiles()
       const sha = files.get(path)
-      const currentText = sha ? await this.readText(sha) : null
-      const next = fn(currentText === null ? null : (JSON.parse(currentText) as T))
+      const currentText = sha ? await this.readText(sha, path) : null
+      const next = fn(currentText === null ? null : parseJson<T>(currentText, path))
       const nextText = `${JSON.stringify(next, null, 2)}\n`
       if (currentText === nextText) return next // nothing changed: skip an empty commit
 

@@ -12,6 +12,7 @@ export type StorageErrorKind =
   | 'forbiddenRole' // the user's role does not allow this change
   | 'invalid' // validation failed
   | 'notEmpty' // import attempted into a repository that already has data
+  | 'corruptData' // a data file is not valid JSON of the expected shape, or too large
   | 'unknown'
 
 export class StorageError extends Error {
@@ -19,13 +20,20 @@ export class StorageError extends Error {
   /** For rateLimit: when requests are possible again. */
   readonly resetAt?: Date
   readonly status?: number
+  /** For corruptData: the repository path of the affected file. */
+  readonly path?: string
 
-  constructor(kind: StorageErrorKind, message?: string, opts?: { resetAt?: Date; status?: number }) {
+  constructor(
+    kind: StorageErrorKind,
+    message?: string,
+    opts?: { resetAt?: Date; status?: number; path?: string },
+  ) {
     super(message ?? kind)
     this.name = 'StorageError'
     this.kind = kind
     this.resetAt = opts?.resetAt
     this.status = opts?.status
+    this.path = opts?.path
   }
 }
 

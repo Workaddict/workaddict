@@ -16,12 +16,17 @@ function store(): UseStore {
   return idbStore
 }
 
-export function createBlobCache(): BlobCache {
+/**
+ * With `persist: false` the cache lives in memory only, so no repository content is left on
+ * disk after the session (used when the user did not choose "Remember me").
+ */
+export function createBlobCache(opts: { persist?: boolean } = {}): BlobCache {
+  const persist = opts.persist ?? true
   const memory = new Map<string, string>()
   return {
     async get(sha) {
       const hit = memory.get(sha)
-      if (hit !== undefined) return hit
+      if (hit !== undefined || !persist) return hit
       try {
         const v = await get<string>(sha, store())
         if (v !== undefined) memory.set(sha, v)
@@ -32,6 +37,7 @@ export function createBlobCache(): BlobCache {
     },
     async set(sha, text) {
       memory.set(sha, text)
+      if (!persist) return
       try {
         await set(sha, text, store())
       } catch {
@@ -40,6 +46,7 @@ export function createBlobCache(): BlobCache {
     },
     async clear() {
       memory.clear()
+      if (!persist) return
       try {
         await clear(store())
       } catch {
@@ -49,7 +56,7 @@ export function createBlobCache(): BlobCache {
   }
 }
 
-/** Removes all cached repository data from this browser (used on logout). */
+/** Removes all cached repository data from this browser (on logout, and on startup without a remembered session). */
 export async function clearBlobCache(): Promise<void> {
   try {
     await clear(store())

@@ -40,6 +40,11 @@ const en = {
     repo: 'Data repository',
     repoPlaceholder: 'owner/name',
     remember: 'Remember me on this device',
+    rememberHint:
+      'Saves the token and cached data on this device. Use it only on your own device, not on shared computers.',
+    classicToken:
+      'This is a classic token. It usually grants access to all of your repositories. A fine-grained token limited to the data repository is safer.',
+    classicTokenLink: 'Create a fine-grained token',
     submit: 'Sign in',
     checking: 'Checking…',
     demo: 'Try the demo (nothing is saved)',
@@ -80,6 +85,15 @@ const en = {
   },
   readOnly:
     'The data was saved by a newer version of this app. You can view it, but changes are disabled until you reload or update the app.',
+  framed: {
+    text: 'For your security, Workaddict does not run inside another page.',
+    open: 'Open Workaddict',
+  },
+  dataProblems: {
+    title: 'Some data in the repository could not be read and is not shown:',
+    hint: 'The app leaves these files unchanged. Ask an owner to fix them on GitHub.',
+    more: 'and {{count}} more',
+  },
   timer: {
     placeholder: 'What are you working on?',
     start: 'Start',
@@ -250,6 +264,10 @@ const en = {
     repo: 'Data repository',
     user: 'Signed in as',
     demoMode: 'Demo mode — nothing is saved to GitHub.',
+    classicToken:
+      'You are signed in with a classic token. Replace it with a fine-grained token that can only access the data repository.',
+    classicTokenRepo:
+      'This token has the “repo” scope: anyone who obtains it can read and write all private repositories of your account.',
     appearance: 'Appearance',
     language: 'Language',
     theme: 'Theme',
@@ -406,6 +424,8 @@ const en = {
     forbiddenRole: 'Your role does not allow this. Ask a team leader or the owner.',
     invalid: 'Please check your input.',
     notEmpty: 'Someone added data meanwhile, so nothing was imported. Review the warning and try again.',
+    corruptData:
+      'The file {{path}} in the data repository is damaged, so it was not changed. Ask an owner to fix it on GitHub.',
     unknown: 'Something went wrong. Please try again.',
   },
 }

@@ -6,6 +6,7 @@ import { ThemeToggle } from '../../components/ThemeToggle'
 import { useI18n } from '../../i18n'
 import { checkLogin } from '../../storage'
 import { useAuth } from './AuthContext'
+import { tokenKind } from './session'
 
 const FINE_GRAINED_URL = 'https://github.com/settings/personal-access-tokens/new'
 const CLASSIC_URL = 'https://github.com/settings/tokens/new?scopes=repo&description=Workaddict'
@@ -36,7 +37,13 @@ export function LoginPage() {
         return
       }
       await login(
-        { mode: 'github', token: token.trim(), repo: res.repo.full_name, branch: res.repo.default_branch },
+        {
+          mode: 'github',
+          token: token.trim(),
+          repo: res.repo.full_name,
+          branch: res.repo.default_branch,
+          ...(res.scopes ? { scopes: res.scopes } : {}),
+        },
         remember,
       )
     } catch {
@@ -100,10 +107,21 @@ export function LoginPage() {
             onChange={(e) => setToken(e.target.value)}
           />
         </label>
-        <label className="checkbox">
-          <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
-          <span>{t('login.remember')}</span>
-        </label>
+        {tokenKind(token) === 'classic' && (
+          <div className="banner banner-warning" role="note">
+            {t('login.classicToken')}{' '}
+            <a href={FINE_GRAINED_URL} target="_blank" rel="noreferrer">
+              {t('login.classicTokenLink')} ↗
+            </a>
+          </div>
+        )}
+        <div className="stack" style={{ gap: 2 }}>
+          <label className="checkbox">
+            <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+            <span>{t('login.remember')}</span>
+          </label>
+          <span className="muted small">{t('login.rememberHint')}</span>
+        </div>
 
         {error && (
           <div className="banner banner-error" role="alert">

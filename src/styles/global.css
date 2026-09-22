@@ -339,6 +339,22 @@ textarea {
   background: var(--accent-soft);
   color: var(--text);
 }
+.banner.row.top {
+  align-items: flex-start;
+}
+.data-problems {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.data-problems ul {
+  margin: 0;
+  padding-left: 18px;
+}
+.data-problems code {
+  overflow-wrap: anywhere;
+}
 
 /* ---------- Chips ---------- */
 .chip {

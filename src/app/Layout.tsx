@@ -9,6 +9,7 @@ import { useAuth, useSessionData } from '../features/auth/AuthContext'
 import { useNow } from '../features/tracker/useNow'
 import { useStoppedByNotice } from '../features/tracker/useStoppedByNotice'
 import { useTimerActions } from '../features/tracker/useTimerActions'
+import { DataProblemsNotice } from '../features/data/DataProblemsNotice'
 import { useAccess, useTeamRoles } from '../features/data/hooks'
 import { RoleBadge, TEAM_SECTION_ID } from '../features/settings/TeamRoles'
 import { PageErrorBoundary } from './lazyPage'
@@ -167,6 +168,7 @@ export function Layout() {
 
       <main className="main">
         {adapter.readOnly && <div className="banner banner-warning">{t('readOnly')}</div>}
+        <DataProblemsNotice />
         <RolesHint />
         {/* Keyed by path so an error on one page clears when the user navigates away. */}
         <PageErrorBoundary key={pathname}>

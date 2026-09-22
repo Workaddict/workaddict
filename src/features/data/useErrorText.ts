@@ -14,6 +14,7 @@ export function useErrorText() {
           const time = e.resetAt ? format(e.resetAt, 'p', { locale }) : '…'
           return t('errors.rateLimit', { time })
         }
+        if (e.kind === 'corruptData') return t('errors.corruptData', { path: e.path ?? '' })
         return t(`errors.${e.kind}`)
       }
       return t('errors.unknown')

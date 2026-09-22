@@ -9,4 +9,4 @@ export {
   type GitHubCredentials,
   type LoginCheck,
 } from './github/githubAdapter'
-export { clearBlobCache } from './github/blobCache'
+export { clearBlobCache, createBlobCache } from './github/blobCache'

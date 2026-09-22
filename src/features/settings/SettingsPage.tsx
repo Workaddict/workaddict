@@ -6,6 +6,7 @@ import { Icon } from '../../components/Icon'
 import { LANGUAGES, setLanguage, useI18n, type Language } from '../../i18n'
 import { setTheme, useThemePref, type ThemePref } from '../../theme'
 import { useAuth, useSessionData } from '../auth/AuthContext'
+import { tokenKind } from '../auth/session'
 import { useAccess } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { downloadBackup } from '../export/backup'
@@ -60,6 +61,14 @@ export default function SettingsPage() {
               <a href={`https://github.com/${session.repo}`} target="_blank" rel="noreferrer">
                 <code>{session.repo}</code>
               </a>
+            </div>
+          )}
+          {session.mode === 'github' && tokenKind(session.token) === 'classic' && (
+            <div className="settings-row">
+              <div className="banner banner-warning" role="note">
+                {t('settings.classicToken')}
+                {Array.isArray(session.scopes) && session.scopes.includes('repo') && <> {t('settings.classicTokenRepo')}</>}
+              </div>
             </div>
           )}
           <div className="settings-row">

@@ -43,6 +43,11 @@ const de: Resources = {
     repo: 'Daten-Repository',
     repoPlaceholder: 'besitzer/name',
     remember: 'Auf diesem Gerät angemeldet bleiben',
+    rememberHint:
+      'Speichert das Token und zwischengespeicherte Daten auf diesem Gerät. Nur auf dem eigenen Gerät verwenden, nicht auf gemeinsam genutzten Computern.',
+    classicToken:
+      'Das ist ein klassisches Token. Es hat meist Zugriff auf alle deine Repositories. Sicherer ist ein Fine-grained Token, das nur auf das Daten-Repository zugreifen kann.',
+    classicTokenLink: 'Fine-grained Token erstellen',
     submit: 'Anmelden',
     checking: 'Wird geprüft…',
     demo: 'Demo ausprobieren (es wird nichts gespeichert)',
@@ -85,6 +90,15 @@ const de: Resources = {
   },
   readOnly:
     'Die Daten wurden von einer neueren Version dieser App gespeichert. Du kannst sie ansehen, Änderungen sind aber deaktiviert, bis du die App neu lädst oder aktualisierst.',
+  framed: {
+    text: 'Zu deiner Sicherheit läuft Workaddict nicht innerhalb einer anderen Seite.',
+    open: 'Workaddict öffnen',
+  },
+  dataProblems: {
+    title: 'Einige Daten im Repository konnten nicht gelesen werden und werden nicht angezeigt:',
+    hint: 'Die App lässt diese Dateien unverändert. Bitte einen Owner, sie auf GitHub zu reparieren.',
+    more: 'und {{count}} weitere',
+  },
   timer: {
     placeholder: 'Woran arbeitest du?',
     start: 'Start',
@@ -256,6 +270,10 @@ const de: Resources = {
     repo: 'Daten-Repository',
     user: 'Angemeldet als',
     demoMode: 'Demo-Modus – es wird nichts auf GitHub gespeichert.',
+    classicToken:
+      'Du bist mit einem klassischen Token angemeldet. Ersetze es durch ein Fine-grained Token, das nur auf das Daten-Repository zugreifen kann.',
+    classicTokenRepo:
+      'Dieses Token hat den Scope „repo“: Wer es erhält, kann alle privaten Repositories deines Kontos lesen und schreiben.',
     appearance: 'Darstellung',
     language: 'Sprache',
     theme: 'Design',
@@ -413,6 +431,8 @@ const de: Resources = {
     forbiddenRole: 'Deine Rolle erlaubt das nicht. Frag eine Teamleitung oder den Besitzer.',
     invalid: 'Bitte prüfe deine Eingaben.',
     notEmpty: 'Inzwischen wurden Daten hinzugefügt, daher wurde nichts importiert. Prüfe den Hinweis und versuche es erneut.',
+    corruptData:
+      'Die Datei {{path}} im Daten-Repository ist beschädigt und wurde daher nicht geändert. Bitte einen Owner, sie auf GitHub zu reparieren.',
     unknown: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',
   },
 }

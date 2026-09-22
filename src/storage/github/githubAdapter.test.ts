@@ -451,6 +451,24 @@ describe('checkLogin', () => {
     expect(await checkLogin(creds, fake().fetch)).toMatchObject({ ok: false, error })
   })
 
+  it('reports the OAuth scopes of classic tokens', async () => {
+    const gh = fake()
+    const withScopes: typeof fetch = async (input, init) => {
+      const res = await gh.fetch(input, init)
+      const headers = new Headers(res.headers)
+      headers.set('X-OAuth-Scopes', 'repo, read:org')
+      return new Response(res.body, { status: res.status, headers })
+    }
+    expect(await checkLogin({ token: 'tok-a', repo: 'team/data' }, withScopes)).toMatchObject({
+      ok: true,
+      scopes: ['repo', 'read:org'],
+    })
+    expect(await checkLogin({ token: 'tok-a', repo: 'team/data' }, fake().fetch)).toMatchObject({
+      ok: true,
+      scopes: null,
+    })
+  })
+
   it('rejects read-only access', async () => {
     const gh = fake()
     gh.push = false
@@ -458,5 +476,107 @@ describe('checkLogin', () => {
       ok: false,
       error: 'noPushAccess',
     })
+  })
+})
+
+describe('untrusted repository data', () => {
+  const ENTRIES = 'entries/bob/2026-09.json'
+  const SEPT = { from: new Date('2026-09-01T00:00:00Z'), to: new Date('2026-09-30T23:59:59Z') }
+  const mk = (id: string, login = 'bob') => ({
+    id,
+    login,
+    start: '2026-09-10T08:00:00.000Z',
+    end: '2026-09-10T09:00:00.000Z',
+    description: id,
+    projectId: null,
+    tagIds: [],
+    createdAt: '',
+    updatedAt: '',
+  })
+
+  async function setup() {
+    const gh = fake()
+    const a = adapterFor(gh, 'tok-a')
+    const b = adapterFor(gh, 'tok-b')
+    await a.init()
+    return { gh, a, b }
+  }
+
+  it('hides a malformed record, reports it, and keeps it on the next write', async () => {
+    const { gh, b } = await setup()
+    const broken = { id: 'x', login: 'bob' }
+    gh.putRaw(ENTRIES, JSON.stringify([mk('e1'), broken]))
+    expect((await b.listEntries(SEPT)).map((e) => e.id)).toEqual(['e1'])
+    expect(b.dataProblems()).toEqual([
+      { path: ENTRIES, version: gh.files.get(ENTRIES)!.sha, kind: 'records' },
+    ])
+
+    await b.saveEntry(mk('e2'))
+    expect(gh.json(ENTRIES)).toEqual([mk('e1'), expect.objectContaining({ id: 'e2' }), broken])
+  })
+
+  it('does not count an entry that claims another member', async () => {
+    const { gh, a } = await setup()
+    gh.putRaw(ENTRIES, JSON.stringify([mk('e1'), mk('fake', 'alice')]))
+    const all = await a.listAllEntries()
+    expect(all.map((e) => `${e.login}:${e.id}`)).toEqual(['bob:e1'])
+  })
+
+  it('reads an unreadable file as empty and refuses to write it', async () => {
+    const { gh, b } = await setup()
+    gh.putRaw(ENTRIES, JSON.stringify({ entries: 42 }))
+    expect(await b.listEntries(SEPT)).toEqual([])
+    expect(b.dataProblems()).toMatchObject([{ path: ENTRIES, kind: 'unreadable' }])
+    await expect(b.saveEntry(mk('e2'))).rejects.toSatisfy(
+      (e: unknown) => isStorageError(e, 'corruptData') && e.path === ENTRIES,
+    )
+    expect(gh.json(ENTRIES)).toEqual({ entries: 42 })
+  })
+
+  it('reads invalid JSON as unreadable instead of failing the whole read', async () => {
+    const { gh, b } = await setup()
+    gh.putRaw(ENTRIES, '[{"id": ')
+    gh.putRaw('entries/alice/2026-09.json', JSON.stringify([mk('a1', 'alice')]))
+    expect((await b.listEntries(SEPT)).map((e) => e.id)).toEqual(['a1'])
+    expect(b.dataProblems()).toMatchObject([{ path: ENTRIES, kind: 'unreadable' }])
+  })
+
+  it('never downloads a file above the size limit', async () => {
+    const { gh, b } = await setup()
+    gh.putRaw(ENTRIES, JSON.stringify([{ pad: 'x'.repeat(2 * 1024 * 1024) }]))
+    const sha = gh.files.get(ENTRIES)!.sha
+    gh.log = []
+    expect(await b.listEntries(SEPT)).toEqual([])
+    expect(gh.count(`GET /repos/team/data/git/blobs/${sha}`)).toBe(0)
+    expect(b.dataProblems()).toMatchObject([{ path: ENTRIES, kind: 'unreadable' }])
+  })
+
+  it('clears the problem once the file is fixed', async () => {
+    const { gh, b } = await setup()
+    gh.putRaw(ENTRIES, JSON.stringify([mk('e1'), 'junk']))
+    await b.listEntries(SEPT)
+    expect(b.dataProblems()).toHaveLength(1)
+    gh.putRaw(ENTRIES, JSON.stringify([mk('e1')]))
+    await b.listEntries(SEPT)
+    expect(b.dataProblems()).toEqual([])
+  })
+
+  it('ignores files whose path has an invalid login', async () => {
+    const { gh, a } = await setup()
+    gh.collaboratorsForbidden = true
+    gh.putRaw('entries/a b/2026-09.json', JSON.stringify([mk('e1', 'a b')]))
+    gh.putRaw('timers/-x.json', 'null')
+    expect((await a.listMembers()).map((m) => m.login)).toEqual(['alice'])
+    expect(await a.listAllEntries()).toEqual([])
+  })
+
+  it('keeps invalid records in place when reassigning entries', async () => {
+    const { gh, a } = await setup()
+    const broken = { id: 'x' }
+    const jane = 'entries/clockify.jane/2026-09.json'
+    gh.putRaw(jane, JSON.stringify([mk('j1', 'clockify.jane'), broken]))
+    expect(await a.reassignEntries('clockify.jane', 'bob')).toBe(1)
+    expect(gh.json(jane)).toEqual([broken])
+    expect(gh.json(ENTRIES)).toEqual([expect.objectContaining({ id: 'j1', login: 'bob' })])
   })
 })
