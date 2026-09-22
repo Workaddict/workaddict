@@ -5,6 +5,8 @@ import {
   AUTHOR_NAME,
   AUTHOR_URL,
   ISSUES_URL,
+  LICENSE_NAME,
+  LICENSE_URL,
   REPO_NAME,
   REPO_URL,
   SECURITY_URL,
@@ -213,6 +215,12 @@ export default function SettingsPage() {
             <span>{t('settings.security')}</span>
             <a href={SECURITY_URL} target="_blank" rel="noreferrer">
               {t('settings.securityPolicy')}
+            </a>
+          </div>
+          <div className="settings-row">
+            <span>{t('settings.license')}</span>
+            <a href={LICENSE_URL} target="_blank" rel="noreferrer">
+              {LICENSE_NAME}
             </a>
           </div>
         </div>

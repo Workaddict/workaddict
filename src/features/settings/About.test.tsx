@@ -30,5 +30,9 @@ describe('Settings about section', () => {
       'href',
       'https://github.com/Workaddict/workaddict/blob/main/SECURITY.md',
     )
+    expect(within(about).getByRole('link', { name: 'AGPL-3.0' })).toHaveAttribute(
+      'href',
+      'https://github.com/Workaddict/workaddict/blob/main/LICENSE',
+    )
   })
 })

@@ -1,4 +1,12 @@
-import { AUTHOR_NAME, AUTHOR_URL, ISSUES_URL, REPO_URL, SECURITY_URL } from '../app/about'
+import {
+  AUTHOR_NAME,
+  AUTHOR_URL,
+  ISSUES_URL,
+  LICENSE_NAME,
+  LICENSE_URL,
+  REPO_URL,
+  SECURITY_URL,
+} from '../app/about'
 import { useI18n } from '../i18n'
 import { Icon } from './Icon'
 
@@ -31,6 +39,11 @@ export function SiteFooter() {
         {t('footer.madeBy')}{' '}
         <a href={AUTHOR_URL} target="_blank" rel="noreferrer">
           {AUTHOR_NAME}
+        </a>
+        {' · '}
+        {t('footer.license')}{' '}
+        <a href={LICENSE_URL} target="_blank" rel="noreferrer">
+          {LICENSE_NAME}
         </a>
       </p>
     </footer>

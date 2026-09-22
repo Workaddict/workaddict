@@ -128,6 +128,7 @@ const de: Resources = {
     github: 'Quellcode',
     issues: 'Problem melden',
     security: 'Sicherheit',
+    license: 'Lizenz',
     madeBy: 'Erstellt von',
   },
   readOnly:
@@ -341,6 +342,7 @@ const de: Resources = {
     reportIssue: 'Problem melden',
     security: 'Sicherheit',
     securityPolicy: 'Sicherheitsrichtlinie',
+    license: 'Lizenz',
   },
   roles: {
     title: 'Team & Rollen',

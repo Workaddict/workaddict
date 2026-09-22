@@ -123,6 +123,7 @@ const en = {
     github: 'Source code',
     issues: 'Report an issue',
     security: 'Security',
+    license: 'License',
     madeBy: 'Made by',
   },
   readOnly:
@@ -335,6 +336,7 @@ const en = {
     reportIssue: 'Report an issue',
     security: 'Security',
     securityPolicy: 'Security policy',
+    license: 'License',
   },
   roles: {
     title: 'Team & roles',

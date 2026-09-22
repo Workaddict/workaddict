@@ -67,6 +67,7 @@ describe('landing page', () => {
       ['Source code', 'https://github.com/Workaddict/workaddict'],
       ['Report an issue', 'https://github.com/Workaddict/workaddict/issues'],
       ['Security', 'https://github.com/Workaddict/workaddict/blob/main/SECURITY.md'],
+      ['AGPL-3.0', 'https://github.com/Workaddict/workaddict/blob/main/LICENSE'],
     ]
     for (const [name, href] of expected) {
       const link = within(footer).getByRole('link', { name })

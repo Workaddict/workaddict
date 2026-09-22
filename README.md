@@ -6,6 +6,7 @@
   <a href="https://github.com/Workaddict/workaddict/stargazers"><img src="https://img.shields.io/github/stars/Workaddict/workaddict?style=for-the-badge&logo=github&label=Stars&color=4f46e5" alt="GitHub stars"></a>
   <img src="https://komarev.com/ghpvc/?username=Workaddict-workaddict&label=Views&color=4f46e5&style=for-the-badge" alt="Views">
   <a href="https://workaddict.github.io/workaddict/"><img src="https://img.shields.io/badge/Live_demo-open-4f46e5?style=for-the-badge" alt="Live demo"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-4f46e5?style=for-the-badge" alt="License: AGPL-3.0"></a>
 </p>
 
 <p align="center">
@@ -296,3 +297,18 @@ src/
 ```
 
 All data access goes through the `StorageAdapter` interface (`src/storage/types.ts`). UI code never calls GitHub directly. That makes it possible to swap the backend later (e.g. for Supabase), and the JSON backup format serves as the migration path.
+
+## License
+
+Workaddict is free and open-source software, © 2026 Benedikt Lehner, licensed under the [GNU Affero General Public License v3.0](LICENSE) with two additional terms in [NOTICE](NOTICE).
+
+In short:
+
+- You may use, study, change and share the code, for free, also for your own team or company.
+- If you publish a changed version, or run one as a website for others, you must share its source code under the same license.
+- Keep the credit visible: the footer and Settings > About must keep showing "Made by Benedikt Lehner" and a link to this project.
+- Mark changed versions as your own (for example "based on Workaddict by Benedikt Lehner"). Don't present them as the original.
+
+This summary is for convenience; the [LICENSE](LICENSE) and [NOTICE](NOTICE) files are what counts.
+
+**Built something with Workaddict?** Please [open an issue](https://github.com/Workaddict/workaddict/issues) and tell me about it. That's a request, not a condition, but I'd love to see it. Suggestions and pull requests are welcome too.

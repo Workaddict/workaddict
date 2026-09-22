@@ -1,0 +1,41 @@
+Workaddict
+Copyright (C) 2026 Benedikt Lehner
+https://github.com/Workaddict/workaddict
+
+This program is free software: you can redistribute it and/or modify it
+under the terms of the GNU Affero General Public License, version 3 only,
+as published by the Free Software Foundation (see LICENSE), with the
+additional terms below.
+
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
+or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public
+License for more details.
+
+
+ADDITIONAL TERMS (section 7 of the GNU AGPL v3)
+
+1. Author attribution (section 7(b)).
+   If you convey this program or a work based on it, or let users interact
+   with it over a network, its user interface must keep showing, as part
+   of its Appropriate Legal Notices:
+     - the credit "Made by Benedikt Lehner", linking to
+       https://github.com/BenediktLehner, and
+     - a link to the original project,
+       https://github.com/Workaddict/workaddict.
+   In this program these notices are shown in the start page footer and in
+   Settings > About. You may restyle, translate or move them, but they must
+   stay visible and legible to users.
+
+2. Marking modified versions (section 7(c)).
+   Modified versions must not be presented as the original Workaddict or
+   as made or endorsed by Benedikt Lehner, and must be marked in a
+   reasonable way as different from the original (for example
+   "based on Workaddict by Benedikt Lehner").
+
+
+A REQUEST (not a condition of the license)
+
+If you publish a version of Workaddict or build on its code, please let me
+know by opening an issue at https://github.com/Workaddict/workaddict/issues.
+I would love to see what you made.
