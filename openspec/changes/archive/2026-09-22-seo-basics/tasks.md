@@ -33,5 +33,5 @@
 
 - [x] 6.1 GitHub → repo Settings → Pages: enable "Enforce HTTPS" (currently off; `http://workaddict.me/` serves the site without redirecting)
 - [x] 6.2 GitHub repo "About": set Website to `https://workaddict.me` and add topics (`clockify-alternative`, `time-tracker`, `time-tracking`, `timesheet`, `open-source`)
-- [ ] 6.3 Google Search Console: submit `https://workaddict.me/sitemap.xml` and request indexing of `/` again (Domain property already verified; first indexing of the pre-SEO page requested on 2026-09-22)
-- [ ] 6.4 Check link previews with the LinkedIn Post Inspector or opengraph.xyz, and run the Google Rich Results / URL Inspection test on the live page
+- [x] 6.3 Google Search Console: submit `https://workaddict.me/sitemap.xml` and request indexing of `/` again (Domain property already verified; first indexing of the pre-SEO page requested on 2026-09-22)
+- [x] 6.4 Check link previews with the LinkedIn Post Inspector or opengraph.xyz, and run the Google Rich Results / URL Inspection test on the live page
