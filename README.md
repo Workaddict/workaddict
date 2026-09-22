@@ -21,7 +21,7 @@ A private, free and simple time tracker for small teams, as an alternative to Cl
 - **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF, Excel (.xlsx), OpenDocument (.ods) and CSV from one Export menu, plus a full JSON backup. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
 - **Full history.** Each change is a git commit with a readable message (`entry: add 2h "Fix login" (alice)`), so the data repo doubles as an audit log that you can revert.
 
-Try it without an account by clicking **"Try the demo"** on the login page. Demo data stays in memory and is never saved.
+Try it without an account by clicking **"Try the demo"** on the start page. Demo data stays in memory and is never saved.
 
 ---
 

@@ -1,6 +1,7 @@
 import { defineConfig } from 'vitest/config'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
+import pkg from './package.json' with { type: 'json' }
 
 // Strict CSP for the production build only (the dev server relies on inline scripts).
 // Scripts only from our own origin, network only to the GitHub API and Clockify (one-time import).
@@ -38,6 +39,10 @@ export default defineConfig({
   plugins: [react(), cspPlugin()],
   // Relative base: works on any GitHub Pages path (hash routing, so no deep-link rewrites needed).
   base: './',
+  // Only the version string reaches the bundle, not the whole manifest.
+  define: {
+    __APP_VERSION__: JSON.stringify(pkg.version),
+  },
   build: {
     chunkSizeWarningLimit: 1500,
   },

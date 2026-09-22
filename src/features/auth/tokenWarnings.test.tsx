@@ -49,7 +49,7 @@ describe('login page token warnings', () => {
       'href',
       'https://github.com/settings/personal-access-tokens/new',
     )
-    expect(screen.getByRole('button', { name: /Sign in/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled()
   })
 
   it('shows no warning for a fine-grained token', () => {

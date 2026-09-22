@@ -1,5 +1,14 @@
 import { useQuery } from '@tanstack/react-query'
 import { Suspense, useState } from 'react'
+import {
+  APP_VERSION,
+  AUTHOR_NAME,
+  AUTHOR_URL,
+  ISSUES_URL,
+  REPO_NAME,
+  REPO_URL,
+  SECURITY_URL,
+} from '../../app/about'
 import { lazyWithReload } from '../../app/lazyPage'
 import { Avatar } from '../../components/bits'
 import { Icon } from '../../components/Icon'
@@ -170,6 +179,41 @@ export default function SettingsPage() {
               <Icon name="logout" size={16} />
               {t('nav.logout')}
             </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>{t('settings.about')}</h2>
+        <div className="card settings-list">
+          <div className="settings-row">
+            <span>{t('settings.version')}</span>
+            <code>v{APP_VERSION}</code>
+          </div>
+          <div className="settings-row">
+            <span>{t('settings.madeBy')}</span>
+            <a href={AUTHOR_URL} target="_blank" rel="noreferrer">
+              {AUTHOR_NAME}
+            </a>
+          </div>
+          <div className="settings-row">
+            <span>{t('settings.source')}</span>
+            <a className="row" href={REPO_URL} target="_blank" rel="noreferrer">
+              <Icon name="github" size={16} />
+              <code>{REPO_NAME}</code>
+            </a>
+          </div>
+          <div className="settings-row">
+            <span>{t('settings.feedback')}</span>
+            <a href={ISSUES_URL} target="_blank" rel="noreferrer">
+              {t('settings.reportIssue')}
+            </a>
+          </div>
+          <div className="settings-row">
+            <span>{t('settings.security')}</span>
+            <a href={SECURITY_URL} target="_blank" rel="noreferrer">
+              {t('settings.securityPolicy')}
+            </a>
           </div>
         </div>
       </section>
