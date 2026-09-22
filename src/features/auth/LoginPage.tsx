@@ -226,7 +226,7 @@ export function LoginPage() {
           </details>
 
           <div className="divider">{t('login.or')}</div>
-          <button type="button" className="btn" disabled={busy} onClick={startDemo}>
+          <button type="button" className="btn btn-wrap" disabled={busy} onClick={startDemo}>
             {t('login.demo')}
           </button>
         </form>

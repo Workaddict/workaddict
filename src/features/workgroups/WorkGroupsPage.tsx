@@ -412,7 +412,7 @@ export default function WorkGroupsPage() {
     <>
       <div className="page-head">
         <h1>{t('workGroups.title')}</h1>
-        <div className="row">
+        <div className="row wrap">
           {totals === 'hidden' && (
             <button
               className="btn"

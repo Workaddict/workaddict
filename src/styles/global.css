@@ -162,6 +162,12 @@ textarea {
   padding: 0 22px;
   font-size: 1rem;
 }
+/* For sentence-length labels that must wrap on narrow screens. */
+.btn.btn-wrap {
+  padding-block: 8px;
+  white-space: normal;
+  text-align: center;
+}
 .link-btn {
   padding: 0;
   border: 0;
@@ -262,6 +268,13 @@ textarea {
 }
 .banner.row.top {
   align-items: flex-start;
+}
+/* [text][spacer][actions]: on narrow screens the actions move below the text. */
+.banner.row {
+  flex-wrap: wrap;
+}
+.banner.row > span:first-child:not(.spacer) {
+  flex: 1 1 16em;
 }
 .data-problems {
   display: flex;
@@ -366,6 +379,7 @@ textarea {
 /* ---------- Layout ---------- */
 .app {
   min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
 }
@@ -377,11 +391,12 @@ textarea {
   display: flex;
   align-items: center;
   gap: 16px;
-  padding: 0 20px;
+  padding: 0 max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
   background: var(--surface);
   border-bottom: 1px solid var(--border);
 }
 .brand {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -404,6 +419,10 @@ textarea {
   text-decoration: none;
   font-weight: 550;
   font-size: 0.925rem;
+  white-space: nowrap;
+}
+.nav a svg {
+  flex: none;
 }
 .nav a:hover {
   color: var(--text);
@@ -418,7 +437,7 @@ textarea {
   width: 100%;
   max-width: 1080px;
   margin: 0 auto;
-  padding: 24px 20px 48px;
+  padding: 24px max(20px, env(safe-area-inset-right)) 48px max(20px, env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -435,10 +454,10 @@ textarea {
 }
 
 .header-timer {
+  flex: none;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  min-width: 0;
   padding: 4px 4px 4px 12px;
   border-radius: 999px;
   background: var(--accent-soft);
@@ -947,6 +966,18 @@ button.entry-duration {
     width: 32px;
     height: 32px;
   }
+  .checkbox input {
+    width: 22px;
+    height: 22px;
+  }
+  /* Larger hit areas for small text controls; the negative margin keeps the layout unchanged. */
+  .table th button,
+  .settings-row a,
+  .site-footer a,
+  .step-link {
+    padding-block: 6px;
+    margin-block: -6px;
+  }
 }
 
 /* ---------- Modal ---------- */
@@ -963,6 +994,7 @@ button.entry-duration {
   width: 100%;
   max-width: 520px;
   max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
   overflow-y: auto;
   padding: 20px;
   background: var(--surface);
@@ -1064,7 +1096,7 @@ button.entry-duration {
   width: 100%;
   max-width: 1120px;
   margin: 0 auto;
-  padding: 16px 20px 0;
+  padding: 16px max(20px, env(safe-area-inset-right)) 0 max(20px, env(safe-area-inset-left));
   display: flex;
   flex-direction: column;
   gap: 56px;
@@ -1251,7 +1283,7 @@ button.entry-duration {
 }
 @media (max-width: 560px) {
   .landing {
-    padding: 12px 16px 0;
+    padding: 12px max(16px, env(safe-area-inset-right)) 0 max(16px, env(safe-area-inset-left));
     gap: 32px;
   }
   .landing-main {
@@ -1444,19 +1476,32 @@ button.entry-duration {
   }
 }
 
-@media (max-width: 720px) {
+/* Widths measured for the German labels, the longest: the full nav plus a running timer
+   needs ~960px, ~1150px with the timer description. */
+@media (max-width: 1200px) {
+  .header-timer .desc {
+    display: none;
+  }
+}
+
+@media (max-width: 400px) {
+  .header:has(.header-timer) .brand span {
+    display: none;
+  }
+}
+
+@media (max-width: 1000px) {
   .header {
-    padding: 0 14px;
+    padding: 0 max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left));
     gap: 10px;
   }
   .header .nav {
     display: none;
   }
-  .header-timer .desc {
-    display: none;
-  }
   .main {
-    padding: 16px 14px calc(var(--bottom-nav-h) + 24px);
+    padding: 16px max(14px, env(safe-area-inset-right))
+      calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 24px)
+      max(14px, env(safe-area-inset-left));
     gap: 16px;
   }
   .bottom-nav {
@@ -1467,8 +1512,8 @@ button.entry-duration {
     z-index: 20;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    height: var(--bottom-nav-h);
-    padding-bottom: env(safe-area-inset-bottom);
+    height: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom));
+    padding: 0 env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     background: var(--surface);
     border-top: 1px solid var(--border);
   }
@@ -1487,18 +1532,42 @@ button.entry-duration {
     color: var(--accent);
   }
   .toasts {
-    bottom: calc(var(--bottom-nav-h) + 12px);
+    bottom: calc(var(--bottom-nav-h) + env(safe-area-inset-bottom) + 12px);
     right: 12px;
     left: 12px;
     max-width: none;
   }
+  .input,
+  .select,
+  .select.select-compact,
+  .input.inline-input {
+    font-size: 16px; /* below 16px iOS Safari zooms in on focus */
+  }
+}
+
+@media (max-width: 720px) {
+  /* One grouped card with a row per figure. */
   .kpis {
     grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
   }
   .kpi {
     display: flex;
-    align-items: baseline;
+    align-items: center;
     justify-content: space-between;
+    padding: 10px 16px;
+    box-shadow: none;
+  }
+  .kpi:not(:first-child) {
+    border-top: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+  }
+  .kpi:not(:last-child) {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
   }
   .kpi .value {
     font-size: 1.25rem;
