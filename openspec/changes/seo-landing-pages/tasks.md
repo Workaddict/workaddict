@@ -14,7 +14,7 @@
 
 ## 3. Import guides
 
-- [ ] 3.1 Take 3–4 screenshots per language of the import wizard (key and region, user mapping, preview, done) with demo or test data only, in the light theme at about 1200 px wide. Optimize them and store them under `public/img/import/en/` and `public/img/import/de/`
+- [x] 3.1 Take 3–4 screenshots per language of the import wizard (key and region, user mapping, preview, done) with demo or test data only, in the light theme at about 1200 px wide. Optimize them and store them under `public/img/import/en/` and `public/img/import/de/`
 - [x] 3.2 Write `import-from-clockify/index.html` (EN): prerequisites (team leader, API key from Profile settings → API, admin key for the whole team), numbered steps in the wizard's order, the notes (rate limit and pause, replacement with confirmation, key never saved, Reassign entries), screenshots with alt, width and height, footer. No JSON-LD
 - [x] 3.3 Write `de/import-from-clockify/index.html` in German, with UI labels copied exactly from `src/i18n/de.ts`
 
@@ -40,10 +40,10 @@
 
 - [x] 6.1 Run `npm test`, `npm run lint` and `npm run build`
 - [x] 6.2 In `npm run preview`, open all four pages plus `/`: no CSP violations, no requests to other origins, no horizontal scroll at 360 px, light and dark mode both correct, all relative links work (including the language switch and "Open app")
-- [ ] 6.3 Validate the JSON-LD with Google's Rich Results Test or the schema.org validator (paste the HTML)
+- [x] 6.3 Validate the JSON-LD with Google's Rich Results Test or the schema.org validator (paste the HTML)
 - [x] 6.4 README: in the note for forks, mention the new pages, their absolute URLs, and that screenshots need retaking when the import wizard changes
 
 ## 7. Launch checklist (manual, after the deploy; ask before pushing to `main`)
 
 - [ ] 7.1 Search Console: resubmit the sitemap and request indexing for the four new URLs
-- [ ] 7.2 Check the live pages with `curl -I` (200, and the paths without a trailing slash redirect) and a link preview for one page
+- [x] 7.2 Check the live pages with `curl -I` (200, and the paths without a trailing slash redirect) and a link preview for one page
