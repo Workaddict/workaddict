@@ -1,4 +1,5 @@
 import { Icon, type IconName } from '../../components/Icon'
+import { seoPageUrl } from '../../app/seoPages'
 import { useI18n } from '../../i18n'
 
 const HIGHLIGHTS: { key: string; icon: IconName }[] = [
@@ -11,7 +12,7 @@ const HIGHLIGHTS: { key: string; icon: IconName }[] = [
 ]
 
 export function Highlights() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   return (
     <section className="landing-section" aria-labelledby="landing-highlights">
       <h2 id="landing-highlights">{t('landing.highlightsTitle')}</h2>
@@ -23,6 +24,11 @@ export function Highlights() {
             </span>
             <h3>{t(`landing.highlights.${h.key}Title`)}</h3>
             <p className="muted">{t(`landing.highlights.${h.key}Text`)}</p>
+            {h.key === 'import' && (
+              <a className="highlight-link" href={seoPageUrl('import-from-clockify', lang)}>
+                {t('landing.highlights.importGuide')}
+              </a>
+            )}
           </li>
         ))}
       </ul>

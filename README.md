@@ -179,7 +179,9 @@ Use a classic token only if the data repo is owned by **another person's persona
 
 The build uses a relative base path and hash routing (`#/stats`), so it works under any repo name and page reloads never 404.
 
-> **Deploying your own copy?** `index.html` (canonical and `og:` URLs), `public/robots.txt` and `public/sitemap.xml` point to `https://workaddict.me`. Change them to your own URL, or search engines will treat your copy as a duplicate of the official site.
+> **Deploying your own copy?** `index.html` (canonical and `og:` URLs), the static search pages (`clockify-alternative/`, `import-from-clockify/` and their German versions under `de/`: canonical, `hreflang` and `og:` URLs), `public/robots.txt` and `public/sitemap.xml` point to `https://workaddict.me`. Change them to your own URL, or search engines will treat your copy as a duplicate of the official site. Links between the pages and the app are relative and work on any path.
+>
+> The import guides quote the app's labels (checked by `src/app/seoPages.test.ts`). Update them, and retake their screenshots, when the Clockify import wizard changes.
 
 ### 4. Sign in
 

@@ -38,7 +38,19 @@ describe('index.html search setup', () => {
   it('needs no change to the Content Security Policy', () => {
     expect(doc.querySelectorAll('[style]')).toHaveLength(0)
     expect(doc.querySelectorAll('style')).toHaveLength(0)
-    expect(doc.querySelectorAll('script:not([src])')).toHaveLength(0)
+    // The only inline script is structured data, which browsers never execute.
+    const inline = [...doc.querySelectorAll('script:not([src])')]
+    expect(inline.map((s) => s.getAttribute('type'))).toEqual(['application/ld+json'])
+  })
+
+  it('describes the app as structured data', () => {
+    const block = doc.querySelector('script[type="application/ld+json"]')
+    const data = JSON.parse(block?.textContent ?? '') as Record<string, unknown>
+    expect(data['@type']).toBe('SoftwareApplication')
+    expect(data.name).toBe('Workaddict')
+    expect(data.offers).toMatchObject({ price: '0' })
+    expect(data).not.toHaveProperty('aggregateRating')
+    expect(data).not.toHaveProperty('review')
   })
 })
 
@@ -48,7 +60,7 @@ describe('crawl files', () => {
     expect(robots).toContain('Sitemap: https://workaddict.me/sitemap.xml')
   })
 
-  it('sitemap.xml lists the site', () => {
+  it('sitemap.xml lists the site (all pages: seoPages.test.ts)', () => {
     const sitemap = new DOMParser().parseFromString(sitemapXml, 'application/xml')
     const locs = [...sitemap.getElementsByTagName('loc')].map((l) => l.textContent)
     expect(locs).toContain('https://workaddict.me/')

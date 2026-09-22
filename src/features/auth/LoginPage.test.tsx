@@ -1,8 +1,8 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, within } from '@testing-library/react'
+import { act, fireEvent, render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, expect, it, vi } from 'vitest'
-import '../../i18n'
+import { setLanguage } from '../../i18n'
 import { AuthContext } from './AuthContext'
 import { LoginPage } from './LoginPage'
 
@@ -74,6 +74,41 @@ describe('landing page', () => {
       expect(link).toHaveAttribute('href', href)
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noreferrer')
+    }
+  })
+
+  it('links the search pages in the UI language, in the same tab', () => {
+    renderLanding()
+    const footer = screen.getByRole('contentinfo')
+    const alternative = within(footer).getByRole('link', { name: 'Clockify alternative' })
+    expect(alternative).toHaveAttribute('href', './clockify-alternative/')
+    expect(alternative).not.toHaveAttribute('target')
+    expect(within(footer).getByRole('link', { name: 'Import from Clockify' })).toHaveAttribute(
+      'href',
+      './import-from-clockify/',
+    )
+    const highlights = screen.getByRole('region', { name: 'Everything a small team needs' })
+    expect(within(highlights).getByRole('link', { name: 'Read the import guide' })).toHaveAttribute(
+      'href',
+      './import-from-clockify/',
+    )
+  })
+
+  it('links the German search pages when German is selected', () => {
+    act(() => setLanguage('de'))
+    try {
+      renderLanding()
+      const footer = screen.getByRole('contentinfo')
+      expect(within(footer).getByRole('link', { name: 'Clockify-Alternative' })).toHaveAttribute(
+        'href',
+        './de/clockify-alternative/',
+      )
+      expect(screen.getByRole('link', { name: 'Zur Import-Anleitung' })).toHaveAttribute(
+        'href',
+        './de/import-from-clockify/',
+      )
+    } finally {
+      act(() => setLanguage('en'))
     }
   })
 })

@@ -1,0 +1,332 @@
+/* Static search pages (clockify-alternative/, import-from-clockify/, de/…).
+   Plain HTML without scripts: the theme follows the system preference via tokens.css. */
+@import './tokens.css';
+
+/* ---------- Base ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+html {
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+h1,
+h2,
+h3 {
+  line-height: 1.25;
+  font-weight: 650;
+}
+h1 {
+  font-size: 2rem;
+  margin: 0 0 12px;
+}
+h2 {
+  font-size: 1.35rem;
+  margin: 40px 0 12px;
+}
+h3 {
+  font-size: 1.05rem;
+  margin: 24px 0 6px;
+}
+p {
+  margin: 0 0 12px;
+}
+a {
+  color: var(--accent);
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+code,
+kbd {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  padding: 1px 5px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+strong {
+  font-weight: 650;
+}
+
+/* ---------- Layout ---------- */
+.page-header,
+.page-main,
+.page-footer {
+  max-width: 800px;
+  margin: 0 auto;
+  padding-left: 16px;
+  padding-right: 16px;
+}
+.page-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+}
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: auto;
+  font-weight: 700;
+  font-size: 1.05rem;
+  color: var(--text);
+  text-decoration: none;
+}
+.page-nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.page-nav a {
+  font-size: 0.9rem;
+}
+.page-main {
+  padding-top: 24px;
+  padding-bottom: 48px;
+}
+.lead {
+  font-size: 1.15rem;
+  color: var(--text-muted);
+  margin-bottom: 20px;
+}
+.muted {
+  color: var(--text-muted);
+}
+.small {
+  font-size: 0.875rem;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 8px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+.btn:hover {
+  border-color: var(--accent);
+}
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+.btn-primary:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+.page-nav .btn {
+  min-height: 34px;
+  padding: 5px 12px;
+  font-size: 0.875rem;
+}
+.cta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 20px 0 8px;
+}
+
+/* ---------- Content blocks ---------- */
+.page-main ul,
+.page-main ol {
+  padding-left: 22px;
+  margin: 0 0 16px;
+}
+.page-main li + li {
+  margin-top: 8px;
+}
+.reasons {
+  list-style: none;
+  padding: 0 !important;
+  display: grid;
+  gap: 12px;
+}
+.reasons li {
+  margin: 0 !important;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.reasons h3 {
+  margin: 0 0 4px;
+}
+.reasons p {
+  margin: 0;
+  color: var(--text-muted);
+}
+.note {
+  margin: 16px 0;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-soft);
+  border-left: 3px solid var(--accent);
+}
+.note-warning {
+  background: var(--warning-soft);
+  color: var(--warning-text);
+  border-left-color: var(--warning-text);
+}
+
+/* Feature table: scrolls inside its own box on narrow screens. */
+.table-wrap {
+  overflow-x: auto;
+  margin: 16px 0 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.925rem;
+}
+th,
+td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border-bottom: 1px solid var(--border);
+}
+tbody tr:last-child th,
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+thead th {
+  background: var(--surface-2);
+  font-weight: 650;
+}
+tbody th {
+  font-weight: 600;
+}
+.yes {
+  color: var(--success);
+  font-weight: 600;
+}
+.no {
+  color: var(--danger);
+  font-weight: 600;
+}
+.table-note {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Numbered steps */
+.steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0 !important;
+}
+.steps > li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 44px;
+  margin-top: 28px !important;
+}
+.steps > li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+.steps h3 {
+  margin: 2px 0 6px;
+}
+
+figure {
+  margin: 14px 0 0;
+}
+figure img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+figcaption {
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* ---------- Footer ---------- */
+.page-footer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding-top: 24px;
+  padding-bottom: 32px;
+  border-top: 1px solid var(--border);
+  font-size: 0.875rem;
+}
+.page-footer nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.page-footer a {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.page-footer a:hover {
+  color: var(--accent);
+}
+.page-footer p {
+  flex-basis: 100%;
+  margin: 0;
+  color: var(--text-muted);
+}
+.page-footer p a {
+  color: var(--text);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.6rem;
+  }
+  .lead {
+    font-size: 1.05rem;
+  }
+  .steps > li {
+    padding-left: 0;
+    padding-top: 40px;
+  }
+}

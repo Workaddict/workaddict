@@ -109,6 +109,7 @@ const en = {
       reportsText: 'Charts by project, tag and member. Export to PDF, Excel, OpenDocument or CSV.',
       importTitle: 'Switch from Clockify',
       importText: 'Bring your projects, tags and entries over with the built-in import.',
+      importGuide: 'Read the import guide',
     },
     stepsTitle: 'How it works',
     step1Title: 'Create a private repository',
@@ -126,6 +127,8 @@ const en = {
     security: 'Security',
     license: 'License',
     madeBy: 'Made by',
+    clockifyAlternative: 'Clockify alternative',
+    importGuide: 'Import from Clockify',
   },
   readOnly:
     'The data was saved by a newer version of this app. You can view it, but changes are disabled until you reload or update the app.',

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>Kostenlose Clockify-Alternative – Open Source, ohne Server | Workaddict</title>
+    <meta
+      name="description"
+      content="Kostenlose Open-Source-Alternative zu Clockify für kleine Teams. Ohne Nutzerlimit, ohne Server: Deine Zeiten liegen in deinem privaten GitHub-Repository."
+    />
+    <link rel="canonical" href="https://workaddict.me/de/clockify-alternative/" />
+    <link rel="alternate" hreflang="en" href="https://workaddict.me/clockify-alternative/" />
+    <link rel="alternate" hreflang="de" href="https://workaddict.me/de/clockify-alternative/" />
+    <link rel="alternate" hreflang="x-default" href="https://workaddict.me/clockify-alternative/" />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/styles/pages.css" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Workaddict" />
+    <meta
+      property="og:title"
+      content="Workaddict – Kostenlose Open-Source-Alternative zu Clockify"
+    />
+    <meta
+      property="og:description"
+      content="Ohne Nutzerlimit, ohne Server, ohne Abo. Die Zeiten deines Teams liegen in deinem eigenen privaten GitHub-Repository."
+    />
+    <meta property="og:url" content="https://workaddict.me/de/clockify-alternative/" />
+    <meta property="og:image" content="https://workaddict.me/og-image.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta
+      property="og:image:alt"
+      content="Workaddict: kostenlose, private Zeiterfassung für kleine Teams"
+    />
+    <meta property="og:locale" content="de_DE" />
+    <meta property="og:locale:alternate" content="en_US" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta
+      name="twitter:title"
+      content="Workaddict – Kostenlose Open-Source-Alternative zu Clockify"
+    />
+    <meta
+      name="twitter:description"
+      content="Ohne Nutzerlimit, ohne Server, ohne Abo. Die Zeiten deines Teams liegen in deinem eigenen privaten GitHub-Repository."
+    />
+    <meta name="twitter:image" content="https://workaddict.me/og-image.png" />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Workaddict",
+        "description": "Kostenlose Open-Source-Zeiterfassung für kleine Teams. Einträge liegen im eigenen privaten GitHub-Repository.",
+        "url": "https://workaddict.me/",
+        "inLanguage": "de",
+        "applicationCategory": "BusinessApplication",
+        "operatingSystem": "Web",
+        "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Static search page. Keep header and footer in sync with the other pages
+         (src/app/seoPages.test.ts checks the links). -->
+    <header class="page-header">
+      <a class="brand" href="../../">
+        <img src="/favicon.svg" width="28" height="28" alt="" />
+        Workaddict
+      </a>
+      <nav class="page-nav" aria-label="Seite">
+        <a href="../../clockify-alternative/" hreflang="en" lang="en">English</a>
+        <a class="btn btn-primary" href="../../">App öffnen</a>
+      </nav>
+    </header>
+
+    <main class="page-main">
+      <h1>Kostenlose Clockify-Alternative – Open Source, ohne Server</h1>
+      <p class="lead">
+        Workaddict ist Zeiterfassung für kleine Teams: Timer, Auswertungen und Exporte. Ohne Abo,
+        ohne Nutzerlimit und ohne eigenen Server, denn die Zeiten deines Teams liegen in deinem
+        eigenen privaten GitHub-Repository.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="../../">Demo ausprobieren</a>
+        <a class="btn" href="../import-from-clockify/">So klappt der Umzug von Clockify</a>
+      </div>
+      <p class="small muted">
+        Die Demo läuft in deinem Browser und speichert nichts. Keine Anmeldung nötig.
+      </p>
+
+      <h2>Warum Teams von Clockify wechseln</h2>
+      <p>
+        Seit April 2026 ist der kostenlose Clockify-Plan auf 5 aktive Nutzer begrenzt. Berichte
+        umfassen höchstens einen Monat, und CSV- und Excel-Exporte gibt es nur noch in bezahlten
+        Plänen. Für viele kleine Teams ein guter Anlass, sich umzusehen. Workaddict geht einen
+        anderen Weg:
+      </p>
+      <ul class="reasons">
+        <li>
+          <h3>Deine Daten gehören dir</h3>
+          <p>
+            Deine Einträge liegen als einfache JSON-Dateien (eine pro Person und Monat) in einem
+            privaten GitHub-Repository, das dir gehört. Jede Änderung ist ein Commit mit
+            vollständiger Historie. Du kannst sie lesen, zurücksetzen oder mit normalen
+            Git-Werkzeugen sichern.
+          </p>
+        </li>
+        <li>
+          <h3>Kein Server, kein Abo</h3>
+          <p>
+            Workaddict ist eine statische Website. Anders als bei selbst gehosteten
+            Open-Source-Zeiterfassungen musst du keinen Server, keine Datenbank und keine Updates
+            betreiben. Dein Browser spricht direkt mit GitHub.
+          </p>
+        </li>
+        <li>
+          <h3>Open Source</h3>
+          <p>
+            Der komplette Quellcode liegt unter der Lizenz AGPL-3.0 auf GitHub. Du kannst nachlesen,
+            was die App mit deinen Daten macht, oder eine eigene Kopie betreiben.
+          </p>
+        </li>
+        <li>
+          <h3>Kein weiteres Konto</h3>
+          <p>
+            Die Anmeldung läuft über ein GitHub-Token, das nur auf dein Daten-Repository zugreifen
+            kann. Es gibt kein Workaddict-Konto und kein Tracking oder Analytics auf der Seite.
+          </p>
+        </li>
+      </ul>
+
+      <h2>Workaddict und Clockify Free im Vergleich</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Funktion</th>
+              <th scope="col">Workaddict</th>
+              <th scope="col">Clockify Free</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Preis</th>
+              <td><span class="yes">Kostenlos</span>, keine bezahlten Pläne</td>
+              <td>Kostenlos, bezahlte Pläne für mehr Nutzer und Funktionen</td>
+            </tr>
+            <tr>
+              <th scope="row">Nutzer</th>
+              <td><span class="yes">Kein Limit</span> (jedes Mitglied braucht ein GitHub-Konto)</td>
+              <td>Bis zu 5 aktive Nutzer</td>
+            </tr>
+            <tr>
+              <th scope="row">Zeitraum für Berichte</th>
+              <td><span class="yes">Beliebig</span></td>
+              <td>1 Monat auf einmal</td>
+            </tr>
+            <tr>
+              <th scope="row">Exporte</th>
+              <td><span class="yes">PDF, Excel, OpenDocument, CSV</span>, JSON-Backup</td>
+              <td>PDF (CSV und Excel in bezahlten Plänen)</td>
+            </tr>
+            <tr>
+              <th scope="row">Wo deine Daten liegen</th>
+              <td>In deinem eigenen privaten GitHub-Repository</td>
+              <td>Auf den Servern von Clockify</td>
+            </tr>
+            <tr>
+              <th scope="row">Änderungshistorie</th>
+              <td><span class="yes">Jede Änderung ist ein Git-Commit</span></td>
+              <td>Audit-Logs im Enterprise-Plan</td>
+            </tr>
+            <tr>
+              <th scope="row">Quellcode</th>
+              <td><span class="yes">Open Source</span> (AGPL-3.0)</td>
+              <td>Proprietär</td>
+            </tr>
+            <tr>
+              <th scope="row">Desktop- und Mobil-Apps, Browser-Erweiterungen</th>
+              <td><span class="no">Nein</span>, eine Web-App, die auch im mobilen Browser läuft</td>
+              <td><span class="yes">Ja</span>, mit Offline-Modus</td>
+            </tr>
+            <tr>
+              <th scope="row">Integrationen</th>
+              <td><span class="no">Keine</span></td>
+              <td><span class="yes">80+</span></td>
+            </tr>
+            <tr>
+              <th scope="row">Rechnungen, Urlaub, Freigaben</th>
+              <td><span class="no">Nein</span></td>
+              <td>In bezahlten Plänen</td>
+            </tr>
+            <tr>
+              <th scope="row">Import aus Clockify</th>
+              <td><span class="yes">Eingebaut</span>: Projekte, Tags und Einträge</td>
+              <td>Entfällt</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="table-note">
+        Angaben zu Clockify mit Stand September 2026, von clockify.me (Preisseite, App-Seite und
+        Hilfeartikel zu den Änderungen am Free-Plan). Falls etwas nicht mehr stimmt,
+        <a href="https://github.com/Workaddict/workaddict/issues" target="_blank" rel="noreferrer"
+          >melde es bitte</a
+        >.
+      </p>
+
+      <h2>Wann Clockify besser passt</h2>
+      <p>
+        Workaddict ist bewusst klein. Bleib bei Clockify oder nimm dort einen bezahlten Plan, wenn
+        du Folgendes brauchst:
+      </p>
+      <ul>
+        <li>native Desktop- oder Mobil-Apps oder Zeiterfassung ohne Internet</li>
+        <li>Integrationen mit Projekt-Tools, Kalendern oder Buchhaltung</li>
+        <li>Rechnungen, Urlaubsverwaltung, Freigaben, Dienstplanung oder GPS-Tracking</li>
+        <li>große Teams, die sich per SSO statt mit GitHub anmelden</li>
+      </ul>
+      <p>
+        Für Workaddict braucht jedes Teammitglied ein GitHub-Konto und für die Anmeldung ein
+        Fine-grained Token. Die App ist für kleine Teams gemacht, die einfache, ehrliche
+        Zeiterfassung und volle Kontrolle über ihre Daten wollen.
+      </p>
+
+      <h2>Was du bekommst</h2>
+      <ul>
+        <li>
+          Einen Live-Timer, der zwischen Geräten synchronisiert: am Laptop starten, am Handy
+          stoppen.
+        </li>
+        <li>Manuelle Einträge, Projekte und Tags, direkt in der Liste bearbeitbar.</li>
+        <li>
+          Rollen für Mitarbeiter, Bearbeiter und Teamleitung, dazu die Live-Ansicht „Team jetzt“.
+        </li>
+        <li>Statistiken nach Projekt, Tag und Mitglied für jeden Zeitraum.</li>
+        <li>Exporte als PDF, Excel, OpenDocument und CSV.</li>
+        <li>Deutsch und Englisch, heller und dunkler Modus.</li>
+      </ul>
+
+      <h2>In wenigen Minuten umgezogen</h2>
+      <p>
+        Der eingebaute Import übernimmt Projekte, Tags und Zeiteinträge aus Clockify in einem
+        Schritt. Er ordnet jeden Clockify-Nutzer einem Teammitglied zu und zeigt eine Vorschau,
+        bevor etwas gespeichert wird.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="../import-from-clockify/">Zur Import-Anleitung</a>
+        <a class="btn" href="../../">Workaddict öffnen</a>
+      </div>
+      <p class="small muted">
+        Clockify ist eine Marke ihres Inhabers. Workaddict ist ein unabhängiges Projekt und steht in
+        keiner Verbindung zu Clockify.
+      </p>
+    </main>
+
+    <footer class="page-footer">
+      <nav aria-label="Workaddict">
+        <a href="../../">Workaddict-App</a>
+        <a href="../clockify-alternative/">Clockify-Alternative</a>
+        <a href="../import-from-clockify/">Import aus Clockify</a>
+        <a href="https://github.com/Workaddict/workaddict" target="_blank" rel="noreferrer"
+          >Quellcode</a
+        >
+        <a href="https://github.com/Workaddict/workaddict/issues" target="_blank" rel="noreferrer"
+          >Problem melden</a
+        >
+        <a
+          href="https://github.com/Workaddict/workaddict/blob/main/SECURITY.md"
+          target="_blank"
+          rel="noreferrer"
+          >Sicherheit</a
+        >
+      </nav>
+      <p>
+        Erstellt von
+        <a href="https://github.com/BenediktLehner" target="_blank" rel="noreferrer"
+          >Benedikt Lehner</a
+        >
+        · Lizenz
+        <a
+          href="https://github.com/Workaddict/workaddict/blob/main/LICENSE"
+          target="_blank"
+          rel="noreferrer"
+          >AGPL-3.0</a
+        >
+      </p>
+    </footer>
+  </body>
+</html>

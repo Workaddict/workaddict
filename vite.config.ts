@@ -2,6 +2,7 @@ import { defineConfig } from 'vitest/config'
 import type { Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import pkg from './package.json' with { type: 'json' }
+import { SEO_PAGE_FILES } from './src/app/seoPages.ts'
 
 // Strict CSP for the production build only (the dev server relies on inline scripts).
 // Scripts only from our own origin, network only to the GitHub API and Clockify (one-time import).
@@ -45,6 +46,10 @@ export default defineConfig({
   },
   build: {
     chunkSizeWarningLimit: 1500,
+    // The app plus the static search pages; each HTML entry gets the CSP from cspPlugin.
+    rollupOptions: {
+      input: ['index.html', ...SEO_PAGE_FILES],
+    },
   },
   test: {
     environment: 'jsdom',

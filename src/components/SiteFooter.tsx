@@ -7,11 +7,12 @@ import {
   REPO_URL,
   SECURITY_URL,
 } from '../app/about'
+import { seoPageUrl } from '../app/seoPages'
 import { useI18n } from '../i18n'
 import { Icon } from './Icon'
 
 export function SiteFooter() {
-  const { t } = useI18n()
+  const { t, lang } = useI18n()
   return (
     <footer className="site-footer">
       <div className="site-footer-brand">
@@ -34,6 +35,8 @@ export function SiteFooter() {
           <Icon name="shield" size={16} />
           {t('footer.security')}
         </a>
+        <a href={seoPageUrl('clockify-alternative', lang)}>{t('footer.clockifyAlternative')}</a>
+        <a href={seoPageUrl('import-from-clockify', lang)}>{t('footer.importGuide')}</a>
       </nav>
       <p className="site-footer-credit muted small">
         {t('footer.madeBy')}{' '}

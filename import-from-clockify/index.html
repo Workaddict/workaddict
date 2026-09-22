@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="no-referrer" />
+    <title>How to import your Clockify data into Workaddict – step-by-step guide</title>
+    <meta
+      name="description"
+      content="Move your team from Clockify to Workaddict: import projects, tags and time entries with a Clockify API key, map users, check a preview, and import in one step."
+    />
+    <link rel="canonical" href="https://workaddict.me/import-from-clockify/" />
+    <link rel="alternate" hreflang="en" href="https://workaddict.me/import-from-clockify/" />
+    <link rel="alternate" hreflang="de" href="https://workaddict.me/de/import-from-clockify/" />
+    <link rel="alternate" hreflang="x-default" href="https://workaddict.me/import-from-clockify/" />
+    <meta name="theme-color" content="#4f46e5" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="/src/styles/pages.css" />
+
+    <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="Workaddict" />
+    <meta property="og:title" content="Import from Clockify – Workaddict guide" />
+    <meta
+      property="og:description"
+      content="Bring your team's Clockify projects, tags and time entries into Workaddict, the free, open-source time tracker with no server."
+    />
+    <meta property="og:url" content="https://workaddict.me/import-from-clockify/" />
+    <meta property="og:image" content="https://workaddict.me/og-image.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta
+      property="og:image:alt"
+      content="Workaddict: free, private time tracking for small teams"
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Import from Clockify – Workaddict guide" />
+    <meta
+      name="twitter:description"
+      content="Bring your team's Clockify projects, tags and time entries into Workaddict, the free, open-source time tracker with no server."
+    />
+    <meta name="twitter:image" content="https://workaddict.me/og-image.png" />
+  </head>
+  <body>
+    <!-- Static search page. Keep header and footer in sync with the other pages, and the quoted
+         UI labels in sync with import.* in src/i18n/en.ts (src/app/seoPages.test.ts checks both). -->
+    <header class="page-header">
+      <a class="brand" href="../">
+        <img src="/favicon.svg" width="28" height="28" alt="" />
+        Workaddict
+      </a>
+      <nav class="page-nav" aria-label="Page">
+        <a href="../de/import-from-clockify/" hreflang="de" lang="de">Deutsch</a>
+        <a class="btn btn-primary" href="../">Open app</a>
+      </nav>
+    </header>
+
+    <main class="page-main">
+      <h1>How to import your data from Clockify</h1>
+      <p class="lead">
+        Workaddict has a built-in Clockify import. It copies your team's projects, tags and time
+        entries in one step and shows a preview before anything is saved. For most teams it takes a
+        few minutes.
+      </p>
+
+      <h2>Before you start</h2>
+      <ul>
+        <li>
+          <strong>A Workaddict workspace.</strong> Create an empty private GitHub repository and a
+          fine-grained token for it, then sign in on the <a href="../">start page</a>. The app sets
+          up the repository on first use. Add your team members as collaborators on the repository,
+          so you can assign their Clockify hours to them.
+        </li>
+        <li>
+          <strong>The team leader role.</strong> Only team leaders see the import in Settings. The
+          repository owner is a team leader.
+        </li>
+        <li>
+          <strong>A Clockify API key.</strong> In Clockify, open Profile settings → API → Generate.
+          To import the whole team, use the key of a Clockify workspace admin. Other keys can only
+          read their own entries.
+        </li>
+      </ul>
+      <p class="note">
+        Import before your team starts tracking in Workaddict. If the workspace already has entries,
+        projects or tags, the import replaces them after you confirm. The old data stays in the
+        repository's git history.
+      </p>
+
+      <h2>Step by step</h2>
+      <ol class="steps">
+        <li>
+          <h3>Open the import</h3>
+          <p>
+            In Workaddict, go to Settings → Data and click <strong>Import from Clockify</strong>.
+          </p>
+        </li>
+        <li>
+          <h3>Enter the key and region</h3>
+          <p>
+            Paste the key into <strong>Clockify API key</strong> and choose your
+            <strong>Clockify region</strong>. Keep "Global (default)" unless your Clockify workspace
+            is hosted in a specific region (EU, USA, UK or Australia). The key is used only for this
+            import, is sent only to Clockify and is never saved.
+          </p>
+        </li>
+        <li>
+          <h3>Choose the workspace</h3>
+          <p>
+            If your key has access to several Clockify workspaces, choose the one to import.
+            Workaddict then loads its users, projects and tags.
+          </p>
+        </li>
+        <li>
+          <h3>Map Clockify users to team members</h3>
+          <p>
+            For each Clockify user, choose under <strong>Import as</strong> whose entries their time
+            becomes: a team member (the repository's collaborators), a former member, or "Don’t
+            import". Matching GitHub logins are suggested automatically. Former members keep their
+            hours in statistics and exports.
+          </p>
+        </li>
+        <li>
+          <h3>Load the time entries</h3>
+          <p>
+            Click <strong>Load time entries</strong>. The Clockify Free plan allows 30 requests per
+            hour, so large workspaces can hit the limit. The import then pauses and shows when you
+            can continue. Nothing is lost. Disconnect other Clockify integrations during the import
+            to save requests.
+          </p>
+        </li>
+        <li>
+          <h3>Check the preview</h3>
+          <p>
+            The preview shows projects, tags, and entries and hours per member and project. Compare
+            the totals with Clockify's summary report. The preview also lists what can't be
+            imported.
+          </p>
+        </li>
+        <li>
+          <h3>Import</h3>
+          <p>
+            Confirm the import. Everything is saved as one commit in your data repository.
+            Afterwards, delete the API key in Clockify (Profile settings → API).
+          </p>
+        </li>
+      </ol>
+
+      <h2>What is imported, and what isn't</h2>
+      <ul>
+        <li>
+          <strong>Imported:</strong> projects (including archived ones), tags, and finished time
+          entries with description, project and tags, for each mapped user.
+        </li>
+        <li>
+          <strong>Not imported:</strong> running timers, entries without a valid duration, and
+          tasks, clients, billable flags and rates, because Workaddict doesn't have them. The
+          preview shows how many entries are affected.
+        </li>
+        <li>
+          <strong>Time zones:</strong> times are shown in your browser's time zone, which may differ
+          from the time zone in your Clockify profile.
+        </li>
+      </ul>
+
+      <h2>Fixing a wrong mapping later</h2>
+      <p>
+        Assigned a Clockify user to the wrong person? Team leaders can move all of a member's
+        entries to someone else under Settings → Data → Reassign entries. You don't need to import
+        again.
+      </p>
+
+      <h2>New to Workaddict?</h2>
+      <p>
+        Workaddict is a free, open-source time tracker for small teams. It needs no server, because
+        your entries stay in your own private GitHub repository.
+        <a href="../clockify-alternative/">See how it compares with Clockify</a>.
+      </p>
+      <div class="cta">
+        <a class="btn btn-primary" href="../">Open Workaddict</a>
+        <a class="btn" href="../clockify-alternative/">Workaddict vs Clockify</a>
+      </div>
+      <p class="small muted">
+        Clockify is a trademark of its owner. Workaddict is an independent project and is not
+        affiliated with Clockify.
+      </p>
+    </main>
+
+    <footer class="page-footer">
+      <nav aria-label="Workaddict">
+        <a href="../">Workaddict app</a>
+        <a href="../clockify-alternative/">Clockify alternative</a>
+        <a href="../import-from-clockify/">Import from Clockify</a>
+        <a href="https://github.com/Workaddict/workaddict" target="_blank" rel="noreferrer"
+          >Source code</a
+        >
+        <a href="https://github.com/Workaddict/workaddict/issues" target="_blank" rel="noreferrer"
+          >Report an issue</a
+        >
+        <a
+          href="https://github.com/Workaddict/workaddict/blob/main/SECURITY.md"
+          target="_blank"
+          rel="noreferrer"
+          >Security</a
+        >
+      </nav>
+      <p>
+        Made by
+        <a href="https://github.com/BenediktLehner" target="_blank" rel="noreferrer"
+          >Benedikt Lehner</a
+        >
+        · License
+        <a
+          href="https://github.com/Workaddict/workaddict/blob/main/LICENSE"
+          target="_blank"
+          rel="noreferrer"
+          >AGPL-3.0</a
+        >
+      </p>
+    </footer>
+  </body>
+</html>

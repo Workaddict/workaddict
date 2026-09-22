@@ -1,0 +1,81 @@
+/* ---------- Design tokens ----------
+   Shared by the app (global.css) and the static search pages (pages.css). */
+:root {
+  color-scheme: light;
+  --bg: #f6f7f9;
+  --surface: #ffffff;
+  --surface-2: #f1f3f6;
+  --border: #e3e6eb;
+  --border-strong: #cfd4dc;
+  --text: #1a1d23;
+  --text-muted: #626b78;
+  --text-faint: #8b93a0;
+  --accent: #4f46e5;
+  --accent-hover: #4338ca;
+  --accent-soft: #eef0ff;
+  --accent-text: #ffffff;
+  --danger: #dc2626;
+  --danger-soft: #fdecec;
+  --success: #15803d;
+  --success-soft: #e7f6ec;
+  --warning-soft: #fff6e0;
+  --warning-text: #7a5300;
+  --shadow: 0 1px 2px rgb(16 24 40 / 6%), 0 1px 3px rgb(16 24 40 / 8%);
+  --shadow-lg: 0 12px 32px rgb(16 24 40 / 18%);
+  --radius: 10px;
+  --radius-sm: 7px;
+  --font: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Consolas, monospace;
+  --header-h: 60px;
+  --bottom-nav-h: 64px;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #0f1115;
+  --surface: #171a20;
+  --surface-2: #1e222a;
+  --border: #2a2f39;
+  --border-strong: #3a404c;
+  --text: #e8eaee;
+  --text-muted: #a0a7b3;
+  --text-faint: #767e8b;
+  --accent: #7c75ff;
+  --accent-hover: #918bff;
+  --accent-soft: #25244a;
+  --accent-text: #0f1115;
+  --danger: #f06363;
+  --danger-soft: #3a1c1f;
+  --success: #4ade80;
+  --success-soft: #16301f;
+  --warning-soft: #342a12;
+  --warning-text: #f5d58a;
+  --shadow: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-lg: 0 12px 32px rgb(0 0 0 / 55%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+    --bg: #0f1115;
+    --surface: #171a20;
+    --surface-2: #1e222a;
+    --border: #2a2f39;
+    --border-strong: #3a404c;
+    --text: #e8eaee;
+    --text-muted: #a0a7b3;
+    --text-faint: #767e8b;
+    --accent: #7c75ff;
+    --accent-hover: #918bff;
+    --accent-soft: #25244a;
+    --accent-text: #0f1115;
+    --danger: #f06363;
+    --danger-soft: #3a1c1f;
+    --success: #4ade80;
+    --success-soft: #16301f;
+    --warning-soft: #342a12;
+    --warning-text: #f5d58a;
+    --shadow: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-lg: 0 12px 32px rgb(0 0 0 / 55%);
+  }
+}

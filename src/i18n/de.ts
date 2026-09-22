@@ -113,6 +113,7 @@ const de: Resources = {
       reportsText: 'Diagramme nach Projekt, Tag und Mitglied. Export als PDF, Excel, OpenDocument oder CSV.',
       importTitle: 'Umstieg von Clockify',
       importText: 'Übernimm Projekte, Tags und Einträge mit dem eingebauten Import.',
+      importGuide: 'Zur Import-Anleitung',
     },
     stepsTitle: 'So funktioniert’s',
     step1Title: 'Privates Repository anlegen',
@@ -130,6 +131,8 @@ const de: Resources = {
     security: 'Sicherheit',
     license: 'Lizenz',
     madeBy: 'Erstellt von',
+    clockifyAlternative: 'Clockify-Alternative',
+    importGuide: 'Import aus Clockify',
   },
   readOnly:
     'Die Daten wurden von einer neueren Version dieser App gespeichert. Du kannst sie ansehen, Änderungen sind aber deaktiviert, bis du die App neu lädst oder aktualisierst.',
