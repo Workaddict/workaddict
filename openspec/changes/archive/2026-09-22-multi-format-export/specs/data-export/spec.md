@@ -1,43 +1,4 @@
-# data-export Specification
-
-## Purpose
-TBD - created by archiving change build-time-tracker-mvp. Update Purpose after archive.
-## Requirements
-### Requirement: PDF report export
-The system SHALL export the currently filtered statistics as a PDF report containing the title, date range, applied filters, total time, the project and member breakdown tables, the charts, and the detailed entry list, using the current UI language.
-
-#### Scenario: Export PDF
-- **WHEN** the user chooses "PDF report" from the Export menu on the stats page for September 2026
-- **THEN** the browser downloads a file named like `time-report_2026-09-01_2026-09-30.pdf` with the report contents
-
-### Requirement: Excel export
-The system SHALL export the currently filtered statistics as an `.xlsx` workbook with the sheets "Summary", "Entries", "By project", and "By member", where dates are real date cells and durations are numeric hours.
-
-#### Scenario: Export Excel
-- **WHEN** the user chooses "Excel (.xlsx)" from the Export menu
-- **THEN** the browser downloads an `.xlsx` file whose "Entries" sheet has one row per filtered entry with date, start, end, member, project, tags, description, and hours
-
-#### Scenario: Summable hours
-- **WHEN** the user opens the "Entries" sheet in Excel and sums the hours column
-- **THEN** the sum equals the total shown on the stats page (within rounding)
-
-### Requirement: JSON backup export
-The system SHALL export a complete backup of all data (workspace, all members' entries, members, schema version, export timestamp) as a single JSON file, independent of filters and of the storage layout.
-
-#### Scenario: Full backup
-- **WHEN** the user clicks "Download backup" in settings
-- **THEN** the browser downloads a JSON file containing every entry of every member and all projects and tags
-
-### Requirement: Export feedback
-The system SHALL show progress while an export of any format is generated and a clear error if generation fails, and SHALL load each format's export code only when that format is requested.
-
-#### Scenario: Large export
-- **WHEN** an export takes longer than half a second to generate
-- **THEN** the Export control shows a loading state and stays disabled until the download starts
-
-#### Scenario: Lazy loading
-- **WHEN** the user opens the stats page without exporting
-- **THEN** no PDF, Excel, OpenDocument, or CSV writer code is loaded
+## ADDED Requirements
 
 ### Requirement: Export menu
 The stats page SHALL offer a single "Export" control that opens a menu listing every export format, grouped into "Document" (PDF report) and "Spreadsheet" (Excel `.xlsx`, OpenDocument `.ods`, CSV), instead of one button per format. The menu SHALL be keyboard accessible, SHALL close on selection, outside click, or Escape, and SHALL NOT be clipped by its container. The control SHALL be disabled when the current filters match no entries.
@@ -88,3 +49,33 @@ The system SHALL export the currently filtered entries as a CSV file with one he
 - **WHEN** an entry description is `=SUM(A1:A9)`
 - **THEN** the CSV field is `'=SUM(A1:A9)` and is shown as text when opened
 
+## MODIFIED Requirements
+
+### Requirement: PDF report export
+The system SHALL export the currently filtered statistics as a PDF report containing the title, date range, applied filters, total time, the project and member breakdown tables, the charts, and the detailed entry list, using the current UI language.
+
+#### Scenario: Export PDF
+- **WHEN** the user chooses "PDF report" from the Export menu on the stats page for September 2026
+- **THEN** the browser downloads a file named like `time-report_2026-09-01_2026-09-30.pdf` with the report contents
+
+### Requirement: Excel export
+The system SHALL export the currently filtered statistics as an `.xlsx` workbook with the sheets "Summary", "Entries", "By project", and "By member", where dates are real date cells and durations are numeric hours.
+
+#### Scenario: Export Excel
+- **WHEN** the user chooses "Excel (.xlsx)" from the Export menu
+- **THEN** the browser downloads an `.xlsx` file whose "Entries" sheet has one row per filtered entry with date, start, end, member, project, tags, description, and hours
+
+#### Scenario: Summable hours
+- **WHEN** the user opens the "Entries" sheet in Excel and sums the hours column
+- **THEN** the sum equals the total shown on the stats page (within rounding)
+
+### Requirement: Export feedback
+The system SHALL show progress while an export of any format is generated and a clear error if generation fails, and SHALL load each format's export code only when that format is requested.
+
+#### Scenario: Large export
+- **WHEN** an export takes longer than half a second to generate
+- **THEN** the Export control shows a loading state and stays disabled until the download starts
+
+#### Scenario: Lazy loading
+- **WHEN** the user opens the stats page without exporting
+- **THEN** no PDF, Excel, OpenDocument, or CSV writer code is loaded

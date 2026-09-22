@@ -1,15 +1,16 @@
 import { endOfDay, format, parseISO, startOfDay } from 'date-fns'
 import { useMemo, useRef, useState } from 'react'
 import { EmptyState, MemberLabel, ProjectChip, Spinner } from '../../components/bits'
-import { Icon } from '../../components/Icon'
 import { FilterPicker } from '../../components/Pickers'
 import { useToast } from '../../components/Toasts'
 import { durationMs, formatHM } from '../../domain/time'
 import { EMPTY_WORKSPACE, type DateRange, type TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
 import { useEntries, useLookups } from '../data/hooks'
+import { loadWriter, type ExportFormat } from '../export/formats'
 import { buildReport, chartToPng } from '../export/report'
 import { HoursBarChart, ProjectShareChart } from './Charts'
+import { ExportMenu } from './ExportMenu'
 import {
   byMember,
   byProject,
@@ -188,7 +189,7 @@ export default function StatsPage() {
     return { from: format(r.from, 'yyyy-MM-dd'), to: format(r.to, 'yyyy-MM-dd') }
   })
   const [filters, setFilters] = useState<StatsFilters>(NO_FILTERS)
-  const [exporting, setExporting] = useState<'pdf' | 'xlsx' | null>(null)
+  const [exporting, setExporting] = useState<ExportFormat | null>(null)
   const barRef = useRef<HTMLDivElement>(null)
   const shareRef = useRef<HTMLDivElement>(null)
 
@@ -237,16 +238,15 @@ export default function StatsPage() {
     ].join(' · ')
   }
 
-  const runExport = async (kind: 'pdf' | 'xlsx') => {
-    setExporting(kind)
+  const runExport = async (format: ExportFormat) => {
+    setExporting(format)
     try {
       const charts =
-        kind === 'pdf'
+        format === 'pdf'
           ? { bars: await chartToPng(barRef.current), share: await chartToPng(shareRef.current) }
           : {}
       const report = buildReport({ entries: filtered, ws, range, filtersText: filtersText(), charts, t, locale })
-      if (kind === 'pdf') await (await import('../export/pdf')).exportPdf(report)
-      else await (await import('../export/xlsx')).exportXlsx(report)
+      await (await loadWriter(format))(report)
     } catch (e) {
       console.error(e)
       toast.error(t('stats.exportFailed'))
@@ -259,16 +259,7 @@ export default function StatsPage() {
     <>
       <div className="page-head">
         <h1>{t('stats.title')}</h1>
-        <div className="row wrap">
-          <button className="btn" onClick={() => runExport('pdf')} disabled={!!exporting || filtered.length === 0}>
-            {exporting === 'pdf' ? <span className="spinner" /> : <Icon name="download" size={16} />}
-            {t('stats.exportPdf')}
-          </button>
-          <button className="btn" onClick={() => runExport('xlsx')} disabled={!!exporting || filtered.length === 0}>
-            {exporting === 'xlsx' ? <span className="spinner" /> : <Icon name="download" size={16} />}
-            {t('stats.exportExcel')}
-          </button>
-        </div>
+        <ExportMenu exporting={exporting} disabled={filtered.length === 0} onExport={runExport} />
       </div>
 
       <section className="card filters">
