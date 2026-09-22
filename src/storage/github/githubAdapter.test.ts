@@ -49,14 +49,14 @@ runAdapterContract('github (fake API)', async () => {
 })
 
 describe('GitHub adapter specifics', () => {
-  it('initializes an empty repository', async () => {
+  it('initializes an empty repository (409 on the head request)', async () => {
     const gh = fake()
     await adapterFor(gh, 'tok-a').init()
     expect(gh.json('tracker.json')).toMatchObject({ schemaVersion: 1 })
     expect(gh.json('workspace.json')).toEqual({ projects: [], tags: [] })
   })
 
-  it('refreshing unchanged data costs one tree request and no blob requests', async () => {
+  it('refreshing unchanged data costs one head request and no tree or blob requests', async () => {
     const gh = fake()
     const a = adapterFor(gh, 'tok-a')
     await a.init()
@@ -66,8 +66,72 @@ describe('GitHub adapter specifics', () => {
     await a.listEntries(range) // warm cache
     gh.log = []
     await a.listEntries(range)
-    expect(gh.count('GET /repos/team/data/git/trees')).toBe(1)
+    expect(gh.count('GET /repos/team/data/git/ref/heads/main')).toBe(1)
+    expect(gh.count('GET /repos/team/data/git/trees')).toBe(0)
     expect(gh.count('GET /repos/team/data/git/blobs')).toBe(0)
+  })
+
+  it('refetches the tree after an own write even when the head looks unchanged', async () => {
+    const gh = fake()
+    const a = adapterFor(gh, 'tok-a')
+    await a.init()
+    await a.getWorkspace()
+    const lagging = gh.head
+    await a.updateWorkspace((ws) => ({ ...ws, tags: [{ id: 't', name: 'T', archived: false }] }), 'add T')
+    gh.head = lagging // the ref briefly reports the commit before our write
+    gh.log = []
+    expect((await a.getWorkspace()).tags).toHaveLength(1)
+    expect(gh.count('GET /repos/team/data/git/trees')).toBe(1)
+  })
+
+  it('refetches the tree after a write conflict', async () => {
+    const gh = fake()
+    const a = adapterFor(gh, 'tok-a')
+    await a.init()
+    let injected = false
+    gh.beforePut = (path) => {
+      if (!injected && path === 'workspace.json') {
+        injected = true
+        gh.putRaw(path, '{"projects":[],"tags":[{"id":"b","name":"B","archived":false}]}')
+      }
+    }
+    gh.log = []
+    await a.updateWorkspace((ws) => ({ ...ws, tags: [...ws.tags, { id: 'a', name: 'A', archived: false }] }), 'add A')
+    // First attempt plus the retry after the conflict each list the files.
+    expect(gh.count('GET /repos/team/data/git/trees')).toBe(2)
+    expect((gh.json('workspace.json') as { tags: { id: string }[] }).tags.map((t) => t.id)).toEqual(['b', 'a'])
+  })
+
+  it('limits blob requests on a cold cache to 8 in flight, across concurrent reads', async () => {
+    const gh = fake()
+    const month = (i: number) => `2025-${String((i % 12) + 1).padStart(2, '0')}`
+    for (let i = 0; i < 40; i++) {
+      const login = `user${Math.floor(i / 12)}`
+      gh.putRaw(
+        `entries/${login}/${month(i)}.json`,
+        JSON.stringify([
+          {
+            id: String(i),
+            login,
+            start: `${month(i)}-10T08:00:00.000Z`,
+            end: `${month(i)}-10T09:00:00.000Z`,
+            description: '',
+            projectId: null,
+            tagIds: [],
+            createdAt: '',
+            updatedAt: '',
+          },
+        ]),
+      )
+    }
+    for (let i = 0; i < 4; i++) gh.putRaw(`timers/user${i}.json`, 'null')
+    const a = adapterFor(gh, 'tok-a', { treeTtlMs: 2000 })
+    gh.blobDelayMs = 5
+    gh.log = []
+    const [entries] = await Promise.all([a.listAllEntries(), a.listTimers()])
+    expect(entries).toHaveLength(40)
+    expect(gh.count('GET /repos/team/data/git/blobs')).toBe(44)
+    expect(gh.peakBlobsInFlight).toBe(8)
   })
 
   it('fetches only the changed file after another member writes', async () => {
@@ -93,6 +157,8 @@ describe('GitHub adapter specifics', () => {
     await b.saveEntry(mk('bob', 12))
     gh.log = []
     expect(await a.listEntries(range)).toHaveLength(3)
+    expect(gh.count('GET /repos/team/data/git/ref/heads/main')).toBe(1)
+    expect(gh.count('GET /repos/team/data/git/trees')).toBe(1)
     expect(gh.count('GET /repos/team/data/git/blobs')).toBe(1)
   })
 

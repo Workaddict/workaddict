@@ -150,6 +150,7 @@ export interface CreateGitHubAdapterOptions {
   fetchFn?: typeof fetch
   cache?: BlobCache
   treeTtlMs?: number
+  maxConcurrentReads?: number
   sleep?: (ms: number) => Promise<void>
 }
 
@@ -162,6 +163,7 @@ export function createGitHubAdapter(opts: CreateGitHubAdapterOptions): RepoAdapt
     branch: opts.branch,
     cache: opts.cache ?? createBlobCache(),
     treeTtlMs: opts.treeTtlMs,
+    maxConcurrentReads: opts.maxConcurrentReads,
     sleep: opts.sleep,
   })
   return new RepoAdapter(store, new GitHubIdentity(client, opts.owner, opts.repo))

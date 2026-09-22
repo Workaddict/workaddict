@@ -174,12 +174,18 @@ const de: Resources = {
     archive: 'Archivieren',
     unarchive: 'Wiederherstellen',
     totalHours: 'Erfasst',
+    showTotals: 'Gesamtstunden anzeigen',
+    totalsLoading: 'Gesamtstunden werden geladen…',
     deleteProjectConfirm_one:
       'Projekt „{{name}}“ löschen? Es wird von {{count}} Eintrag verwendet, der dann als „Kein Projekt“ erscheint.',
     deleteProjectConfirm_other:
       'Projekt „{{name}}“ löschen? Es wird von {{count}} Einträgen verwendet, die dann als „Kein Projekt“ erscheinen.',
     deleteTagConfirm_one: 'Tag „{{name}}“ löschen? Er wird von {{count}} Eintrag verwendet.',
     deleteTagConfirm_other: 'Tag „{{name}}“ löschen? Er wird von {{count}} Einträgen verwendet.',
+    deleteProjectUnknown:
+      'Projekt „{{name}}“ löschen? Die Zahl der Einträge, die es verwenden, konnte nicht ermittelt werden. Sie erscheinen dann als „Kein Projekt“.',
+    deleteTagUnknown:
+      'Tag „{{name}}“ löschen? Die Zahl der Einträge, die ihn verwenden, konnte nicht ermittelt werden.',
     nameTaken: 'Dieser Name existiert bereits.',
     nameRequired: 'Gib einen Namen ein.',
     emptyProjects: 'Noch keine Projekte. Projekte gruppieren Einträge, z. B. nach Kunde oder Produkt.',

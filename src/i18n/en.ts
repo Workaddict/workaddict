@@ -168,12 +168,18 @@ const en = {
     archive: 'Archive',
     unarchive: 'Restore',
     totalHours: 'Tracked',
+    showTotals: 'Show total hours',
+    totalsLoading: 'Loading total hours…',
     deleteProjectConfirm_one:
       'Delete project “{{name}}”? It is used by {{count}} entry, which will show as “No project”.',
     deleteProjectConfirm_other:
       'Delete project “{{name}}”? It is used by {{count}} entries, which will show as “No project”.',
     deleteTagConfirm_one: 'Delete tag “{{name}}”? It is used by {{count}} entry.',
     deleteTagConfirm_other: 'Delete tag “{{name}}”? It is used by {{count}} entries.',
+    deleteProjectUnknown:
+      'Delete project “{{name}}”? The number of entries that use it could not be determined. They will show as “No project”.',
+    deleteTagUnknown:
+      'Delete tag “{{name}}”? The number of entries that use it could not be determined.',
     nameTaken: 'This name already exists.',
     nameRequired: 'Enter a name.',
     emptyProjects: 'No projects yet. Projects group entries, e.g. by client or product.',

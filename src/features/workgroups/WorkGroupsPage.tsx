@@ -1,4 +1,4 @@
-import { useMemo, useState, type FormEvent } from 'react'
+import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import { EmptyState, Spinner } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { useConfirm } from '../../components/Modal'
@@ -7,7 +7,13 @@ import { durationMs, formatHM } from '../../domain/time'
 import { PROJECT_COLORS, type Project, type Tag, type TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
-import { useAccess, useAllEntries, useWorkspace } from '../data/hooks'
+import {
+  useAccess,
+  useAllEntries,
+  useFetchAllEntries,
+  useHasAllEntries,
+  useWorkspace,
+} from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { nextProjectColor, useWorkspaceActions } from '../data/workspaceActions'
 
@@ -15,6 +21,9 @@ interface Usage {
   ms: number
   count: number
 }
+
+/** Hour cells stay hidden until totals are requested, then show a placeholder while loading. */
+type Totals = 'hidden' | 'loading' | 'ready'
 
 function usageBy(entries: TimeEntry[], keys: (e: TimeEntry) => string[]): Map<string, Usage> {
   const m = new Map<string, Usage>()
@@ -27,6 +36,43 @@ function usageBy(entries: TimeEntry[], keys: (e: TimeEntry) => string[]): Map<st
     }
   }
   return m
+}
+
+function Hours({ usage, totals }: { usage?: Usage; totals: Totals }) {
+  const { t } = useI18n()
+  if (totals === 'hidden') return null
+  if (totals === 'loading') {
+    return (
+      <span className="num faint small" role="status" aria-label={t('workGroups.totalsLoading')}>
+        …
+      </span>
+    )
+  }
+  return (
+    <span className="num muted small" title={t('workGroups.totalHours')}>
+      {formatHM(usage?.ms ?? 0)}
+    </span>
+  )
+}
+
+/**
+ * Counts the entries matching `uses`, loading all entries first if needed, so a delete
+ * confirmation never states 0 while data is still loading. Resolves to null if loading fails.
+ */
+function useCountEntries() {
+  const fetchAll = useFetchAllEntries()
+  const [counting, setCounting] = useState(false)
+  const count = async (uses: (e: TimeEntry) => boolean): Promise<number | null> => {
+    setCounting(true)
+    try {
+      return (await fetchAll()).filter(uses).length
+    } catch {
+      return null
+    } finally {
+      setCounting(false)
+    }
+  }
+  return { count, counting }
 }
 
 function Palette({ value, onChange }: { value: string; onChange: (c: string) => void }) {
@@ -126,11 +172,13 @@ function NameForm({
 function ProjectRow({
   project,
   usage,
+  totals,
   items,
   canManage,
 }: {
   project: Project
   usage?: Usage
+  totals: Totals
   items: Project[]
   canManage: boolean
 }) {
@@ -138,6 +186,7 @@ function ProjectRow({
   const confirm = useConfirm()
   const onError = useErrorToast()
   const { updateProject, deleteProject } = useWorkspaceActions()
+  const { count, counting } = useCountEntries()
   const [editing, setEditing] = useState(false)
   const [color, setColor] = useState(project.color)
 
@@ -169,12 +218,11 @@ function ProjectRow({
         {project.name}
         {project.archived && <span className="faint small"> · {t('common.archived')}</span>}
       </span>
-      <span className="num muted small" title={t('workGroups.totalHours')}>
-        {formatHM(usage?.ms ?? 0)}
-      </span>
+      <Hours usage={usage} totals={totals} />
       {canManage && (
         <RowActions
           archived={project.archived}
+          deleting={counting}
           onEdit={() => {
             setColor(project.color)
             setEditing(true)
@@ -187,11 +235,12 @@ function ProjectRow({
             ).catch(onError)
           }
           onDelete={async () => {
+            const n = await count((e) => e.projectId === project.id)
             const ok = await confirm({
-              message: t('workGroups.deleteProjectConfirm', {
-                name: project.name,
-                count: usage?.count ?? 0,
-              }),
+              message:
+                n === null
+                  ? t('workGroups.deleteProjectUnknown', { name: project.name })
+                  : t('workGroups.deleteProjectConfirm', { name: project.name, count: n }),
             })
             if (ok) deleteProject(project).catch(onError)
           }}
@@ -204,11 +253,13 @@ function ProjectRow({
 function TagRow({
   tag,
   usage,
+  totals,
   items,
   canManage,
 }: {
   tag: Tag
   usage?: Usage
+  totals: Totals
   items: Tag[]
   canManage: boolean
 }) {
@@ -216,6 +267,7 @@ function TagRow({
   const confirm = useConfirm()
   const onError = useErrorToast()
   const { updateTag, deleteTag } = useWorkspaceActions()
+  const { count, counting } = useCountEntries()
   const [editing, setEditing] = useState(false)
 
   if (editing) {
@@ -244,12 +296,11 @@ function TagRow({
         {tag.name}
         {tag.archived && <span className="faint small"> · {t('common.archived')}</span>}
       </span>
-      <span className="num muted small" title={t('workGroups.totalHours')}>
-        {formatHM(usage?.ms ?? 0)}
-      </span>
+      <Hours usage={usage} totals={totals} />
       {canManage && (
         <RowActions
           archived={tag.archived}
+          deleting={counting}
           onEdit={() => setEditing(true)}
           onArchive={() =>
             updateTag(
@@ -259,11 +310,12 @@ function TagRow({
             ).catch(onError)
           }
           onDelete={async () => {
+            const n = await count((e) => e.tagIds.includes(tag.id))
             const ok = await confirm({
-              message: t('workGroups.deleteTagConfirm', {
-                name: tag.name,
-                count: usage?.count ?? 0,
-              }),
+              message:
+                n === null
+                  ? t('workGroups.deleteTagUnknown', { name: tag.name })
+                  : t('workGroups.deleteTagConfirm', { name: tag.name, count: n }),
             })
             if (ok) deleteTag(tag).catch(onError)
           }}
@@ -275,6 +327,8 @@ function TagRow({
 
 function RowActions(props: {
   archived: boolean
+  /** Entries are being counted for the delete confirmation. */
+  deleting?: boolean
   onEdit: () => void
   onArchive: () => void
   onDelete: () => void
@@ -303,6 +357,8 @@ function RowActions(props: {
         className="btn btn-icon"
         title={t('common.delete')}
         aria-label={t('common.delete')}
+        disabled={props.deleting}
+        aria-busy={props.deleting}
         onClick={props.onDelete}
       >
         <Icon name="trash" size={16} />
@@ -317,7 +373,16 @@ export default function WorkGroupsPage() {
   const access = useAccess()
   const canManage = !adapter.readOnly && access.can('manageWorkspace')
   const ws = useWorkspace()
-  const entries = useAllEntries()
+  const onError = useErrorToast()
+  // Totals need every entry file, so they load only on request or when already cached.
+  const [totalsRequested, setTotalsRequested] = useState(false)
+  const cached = useHasAllEntries()
+  const entries = useAllEntries({ enabled: totalsRequested || cached })
+  const totals: Totals = entries.data
+    ? 'ready'
+    : totalsRequested && !entries.isError
+      ? 'loading'
+      : 'hidden'
   const { createProject, createTag } = useWorkspaceActions()
   const [showArchived, setShowArchived] = useState(false)
   const [newColor, setNewColor] = useState<string | null>(null)
@@ -327,6 +392,10 @@ export default function WorkGroupsPage() {
     [entries.data],
   )
   const tagUsage = useMemo(() => usageBy(entries.data ?? [], (e) => e.tagIds), [entries.data])
+
+  useEffect(() => {
+    if (entries.error) onError(entries.error)
+  }, [entries.error, onError])
 
   if (ws.isPending) return <Spinner label={t('common.loading')} />
   const projects = ws.data?.projects ?? []
@@ -343,14 +412,27 @@ export default function WorkGroupsPage() {
     <>
       <div className="page-head">
         <h1>{t('workGroups.title')}</h1>
-        <label className="checkbox small">
-          <input
-            type="checkbox"
-            checked={showArchived}
-            onChange={(e) => setShowArchived(e.target.checked)}
-          />
-          {t('workGroups.showArchived')}
-        </label>
+        <div className="row">
+          {totals === 'hidden' && (
+            <button
+              className="btn"
+              onClick={() => {
+                setTotalsRequested(true)
+                if (entries.isError) void entries.refetch()
+              }}
+            >
+              {t('workGroups.showTotals')}
+            </button>
+          )}
+          <label className="checkbox small">
+            <input
+              type="checkbox"
+              checked={showArchived}
+              onChange={(e) => setShowArchived(e.target.checked)}
+            />
+            {t('workGroups.showArchived')}
+          </label>
+        </div>
       </div>
 
       {!adapter.readOnly && !canManage && <p className="muted small">{t('workGroups.roleHint')}</p>}
@@ -385,6 +467,7 @@ export default function WorkGroupsPage() {
                 key={p.id}
                 project={p}
                 usage={projectUsage.get(p.id)}
+                totals={totals}
                 items={projects}
                 canManage={canManage}
               />
@@ -412,6 +495,7 @@ export default function WorkGroupsPage() {
                 key={x.id}
                 tag={x}
                 usage={tagUsage.get(x.id)}
+                totals={totals}
                 items={tags}
                 canManage={canManage}
               />

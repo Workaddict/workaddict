@@ -6,7 +6,7 @@ import {
   type QueryKey,
 } from '@tanstack/react-query'
 import { endOfDay, startOfDay } from 'date-fns'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { can, type Action } from '../../domain/permissions'
 import type {
   Access,
@@ -59,8 +59,8 @@ export function useEntries(range: DateRange) {
     queryKey: keys.entriesRange(range),
     queryFn: () => adapter.listEntries(range),
     placeholderData: (prev) => prev,
-    // Pick up entries created on other devices (e.g. a timer stopped elsewhere). Cheap: one tree
-    // request; unchanged files are served from the blob-SHA cache.
+    // Pick up entries created on other devices (e.g. a timer stopped elsewhere). Cheap: one head
+    // request when nothing changed; unchanged files are served from the blob-SHA cache.
     refetchInterval: TIMER_POLL_MS,
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: 'always',
@@ -74,9 +74,27 @@ export function useTodayEntries() {
   return useEntries(range)
 }
 
-export function useAllEntries() {
+const allEntriesQuery = (adapter: StorageAdapter) => ({
+  queryKey: keys.entriesAll,
+  queryFn: () => adapter.listAllEntries(),
+})
+
+/** Every entry of every member. `enabled: false` only reads what is already cached. */
+export function useAllEntries({ enabled = true }: { enabled?: boolean } = {}) {
   const { adapter } = useSessionData()
-  return useQuery({ queryKey: keys.entriesAll, queryFn: () => adapter.listAllEntries() })
+  return useQuery({ ...allEntriesQuery(adapter), enabled })
+}
+
+/** Loads all entries outside of render (e.g. before a confirmation), sharing the query cache. */
+export function useFetchAllEntries() {
+  const queryClient = useQueryClient()
+  const { adapter } = useSessionData()
+  return useCallback(() => queryClient.fetchQuery(allEntriesQuery(adapter)), [queryClient, adapter])
+}
+
+/** Whether all entries are already in the query cache (e.g. after visiting Reassign entries). */
+export function useHasAllEntries() {
+  return useQueryClient().getQueryData(keys.entriesAll) !== undefined
 }
 
 /** All running timers; polled while the page is visible and refreshed on focus. */

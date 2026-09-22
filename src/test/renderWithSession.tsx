@@ -8,10 +8,13 @@ import { AuthContext } from '../features/auth/AuthContext'
 import type { StorageAdapter } from '../storage'
 
 /** Renders UI behind the login guard with a ready session over `adapter`. */
-export async function renderWithSession(ui: ReactNode, adapter: StorageAdapter) {
+export async function renderWithSession(
+  ui: ReactNode,
+  adapter: StorageAdapter,
+  queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } }),
+) {
   await adapter.init()
   const user = await adapter.getCurrentUser()
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
   const auth = {
     state: { status: 'ready' as const, session: { mode: 'demo' as const }, adapter, user },
     login: async () => {},

@@ -20,6 +20,11 @@ export class FakeGitHub {
   /** Number of commits on the branch (every contents PUT, putRaw, and ref update). */
   commits = 0
   head = 'c0'
+  /** Delay before a blob response, so tests can observe how many blob requests overlap. */
+  blobDelayMs = 0
+  blobsInFlight = 0
+  /** Highest number of blob requests in flight at the same time. */
+  peakBlobsInFlight = 0
   private trees = new Map<string, { path: string; content?: string; sha?: null }[]>()
   private pendingCommits = new Map<string, { tree: string; parent: string; message: string }>()
   messages: string[] = []
@@ -85,7 +90,8 @@ export class FakeGitHub {
         })),
       )
     }
-    if (sub === '/git/trees/main') {
+    // The fake keeps no history: a tree by branch name or by commit SHA lists the current files.
+    if (sub.startsWith('/git/trees/') && method === 'GET') {
       if (this.files.size === 0) return res(409, { message: 'Git Repository is empty.' })
       return res(200, {
         truncated: false,
@@ -93,6 +99,12 @@ export class FakeGitHub {
       })
     }
     if (sub.startsWith('/git/blobs/')) {
+      this.peakBlobsInFlight = Math.max(this.peakBlobsInFlight, ++this.blobsInFlight)
+      try {
+        if (this.blobDelayMs > 0) await new Promise((r) => setTimeout(r, this.blobDelayMs))
+      } finally {
+        this.blobsInFlight--
+      }
       const text = this.blobs.get(sub.slice('/git/blobs/'.length))
       if (text === undefined) return res(404, { message: 'Not Found' })
       return res(200, { content: encodeBase64(text), encoding: 'base64' })

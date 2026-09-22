@@ -40,6 +40,22 @@ export async function gitBlobSha(text: string): Promise<string> {
 
 export const MAX_WRITE_RETRIES = 3
 
+/** Runs at most `limit` tasks at the same time; the rest wait in call order. */
+function createLimiter(limit: number) {
+  let active = 0
+  const queue: (() => void)[] = []
+  return async <T>(task: () => Promise<T>): Promise<T> => {
+    if (active >= limit) await new Promise<void>((resolve) => queue.push(resolve))
+    active++
+    try {
+      return await task()
+    } finally {
+      active--
+      queue.shift()?.()
+    }
+  }
+}
+
 export interface GitHubFileStoreOptions {
   client: GitHubClient
   owner: string
@@ -48,30 +64,39 @@ export interface GitHubFileStoreOptions {
   cache: BlobCache
   /** How long a fetched tree snapshot is reused (dedupes the burst of reads in one refresh). */
   treeTtlMs?: number
+  /** Most blob requests in flight at once, across all concurrent reads. */
+  maxConcurrentReads?: number
   sleep?: (ms: number) => Promise<void>
 }
 
 /**
  * FileStore backed by a GitHub repository.
- * Reads: one recursive tree call lists every file with its blob SHA; contents are fetched
- * per SHA and cached, so unchanged files are never downloaded twice.
+ * Reads: a branch-head request tells whether anything changed; only then does one recursive
+ * tree call list every file with its blob SHA. Contents are fetched per SHA (a few at a time)
+ * and cached, so unchanged files are never downloaded twice.
  * Writes: Contents API with the current SHA; conflicts are retried with re-applied changes.
  */
 export class GitHubFileStore implements FileStore {
   private tree: Promise<Map<string, string>> | null = null
   private treeFetchedAt = 0
+  /** Head commit and file list of the last fetched tree, reused while the head is unchanged. */
+  private snapshot: { commit: string; files: Map<string, string> } | null = null
   private readonly base: string
   private readonly treeTtlMs: number
   private readonly sleep: (ms: number) => Promise<void>
+  private readonly limit: <T>(task: () => Promise<T>) => Promise<T>
 
   constructor(private readonly opts: GitHubFileStoreOptions) {
     this.base = `/repos/${encodeURIComponent(opts.owner)}/${encodeURIComponent(opts.repo)}`
     this.treeTtlMs = opts.treeTtlMs ?? 2000
     this.sleep = opts.sleep ?? ((ms) => new Promise((r) => setTimeout(r, ms)))
+    this.limit = createLimiter(opts.maxConcurrentReads ?? 8)
   }
 
   invalidate(): void {
     this.tree = null
+    // Forget the head too: right after a write the ref may still report the old commit.
+    this.snapshot = null
   }
 
   listFiles(): Promise<Map<string, string>> {
@@ -87,22 +112,33 @@ export class GitHubFileStore implements FileStore {
   }
 
   private async fetchTree(): Promise<Map<string, string>> {
+    let commit: string
     try {
-      const res = await this.opts.client.get<TreeResponse>(
-        `${this.base}/git/trees/${encodeURIComponent(this.opts.branch)}?recursive=1`,
+      const ref = await this.opts.client.get<RefResponse>(
+        `${this.base}/git/ref/heads/${encodeURIComponent(this.opts.branch)}`,
       )
-      return new Map(res.tree.filter((t) => t.type === 'blob').map((t) => [t.path, t.sha]))
+      commit = ref.object.sha
     } catch (e) {
       // An empty repository (409) or a missing branch (404) simply has no files yet.
       if (isStorageError(e, 'conflict') || isStorageError(e, 'notFound')) return new Map()
       throw e
     }
+    if (this.snapshot?.commit === commit) return this.snapshot.files
+    // By commit SHA, not branch name, so the list matches the head just checked.
+    const res = await this.opts.client.get<TreeResponse>(
+      `${this.base}/git/trees/${commit}?recursive=1`,
+    )
+    const files = new Map(res.tree.filter((t) => t.type === 'blob').map((t) => [t.path, t.sha]))
+    this.snapshot = { commit, files }
+    return files
   }
 
   private async readText(sha: string): Promise<string> {
     const cached = await this.opts.cache.get(sha)
     if (cached !== undefined) return cached
-    const blob = await this.opts.client.get<BlobResponse>(`${this.base}/git/blobs/${sha}`)
+    const blob = await this.limit(() =>
+      this.opts.client.get<BlobResponse>(`${this.base}/git/blobs/${sha}`),
+    )
     const text = blob.encoding === 'base64' ? decodeBase64(blob.content) : blob.content
     await this.opts.cache.set(sha, text)
     return text
@@ -129,7 +165,11 @@ export class GitHubFileStore implements FileStore {
           `${this.base}/contents/${path.split('/').map(encodeURIComponent).join('/')}`,
           { message, content: encodeBase64(nextText), ...(sha ? { sha } : {}) },
         )
+        // Updates the cached file list in place so reads within the TTL see the new SHA. The
+        // remembered head is dropped, so the next refresh fetches a fresh tree; do not rely on
+        // this mutation elsewhere.
         files.set(path, res.content.sha)
+        this.snapshot = null
         await this.opts.cache.set(res.content.sha, nextText)
         return next
       } catch (e) {
