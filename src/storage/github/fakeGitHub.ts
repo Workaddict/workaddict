@@ -95,7 +95,12 @@ export class FakeGitHub {
       if (this.files.size === 0) return res(409, { message: 'Git Repository is empty.' })
       return res(200, {
         truncated: false,
-        tree: [...this.files].map(([p, f]) => ({ path: p, type: 'blob', sha: f.sha })),
+        tree: [...this.files].map(([p, f]) => ({
+          path: p,
+          type: 'blob',
+          sha: f.sha,
+          size: new TextEncoder().encode(f.text).length,
+        })),
       })
     }
     if (sub.startsWith('/git/blobs/')) {

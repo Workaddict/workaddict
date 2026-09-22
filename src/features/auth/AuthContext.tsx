@@ -3,6 +3,7 @@ import { createContext, useCallback, useContext, useEffect, useState, type React
 import type { Member } from '../../domain/types'
 import {
   clearBlobCache,
+  createBlobCache,
   createGitHubAdapter,
   isStorageError,
   parseRepo,
@@ -10,7 +11,13 @@ import {
 } from '../../storage'
 import { onAuthExpired } from './authEvents'
 import { createDemoAdapter } from './demoData'
-import { clearSession, loadSession, saveSession, type Session } from './session'
+import {
+  clearSession,
+  hasRememberedSession,
+  loadSession,
+  saveSession,
+  type Session,
+} from './session'
 
 export type LogoutReason = 'sessionExpired' | 'unreachable'
 
@@ -29,14 +36,20 @@ interface AuthContextValue {
 /** Exported for tests, which provide a ready session directly. */
 export const AuthContext = createContext<AuthContextValue | null>(null)
 
-function createAdapter(session: Session): StorageAdapter {
+/** Repository content is kept on disk (IndexedDB) only for remembered sessions. */
+function createAdapter(session: Session, remember: boolean): StorageAdapter {
   if (session.mode === 'demo') return createDemoAdapter()
   const repo = parseRepo(session.repo)!
-  return createGitHubAdapter({ token: session.token, ...repo, branch: session.branch })
+  return createGitHubAdapter({
+    token: session.token,
+    ...repo,
+    branch: session.branch,
+    cache: createBlobCache({ persist: remember }),
+  })
 }
 
-async function open(session: Session): Promise<AuthState> {
-  const adapter = createAdapter(session)
+async function open(session: Session, remember: boolean): Promise<AuthState> {
+  const adapter = createAdapter(session, remember)
   await adapter.init()
   const user = await adapter.getCurrentUser()
   return { status: 'ready', session, adapter, user }
@@ -60,10 +73,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Restore a stored session on startup.
   useEffect(() => {
+    const remembered = hasRememberedSession()
+    // Without a remembered session nothing may stay on disk, e.g. from a closed tab.
+    if (!remembered) void clearBlobCache()
     const session = loadSession()
     if (!session) return
     let cancelled = false
-    open(session)
+    open(session, remembered)
       .then((s) => !cancelled && setState(s))
       .catch((e: unknown) => {
         if (cancelled) return
@@ -82,7 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => onAuthExpired(() => void logout('sessionExpired')), [logout])
 
   const login = useCallback(async (session: Session, remember: boolean) => {
-    const next = await open(session)
+    const next = await open(session, remember)
     if (session.mode === 'github') saveSession(session, remember)
     setState(next)
   }, [])

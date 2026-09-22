@@ -255,15 +255,18 @@ If this returns JSON with `"full_name": "my-team/time-data"` and `"push": true`,
 
 ## Security notes
 
-Read this before you use the app with real data.
+Read this before you use the app with real data. To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 - **Roles are not a security boundary.** Anyone with write access to the data repo can read and change _all_ data through the GitHub API or the GitHub website, including other members' entries, projects, and `roles.json` itself. The app checks roles before every change it makes, but it cannot stop direct edits to the repository. Only add people you trust. Every change is a commit that names the acting user (for example `entry: delete "Standup" for bob (carol)`, `role: set bob to editor (alice)`), so you can find and revert unwanted changes in the git history.
 - **Your token is stored in your browser.** With "Remember me" it is kept in `localStorage`; without it, in `sessionStorage`, which is cleared when the tab closes. Anyone with access to your browser profile, or any script that runs on the page, could read it. To limit the risk:
-  - use a **fine-grained token** limited to the data repo, with an expiration date;
-  - don't use "Remember me" on shared computers;
+  - use a **fine-grained token** limited to the data repo, with an expiration date (the app warns when you sign in with a classic token);
+  - don't use "Remember me" on shared computers. Without it, repository data is cached in memory only and nothing stays on disk after the tab closes;
   - **log out** (Settings → Log out) to remove the token and cached data;
   - if a token leaks, revoke it on GitHub right away.
-- **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com` and, for the one-time Clockify import, `https://*.clockify.me`. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
+- **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com` and, for the one-time Clockify import, `https://*.clockify.me`. Trusted Types are enforced and inline styles are not allowed. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
+- **No framing.** The app refuses to run inside another page (clickjacking protection) and offers a link to open it in its own tab.
+- **Repository data is treated as untrusted.** Every file is validated before use. Broken or suspicious records (for example an entry in bob's file that claims to be alice's) are not shown, are listed in a notice, and are kept unchanged when the app writes the file. Files over 2 MB are not loaded.
+- **Build pipeline.** GitHub Actions are pinned to commit SHAs, dependencies install without install scripts, the deploy fails on known high-severity vulnerabilities, and Dependabot proposes updates after a 7-day waiting period.
 - **The app repo contains no data or secrets.** It is safe for it to be public.
 
 ---

@@ -11,6 +11,11 @@ export interface GitHubClientOptions {
 export class GitHubClient {
   private readonly token: string
   private readonly fetchFn: typeof fetch
+  /**
+   * OAuth scopes of the token from the last response (`X-OAuth-Scopes`, which GitHub exposes
+   * via CORS). Classic tokens list their scopes; null when the header was absent.
+   */
+  scopes: string[] | null = null
 
   constructor(opts: GitHubClientOptions) {
     this.token = opts.token
@@ -36,6 +41,8 @@ export class GitHubClient {
       const offline = typeof navigator !== 'undefined' && navigator.onLine === false
       throw new StorageError(offline ? 'offline' : 'network', String(e))
     }
+    const scopes = res.headers.get('x-oauth-scopes')
+    this.scopes = scopes === null ? null : scopes.split(',').map((s) => s.trim()).filter(Boolean)
     if (res.ok) {
       return (res.status === 204 ? undefined : await res.json()) as T
     }

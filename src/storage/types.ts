@@ -84,6 +84,20 @@ export interface StorageAdapter {
    * only. Returns the number of moved entries; nothing is written when it is 0.
    */
   reassignEntries(from: string, to: string, opts?: { before?: Date }): Promise<number>
+
+  /**
+   * Data files that could not be fully read in recent reads: records that failed validation, or
+   * files that are unreadable (wrong shape, invalid JSON, too large). Updated by every read.
+   */
+  dataProblems(): DataProblem[]
+}
+
+export interface DataProblem {
+  path: string
+  /** Content version (blob SHA) the problem was found in; a changed file is re-checked. */
+  version: string
+  /** `records`: some records were skipped; `unreadable`: nothing in the file could be used. */
+  kind: 'records' | 'unreadable'
 }
 
 export interface RoleMember extends Member, Access {}

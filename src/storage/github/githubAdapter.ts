@@ -106,7 +106,7 @@ export function parseRepo(full: string): { owner: string; repo: string } | null 
 }
 
 export type LoginCheck =
-  | { ok: true; user: Member; repo: GitHubRepoInfo }
+  | { ok: true; user: Member; repo: GitHubRepoInfo; scopes: string[] | null }
   | { ok: false; error: 'badRepoFormat' | 'invalidToken' | 'repoNotFound' | 'noPushAccess' | 'offline' | 'rateLimit' | 'unknown'; resetAt?: Date }
 
 /** Validates a token and repository before logging in. */
@@ -131,7 +131,7 @@ export async function checkLogin(
       throw e
     }
     if (!repo.permissions?.push) return { ok: false, error: 'noPushAccess' }
-    return { ok: true, user: { login: u.login, avatarUrl: u.avatar_url }, repo }
+    return { ok: true, user: { login: u.login, avatarUrl: u.avatar_url }, repo, scopes: client.scopes }
   } catch (e) {
     if (e instanceof StorageError) {
       if (e.kind === 'auth') return { ok: false, error: 'invalidToken' }

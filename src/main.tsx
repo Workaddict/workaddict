@@ -8,6 +8,7 @@ import {
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { App } from './app/App'
+import { FrameGuard } from './app/FrameGuard'
 import { ConfirmProvider } from './components/Modal'
 import { ToastProvider } from './components/Toasts'
 import { AuthProvider } from './features/auth/AuthContext'
@@ -47,14 +48,16 @@ const queryClient = new QueryClient({
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <ToastProvider>
-        <ConfirmProvider>
-          <AuthProvider>
-            <App />
-          </AuthProvider>
-        </ConfirmProvider>
-      </ToastProvider>
-    </QueryClientProvider>
+    <FrameGuard>
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>
+          <ConfirmProvider>
+            <AuthProvider>
+              <App />
+            </AuthProvider>
+          </ConfirmProvider>
+        </ToastProvider>
+      </QueryClientProvider>
+    </FrameGuard>
   </StrictMode>,
 )
