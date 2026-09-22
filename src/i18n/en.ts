@@ -83,6 +83,7 @@ const en = {
         'Your token is stored only in this browser and is sent only to api.github.com.',
     },
   },
+  // index.html has a static copy of this text for crawlers; update it when these strings change.
   landing: {
     headline: 'Free and open-source time tracking',
     subline:

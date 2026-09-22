@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/Workaddict/workaddict/stargazers"><img src="https://img.shields.io/github/stars/Workaddict/workaddict?style=for-the-badge&logo=github&label=Stars&color=4f46e5" alt="GitHub stars"></a>
   <img src="https://komarev.com/ghpvc/?username=Workaddict-workaddict&label=Views&color=4f46e5&style=for-the-badge" alt="Views">
-  <a href="https://workaddict.github.io/workaddict/"><img src="https://img.shields.io/badge/Live_demo-open-4f46e5?style=for-the-badge" alt="Live demo"></a>
+  <a href="https://workaddict.me"><img src="https://img.shields.io/badge/Live_demo-open-4f46e5?style=for-the-badge" alt="Live demo"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-AGPL--3.0-4f46e5?style=for-the-badge" alt="License: AGPL-3.0"></a>
 </p>
 
@@ -22,7 +22,7 @@ A private, free and simple time tracker for small teams, as an alternative to Cl
 - **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF, Excel (.xlsx), OpenDocument (.ods) and CSV from one Export menu, plus a full JSON backup. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
 - **Full history.** Each change is a git commit with a readable message (`entry: add 2h "Fix login" (alice)`), so the data repo doubles as an audit log that you can revert.
 
-Try it without an account by clicking **"Try the demo"** on the start page. Demo data stays in memory and is never saved.
+Try it without an account at **[workaddict.me](https://workaddict.me)** by clicking **"Try the demo"** on the start page. Demo data stays in memory and is never saved.
 
 ---
 
@@ -178,6 +178,8 @@ Use a classic token only if the data repo is owned by **another person's persona
 4. The app is available at `https://<user-or-org>.github.io/<app-repo>/`.
 
 The build uses a relative base path and hash routing (`#/stats`), so it works under any repo name and page reloads never 404.
+
+> **Deploying your own copy?** `index.html` (canonical and `og:` URLs), `public/robots.txt` and `public/sitemap.xml` point to `https://workaddict.me`. Change them to your own URL, or search engines will treat your copy as a duplicate of the official site.
 
 ### 4. Sign in
 

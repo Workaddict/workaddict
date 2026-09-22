@@ -1596,3 +1596,43 @@ button.entry-duration {
     max-width: 180px;
   }
 }
+
+/* ---------- Static fallback (index.html) ----------
+   Shown to crawlers and without JavaScript; React replaces it on mount. Never hidden. */
+.static-fallback {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 24px 16px 40px;
+}
+.static-fallback main {
+  margin: 28px 0 32px;
+}
+.static-fallback h1 {
+  font-size: 1.9rem;
+  margin-bottom: 8px;
+}
+.static-fallback h2 {
+  font-size: 1.2rem;
+  margin: 28px 0 10px;
+}
+.static-fallback h3 {
+  font-size: 1rem;
+}
+.static-fallback p {
+  margin: 4px 0;
+}
+.static-fallback ul,
+.static-fallback ol {
+  padding-left: 20px;
+  margin: 8px 0;
+}
+.static-fallback li + li {
+  margin-top: 8px;
+}
+.static-fallback li p,
+.static-fallback footer {
+  color: var(--text-muted);
+}
+.static-fallback a {
+  color: var(--accent);
+}

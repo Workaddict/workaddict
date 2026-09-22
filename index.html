@@ -4,16 +4,126 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="no-referrer" />
+    <title>Workaddict – Free, open-source Clockify alternative for small teams</title>
     <meta
       name="description"
-      content="Free, private time tracking for small teams. A Clockify alternative that keeps your data in your own GitHub repository."
+      content="Free, open-source Clockify alternative for small teams. No server, no subscription: your time entries stay in your own private GitHub repository."
     />
+    <link rel="canonical" href="https://workaddict.me/" />
     <meta name="theme-color" content="#4f46e5" />
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
-    <title>Workaddict</title>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Workaddict" />
+    <meta property="og:title" content="Workaddict – Free, open-source Clockify alternative" />
+    <meta
+      property="og:description"
+      content="Free time tracking for small teams with no server: your entries stay in your own private GitHub repository. Timer, reports, exports and Clockify import."
+    />
+    <meta property="og:url" content="https://workaddict.me/" />
+    <meta property="og:image" content="https://workaddict.me/og-image.png" />
+    <meta property="og:image:width" content="1280" />
+    <meta property="og:image:height" content="640" />
+    <meta
+      property="og:image:alt"
+      content="Workaddict: free, private time tracking for small teams"
+    />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Workaddict – Free, open-source Clockify alternative" />
+    <meta
+      name="twitter:description"
+      content="Free time tracking for small teams with no server: your entries stay in your own private GitHub repository."
+    />
+    <meta name="twitter:image" content="https://workaddict.me/og-image.png" />
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <!--
+        Static fallback for crawlers, link previews and visitors without JavaScript.
+        React replaces it on mount. Keep the text in sync with `landing.*` in src/i18n/en.ts
+        (src/app/seo.test.ts checks the headline).
+      -->
+      <div class="static-fallback">
+        <header>
+          <span class="brand">
+            <img src="./favicon.svg" width="28" height="28" alt="" />
+            Workaddict
+          </span>
+        </header>
+        <main>
+          <h1>Free and open-source time tracking</h1>
+          <p>A simple time tracker for you and your team. No subscription, no ads, no tracking.</p>
+          <ul>
+            <li>Free. No paid plans, no limits.</li>
+            <li>
+              Open source.
+              <a href="https://github.com/Workaddict/workaddict">Read the code on GitHub</a>
+            </li>
+            <li>Your entries stay in your own private GitHub repository.</li>
+          </ul>
+
+          <h2>Everything a small team needs</h2>
+          <ul>
+            <li>
+              <h3>Free, no server</h3>
+              <p>A static website on GitHub Pages. No subscription, no seats to count.</p>
+            </li>
+            <li>
+              <h3>Your data, your repository</h3>
+              <p>
+                Entries are stored in a private GitHub repository you control. Every change is a
+                commit you can revert.
+              </p>
+            </li>
+            <li>
+              <h3>Made for teams</h3>
+              <p>
+                Worker, editor and team leader roles, plus a live “Team now” view of who is tracking
+                right now.
+              </p>
+            </li>
+            <li>
+              <h3>A timer that follows you</h3>
+              <p>Start on your laptop, stop on your phone. Overnight entries just work.</p>
+            </li>
+            <li>
+              <h3>Reports and exports</h3>
+              <p>Charts by project, tag and member. Export to PDF, Excel, OpenDocument or CSV.</p>
+            </li>
+            <li>
+              <h3>Switch from Clockify</h3>
+              <p>Bring your projects, tags and entries over with the built-in import.</p>
+            </li>
+          </ul>
+
+          <h2>How it works</h2>
+          <ol>
+            <li>
+              <h3>Create a private repository</h3>
+              <p>An empty private repository on GitHub holds your team’s data.</p>
+            </li>
+            <li>
+              <h3>Create a token</h3>
+              <p>A fine-grained token that can access only that repository.</p>
+            </li>
+            <li>
+              <h3>Sign in</h3>
+              <p>Enter the repository and the token. The app sets everything up on first use.</p>
+            </li>
+          </ol>
+        </main>
+        <footer>
+          <p>
+            <a href="https://github.com/Workaddict/workaddict">Source code</a> ·
+            <a href="https://github.com/Workaddict/workaddict/issues">Report an issue</a> ·
+            <a href="https://github.com/Workaddict/workaddict/blob/main/LICENSE">AGPL-3.0</a>
+          </p>
+          <p>Made by <a href="https://github.com/BenediktLehner">Benedikt Lehner</a></p>
+        </footer>
+      </div>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
