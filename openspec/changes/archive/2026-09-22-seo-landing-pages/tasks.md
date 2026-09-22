@@ -45,5 +45,5 @@
 
 ## 7. Launch checklist (manual, after the deploy; ask before pushing to `main`)
 
-- [ ] 7.1 Search Console: resubmit the sitemap and request indexing for the four new URLs
+- [x] 7.1 Search Console: resubmit the sitemap and request indexing for the four new URLs
 - [x] 7.2 Check the live pages with `curl -I` (200, and the paths without a trailing slash redirect) and a link preview for one page
