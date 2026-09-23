@@ -1,4 +1,3 @@
-import { format } from 'date-fns'
 import type { ReactNode } from 'react'
 import { CopyText } from '../../components/CopyText'
 import { useI18n } from '../../i18n'
@@ -23,7 +22,7 @@ export function LoginDiagnosis({
   token: string
   repo: string
 }) {
-  const { t, locale } = useI18n()
+  const { t, time } = useI18n()
   const parsed = parseRepo(repo)
   const owner = parsed?.owner ?? ''
   const name = parsed?.repo ?? ''
@@ -35,7 +34,7 @@ export function LoginDiagnosis({
   const title = t(`login.errors.${error}`, {
     repo: full,
     owner,
-    time: failure.resetAt ? format(failure.resetAt, 'p', { locale }) : '…',
+    time: failure.resetAt ? time(failure.resetAt) : '…',
   })
 
   const message = (m: Pick<OwnerMessageInput, 'problem' | 'ownerType'>) =>

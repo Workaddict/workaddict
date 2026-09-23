@@ -4,23 +4,25 @@ Reference this file with `@continuations/2026-09-23-onboarding-verification.md` 
 
 ## Where things stand (2026-09-23, end of day)
 
-The change is **implemented, committed and green**, but **not pushed**. Four commits sit on local `main`, ahead of `origin/main`:
+The change is **implemented, committed and green**, but **not pushed**. The onboarding commits sit on local `main`, ahead of `origin/main`. They were rebased on 2026-09-23 onto the timer-feedback follow-ups, which were pushed on their own (`b4ba463`), so their hashes changed:
 
 ```
-d86d229  fix: owner message names the wrong-resource-owner case
-76aa54e  fix: solo setup no longer talks about an organization
-c88994d  fix: token link only sends the parameters GitHub applies
-ac962a6  feat: guided team and solo onboarding with sign-in diagnosis
+        fix: sign-in rate-limit time follows the time format setting
+2d94e6a docs: continuation for the open onboarding verification
+7e7530c fix: owner message names the wrong-resource-owner case
+4a83f0d fix: solo setup no longer talks about an organization
+33395c9 fix: token link only sends the parameters GitHub applies
+43f1c41 feat: guided team and solo onboarding with sign-in diagnosis
 --- origin/main ---
-1003d60  docs: archive timer-feedback          (from the parallel session)
-de274ff  feat: timer feedback                  (from the parallel session)
+b4ba463 fix: timer feedback follow-ups (stop on close, start edit, time format)
+94e24f9 docs: reopen timer-feedback
 ```
 
 `tsc` clean, **461 tests**, `eslint` 0 errors (10 pre-existing `react-refresh` warnings), `npm run build` passes.
 
 A push to `main` deploys straight to production. **Ask before pushing.** The user writes German or English and wants short, clear answers.
 
-There is also a tag `backup/onboarding-7c8a70f` pointing at the pre-rebase version of the first commit. Delete it once the work is pushed: `git tag -d backup/onboarding-7c8a70f`.
+There are also the tags `backup/onboarding-7c8a70f` (pre-rebase version of the first commit) and `backup/main-before-rebase` (local `main` before the second rebase). Delete both once the work is pushed: `git tag -d backup/onboarding-7c8a70f backup/main-before-rebase`.
 
 ## What is still open
 
@@ -90,4 +92,4 @@ marketing/                              SEO listing and launch drafts (separate 
 
 ## Suggested opening prompt
 
-> Read `@continuations/2026-09-23-onboarding-verification.md`. Four onboarding commits are waiting on local main. Guide me through task 9.2 (the two-account run) and the read-only token case, then we decide about pushing.
+> Read `@continuations/2026-09-23-onboarding-verification.md`. The onboarding commits are waiting on local main. Guide me through task 9.2 (the two-account run) and the read-only token case, then we decide about pushing.
