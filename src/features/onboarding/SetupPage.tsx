@@ -69,7 +69,7 @@ export function SetupPage() {
           ← {t('onboarding.back')}
         </Link>
         <div className="stack" style={{ gap: 6 }}>
-          <h1>{t('onboarding.setup.title')}</h1>
+          <h1>{t(solo ? 'onboarding.setup.soloTitle' : 'onboarding.setup.title')}</h1>
           <p className="muted">
             {t(solo ? 'onboarding.setup.soloIntro' : 'onboarding.setup.intro')}
           </p>
@@ -189,7 +189,7 @@ export function SetupPage() {
                 {ready && (
                   <GitHubLink
                     href={githubLinks.newRepo(org, repo)}
-                    menu={t('onboarding.menu.newRepo')}
+                    menu={t(solo ? 'onboarding.menu.newRepoOwn' : 'onboarding.menu.newRepo')}
                     primary
                   >
                     {t('onboarding.setup.repoLink', names)}

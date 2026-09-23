@@ -136,6 +136,7 @@ const en = {
     menu: {
       createOrg: 'Profile picture → Your organizations → New organization',
       newRepo: 'Organization page → Repositories → New repository',
+      newRepoOwn: 'Profile picture → Your repositories → New',
       memberPrivileges: 'Organization → Settings → Member privileges → Base permissions',
       tokenPolicy: 'Organization → Settings → Personal access tokens → Settings',
       pendingTokens: 'Organization → Settings → Personal access tokens → Pending requests',
@@ -224,6 +225,7 @@ const en = {
     },
     setup: {
       title: 'Set up a team',
+      soloTitle: 'Set up your time tracking',
       intro:
         'About 10 minutes, once. Each step opens the right GitHub page. Tick off what is done; your progress is kept in this browser.',
       soloIntro:

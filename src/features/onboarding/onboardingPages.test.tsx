@@ -313,6 +313,9 @@ describe('setup wizard', () => {
     )
     expect(screen.getByLabelText('Data repository')).toHaveValue('my-name/time-data')
     expect(screen.getByText(/cannot be shared with fine-grained tokens/)).toBeInTheDocument()
+    // Nothing on the solo path may talk about an organization.
+    expect(screen.getByRole('heading', { name: 'Set up your time tracking' })).toBeInTheDocument()
+    expect(screen.queryByText(/Organization page/)).toBeNull()
   })
 
   it('lets the user switch between the solo and team paths', () => {

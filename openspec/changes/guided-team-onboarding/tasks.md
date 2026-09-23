@@ -61,8 +61,8 @@ The wizard assumed every user sets up a team, so one person tracking their own t
 - [x] 10.3 Solo texts in `en.ts` and `de.ts` (`mode*`, `user*`, `soloIntro`, `soloRepoText`, `soloTokenText`, `soloLater`), including the note that a personal repository cannot be shared with fine-grained tokens
 - [x] 10.4 Styles for the two path buttons (`.ob-modes`, `.ob-mode`)
 - [x] 10.5 Tests: solo path skips the organization steps and builds the right links; switching paths; mode migration for old saved progress; `stepsFor`; existing wizard tests pick the team path first
-- [ ] 10.6 Check the solo path in the browser at phone width and in dark mode
-- [ ] 10.7 Update the README quick start so it names both paths
+- [~] 10.6 Solo path checked in the browser in dark mode at 1440 px: heading, steps, links and menu paths are right and there is no horizontal overflow. Two bugs found and fixed (the heading still said "Set up a team", and step 1 pointed at an organization page). **Phone width is still unchecked**: the browser extension reported the window resize as successful but the viewport stayed at 1440, so no narrow-viewport look was possible. The CSS collapses `.ob-names` to one column below 560 px and `.ob-modes` wraps with no fixed widths, so it should hold, but nobody has seen it
+- [x] 10.7 README quick start names both paths, and section 2.1 now says that only the token name and description can be prefilled
 
 ## 9. Verify
 

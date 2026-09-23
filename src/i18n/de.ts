@@ -145,6 +145,7 @@ const de: Resources = {
     menu: {
       createOrg: 'Profilbild → Your organizations → New organization',
       newRepo: 'Organisationsseite → Repositories → New repository',
+      newRepoOwn: 'Profilbild → Your repositories → New',
       memberPrivileges: 'Organisation → Settings → Member privileges → Base permissions',
       tokenPolicy: 'Organisation → Settings → Personal access tokens → Settings',
       pendingTokens: 'Organisation → Settings → Personal access tokens → Pending requests',
@@ -235,6 +236,7 @@ const de: Resources = {
     },
     setup: {
       title: 'Team einrichten',
+      soloTitle: 'Zeiterfassung einrichten',
       intro:
         'Etwa 10 Minuten, einmalig. Jeder Schritt öffnet die passende GitHub-Seite. Hake ab, was erledigt ist; dein Fortschritt bleibt in diesem Browser gespeichert.',
       soloIntro:

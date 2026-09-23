@@ -49,9 +49,10 @@ Browser (this app, GitHub Pages)  ──GitHub REST API──►  private data r
 
 ### Quick start: let the app guide you
 
-Open the app (for example [workaddict.me](https://workaddict.me)):
+Open the app (for example [workaddict.me](https://workaddict.me)) and click **Set up a team**. The wizard first asks who the setup is for:
 
-- **Team owner:** click **Set up a team**. Enter your organization name once; every step then opens the right GitHub page, prefilled: organization, private data repo, base permission, token approval, invitations (optionally as ready-made `gh` commands) and your own token. At the end you get an **invite link** and a message for your team. Later you find both under **Settings → Invite members**.
+- **Just me:** no organization needed. A fine-grained token reaches a private repository in your own account, so it is three steps: create the repo, create the token, sign in. If other people join later, move the repository into a free organization and run the wizard again as a team — a repository in a personal account cannot be shared with fine-grained tokens.
+- **A team:** enter your organization name once; every step then opens the right GitHub page: organization, private data repo, base permission, token approval, invitations (optionally as ready-made `gh` commands) and your own token. At the end you get an **invite link** and a message for your team. Later you find both under **Settings → Invite members**.
 - **Member:** open the **invite link** from your team owner. It walks you through accepting the invitation, checking your access, creating the token and signing in, in the right order.
 - **Sign-in fails?** The app looks up what's wrong, lists the most likely causes with links, and gives you a ready-made message for the owner.
 
@@ -145,7 +146,8 @@ Every team member creates **their own** token on **their own** GitHub account. N
 
 #### 2.1 Create a fine-grained token (recommended)
 
-1. Sign in to GitHub with **your own** account and open <https://github.com/settings/personal-access-tokens/new>. The **How do I get a token?** help on the app's sign-in page links a prefilled version of this form (name, expiration, Contents: Read and write). GitHub may first ask you to confirm it's you (password or GitHub Mobile). Alternatively: click your profile picture (top right) → **Settings** → **Developer settings** (at the bottom of the left sidebar) → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+1. Sign in to GitHub with **your own** account and open <https://github.com/settings/personal-access-tokens/new>. The **How do I get a token?** help on the app's sign-in page links the same form with the token name filled in. GitHub may first ask you to confirm it's you (password or GitHub Mobile). Alternatively: click your profile picture (top right) → **Settings** → **Developer settings** (at the bottom of the left sidebar) → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+   - **Only the name and description can be prefilled by a link.** As of September 2026 GitHub ignores the resource owner, expiration and permission parameters, so the form always opens on your personal account with a 30-day expiry and no permissions. Steps 4, 5, 6 and 7 below are the ones you have to set by hand every time.
 2. **Token name:** something recognizable, e.g. `Workaddict`.
 3. **Description** (optional): e.g. `Time tracking`.
 4. **Resource owner:** open the dropdown and select the **organization** that owns the data repo (e.g. `my-team`), **not** your own username.
