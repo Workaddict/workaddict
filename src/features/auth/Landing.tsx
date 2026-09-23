@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { Icon, type IconName } from '../../components/Icon'
 import { seoPageUrl } from '../../app/seoPages'
 import { useI18n } from '../../i18n'
@@ -50,11 +51,17 @@ export function HowItWorks({ onTokenHelp }: { onTokenHelp: () => void }) {
             <div className="stack" style={{ gap: 4 }}>
               <h3>{t(`landing.step${n}Title`)}</h3>
               <p className="muted">{t(`landing.step${n}Text`)}</p>
+              {n === 1 && (
+                <Link to="/setup" className="step-link">
+                  {t('landing.step1Link')}
+                </Link>
+              )}
               {n === 2 && (
                 <button type="button" className="link-btn step-link" onClick={onTokenHelp}>
                   {t('landing.step2Link')}
                 </button>
               )}
+              {n === 3 && <p className="muted">{t('landing.inviteHint')}</p>}
             </div>
           </li>
         ))}

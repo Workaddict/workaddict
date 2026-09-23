@@ -6,6 +6,8 @@ export type Session =
       branch: string
       /** OAuth scopes GitHub reported at login (classic tokens only). */
       scopes?: string[]
+      /** Whether the data repository belongs to an organization or a user (missing in old sessions). */
+      ownerType?: 'User' | 'Organization'
     }
   | { mode: 'demo' }
 

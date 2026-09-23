@@ -2,6 +2,8 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Spinner } from '../components/bits'
 import { useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
+import { JoinPage } from '../features/onboarding/JoinPage'
+import { SetupPage } from '../features/onboarding/SetupPage'
 import { TrackerPage } from '../features/tracker/TrackerPage'
 import { useI18n } from '../i18n'
 import { Layout } from './Layout'
@@ -22,6 +24,8 @@ export function App() {
     <HashRouter>
       {state.status === 'loggedOut' ? (
         <Routes>
+          <Route path="setup" element={<SetupPage />} />
+          <Route path="join" element={<JoinPage />} />
           <Route path="*" element={<LoginPage />} />
         </Routes>
       ) : (

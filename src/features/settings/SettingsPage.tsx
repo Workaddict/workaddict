@@ -22,6 +22,7 @@ import { useAuth, useSessionData } from '../auth/AuthContext'
 import { tokenKind } from '../auth/session'
 import { useAccess } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
+import { TeamHelper } from '../onboarding/TeamHelper'
 import { downloadBackup } from '../export/backup'
 import { setStopOnClose, useStopOnClose } from '../tracker/stopOnClose'
 import { ReassignEntriesModal } from './ReassignEntries'
@@ -83,7 +84,9 @@ export default function SettingsPage() {
             <div className="settings-row">
               <div className="banner banner-warning" role="note">
                 {t('settings.classicToken')}
-                {Array.isArray(session.scopes) && session.scopes.includes('repo') && <> {t('settings.classicTokenRepo')}</>}
+                {Array.isArray(session.scopes) && session.scopes.includes('repo') && (
+                  <> {t('settings.classicTokenRepo')}</>
+                )}
               </div>
             </div>
           )}
@@ -161,6 +164,7 @@ export default function SettingsPage() {
       </section>
 
       <TeamRolesSection />
+      <TeamHelper />
 
       <section className="section">
         <h2>{t('settings.data')}</h2>

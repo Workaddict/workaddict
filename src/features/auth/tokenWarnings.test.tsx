@@ -47,7 +47,9 @@ describe('login page token warnings', () => {
     const warning = screen.getByText(CLASSIC_WARNING)
     expect(within(warning).getByRole('link')).toHaveAttribute(
       'href',
-      'https://github.com/settings/personal-access-tokens/new',
+      expect.stringMatching(
+        /^https:\/\/github\.com\/settings\/personal-access-tokens\/new\?.*contents=write/,
+      ),
     )
     expect(screen.getByRole('button', { name: 'Sign in' })).toBeEnabled()
   })

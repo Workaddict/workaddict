@@ -1,26 +1,19 @@
-import { useRef, useState, type FormEvent } from 'react'
+import { useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 import { REPO_URL } from '../../app/about'
 import { Icon } from '../../components/Icon'
-import { LanguageSwitch } from '../../components/LanguageSwitch'
 import { SiteFooter } from '../../components/SiteFooter'
-import { ThemeToggle } from '../../components/ThemeToggle'
 import { useI18n } from '../../i18n'
-import { checkLogin } from '../../storage'
+import { githubLinks } from '../onboarding/githubLinks'
+import { TokenChecklist } from '../onboarding/parts'
 import { useAuth } from './AuthContext'
 import { Highlights, HowItWorks } from './Landing'
-import { tokenKind } from './session'
+import { PublicHeader } from './PublicHeader'
+import { SignInForm } from './SignInForm'
 
-const FINE_GRAINED_URL = 'https://github.com/settings/personal-access-tokens/new'
-const CLASSIC_URL = 'https://github.com/settings/tokens/new?scopes=repo&description=Workaddict'
-
-export function LoginPage() {
-  const { t, time } = useI18n()
+export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
+  const { t } = useI18n()
   const { state, login } = useAuth()
-  const [token, setToken] = useState('')
-  const [repo, setRepo] = useState('')
-  const [remember, setRemember] = useState(true)
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const reason = state.status === 'loggedOut' ? state.reason : undefined
 
@@ -35,48 +28,9 @@ export function LoginPage() {
     helpRef.current?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
   }
 
-  const submit = async (e: FormEvent) => {
-    e.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      const res = await checkLogin({ token, repo })
-      if (!res.ok) {
-        setError(
-          t(`login.errors.${res.error}`, {
-            time: res.resetAt ? time(res.resetAt) : '…',
-          }),
-        )
-        return
-      }
-      await login(
-        {
-          mode: 'github',
-          token: token.trim(),
-          repo: res.repo.full_name,
-          branch: res.repo.default_branch,
-          ...(res.scopes ? { scopes: res.scopes } : {}),
-        },
-        remember,
-      )
-    } catch {
-      setError(t('login.errors.unknown'))
-    } finally {
-      setBusy(false)
-    }
-  }
-
   return (
     <div className="landing">
-      <header className="row landing-top">
-        <div className="brand">
-          <img src="./favicon.svg" width={28} height={28} alt="" />
-          {t('common.appName')}
-        </div>
-        <span className="spacer" />
-        <LanguageSwitch />
-        <ThemeToggle />
-      </header>
+      <PublicHeader />
 
       <div className="landing-main">
         <section className="landing-hero" aria-labelledby="landing-headline">
@@ -101,134 +55,93 @@ export function LoginPage() {
               {t('landing.factData')}
             </li>
           </ul>
-          <div>
-            <button
-              type="button"
-              className="btn btn-primary btn-lg"
-              disabled={busy}
-              onClick={startDemo}
-            >
+          <div className="row landing-actions">
+            <button type="button" className="btn btn-primary btn-lg" onClick={startDemo}>
               <Icon name="play" size={16} filled />
               {t('landing.demo')}
             </button>
+            <Link to="/setup" className="btn btn-lg">
+              <Icon name="users" size={16} />
+              {t('landing.setupTeam')}
+            </Link>
           </div>
         </section>
 
-        <form className="card login-card" onSubmit={submit}>
-          <div className="stack" style={{ gap: 4 }}>
-            <h2>{t('login.title')}</h2>
-            <p className="muted small">{t('login.subtitle')}</p>
-          </div>
+        <SignInForm
+          className="card login-card"
+          header={
+            <>
+              <div className="stack" style={{ gap: 4 }}>
+                <h2>{t('login.title')}</h2>
+                <p className="muted small">{t('login.subtitle')}</p>
+              </div>
+              {notice === 'invalidInvite' && (
+                <div className="banner banner-warning" role="note">
+                  {t('onboarding.join.invalid')}
+                </div>
+              )}
+              {reason === 'sessionExpired' && (
+                <div className="banner banner-warning">{t('login.sessionExpired')}</div>
+              )}
+              {reason === 'unreachable' && (
+                <div className="banner banner-warning row">
+                  <span>{t('login.errors.offline')}</span>
+                  <span className="spacer" />
+                  <button
+                    type="button"
+                    className="btn btn-sm"
+                    onClick={() => window.location.reload()}
+                  >
+                    {t('common.retry')}
+                  </button>
+                </div>
+              )}
+            </>
+          }
+          footer={(busy) => (
+            <>
+              <details
+                ref={helpRef}
+                open={helpOpen}
+                onToggle={(e) => setHelpOpen(e.currentTarget.open)}
+              >
+                <summary>{t('login.help.title')}</summary>
+                <p style={{ marginTop: 8 }}>{t('login.help.intro')}</p>
+                <p style={{ marginTop: 10 }}>
+                  <strong>{t('login.help.orderTitle')}</strong>
+                </p>
+                <p>{t('login.help.order')}</p>
+                <p style={{ marginTop: 10 }}>
+                  <strong>{t('login.help.fineTitle')}</strong>
+                </p>
+                <TokenChecklist />
+                <p style={{ marginTop: 10 }}>{t('login.help.approval')}</p>
+                <p style={{ marginTop: 12 }}>
+                  <strong>{t('login.help.classicTitle')}</strong>
+                </p>
+                <p>{t('login.help.classicText')}</p>
+                <div className="banner banner-warning" style={{ margin: '8px 0' }}>
+                  {t('login.help.classicWarning')}
+                </div>
+                <a href={githubLinks.classicToken()} target="_blank" rel="noreferrer">
+                  {t('login.help.openClassic')} ↗
+                </a>
+                <p className="muted" style={{ marginTop: 12 }}>
+                  {t('login.help.security')}
+                </p>
+              </details>
 
-          {reason === 'sessionExpired' && (
-            <div className="banner banner-warning">{t('login.sessionExpired')}</div>
-          )}
-          {reason === 'unreachable' && (
-            <div className="banner banner-warning row">
-              <span>{t('login.errors.offline')}</span>
-              <span className="spacer" />
-              <button type="button" className="btn btn-sm" onClick={() => window.location.reload()}>
-                {t('common.retry')}
+              <p className="small">
+                {t('login.setupPrompt')} <Link to="/setup">{t('login.setupLink')}</Link>
+              </p>
+
+              <div className="divider">{t('login.or')}</div>
+              <button type="button" className="btn btn-wrap" disabled={busy} onClick={startDemo}>
+                {t('login.demo')}
               </button>
-            </div>
+            </>
           )}
-
-          <label className="field">
-            <span>{t('login.repo')}</span>
-            <input
-              className="input"
-              required
-              autoComplete="off"
-              spellCheck={false}
-              placeholder={t('login.repoPlaceholder')}
-              value={repo}
-              onChange={(e) => setRepo(e.target.value)}
-            />
-          </label>
-          <label className="field">
-            <span>{t('login.token')}</span>
-            <input
-              className="input"
-              required
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              placeholder={t('login.tokenPlaceholder')}
-              value={token}
-              onChange={(e) => setToken(e.target.value)}
-            />
-          </label>
-          {tokenKind(token) === 'classic' && (
-            <div className="banner banner-warning" role="note">
-              {t('login.classicToken')}{' '}
-              <a href={FINE_GRAINED_URL} target="_blank" rel="noreferrer">
-                {t('login.classicTokenLink')} ↗
-              </a>
-            </div>
-          )}
-          <div className="stack" style={{ gap: 2 }}>
-            <label className="checkbox">
-              <input
-                type="checkbox"
-                checked={remember}
-                onChange={(e) => setRemember(e.target.checked)}
-              />
-              <span>{t('login.remember')}</span>
-            </label>
-            <span className="muted small">{t('login.rememberHint')}</span>
-          </div>
-
-          {error && (
-            <div className="banner banner-error" role="alert">
-              {error}
-            </div>
-          )}
-
-          <button className="btn btn-primary btn-lg" disabled={busy}>
-            <Icon name="github" size={18} />
-            {busy ? t('login.checking') : t('login.submit')}
-          </button>
-
-          <details
-            ref={helpRef}
-            open={helpOpen}
-            onToggle={(e) => setHelpOpen(e.currentTarget.open)}
-          >
-            <summary>{t('login.help.title')}</summary>
-            <p style={{ marginTop: 8 }}>{t('login.help.intro')}</p>
-            <p style={{ marginTop: 10 }}>
-              <strong>{t('login.help.fineTitle')}</strong>
-            </p>
-            <ol>
-              <li>{t('login.help.step1')}</li>
-              <li>{t('login.help.step2')}</li>
-              <li>{t('login.help.step3')}</li>
-              <li>{t('login.help.step4')}</li>
-              <li>{t('login.help.step5')}</li>
-            </ol>
-            <a href={FINE_GRAINED_URL} target="_blank" rel="noreferrer">
-              {t('login.help.openGitHub')} ↗
-            </a>
-            <p style={{ marginTop: 12 }}>
-              <strong>{t('login.help.classicTitle')}</strong>
-            </p>
-            <p>{t('login.help.classicText')}</p>
-            <div className="banner banner-warning" style={{ margin: '8px 0' }}>
-              {t('login.help.classicWarning')}
-            </div>
-            <a href={CLASSIC_URL} target="_blank" rel="noreferrer">
-              {t('login.help.openClassic')} ↗
-            </a>
-            <p className="muted" style={{ marginTop: 12 }}>
-              {t('login.help.security')}
-            </p>
-          </details>
-
-          <div className="divider">{t('login.or')}</div>
-          <button type="button" className="btn btn-wrap" disabled={busy} onClick={startDemo}>
-            {t('login.demo')}
-          </button>
-        </form>
+        />
       </div>
 
       <Highlights />

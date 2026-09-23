@@ -27,6 +27,9 @@ const de: Resources = {
     language: 'Sprache',
     switchToDark: 'Zum dunklen Design wechseln',
     switchToLight: 'Zum hellen Design wechseln',
+    copied: 'Kopiert',
+    copyManually:
+      'Kopieren ist nicht verfügbar. Der Text ist markiert: drücke Strg+C (⌘C auf dem Mac).',
   },
   nav: {
     tracker: 'Zeiterfassung',
@@ -54,14 +57,20 @@ const de: Resources = {
     or: 'oder',
     sessionExpired:
       'Deine Sitzung ist abgelaufen oder das Token wurde widerrufen. Bitte melde dich erneut an.',
+    setupPrompt: 'Du richtest ein neues Team ein?',
+    setupLink: 'Team Schritt für Schritt einrichten',
     errors: {
       badRepoFormat: 'Gib das Repository als besitzer/name an, z. B. mein-team/zeitdaten.',
       invalidToken:
         'GitHub hat dieses Token abgelehnt. Prüfe, ob es vollständig kopiert wurde und nicht abgelaufen ist.',
-      repoNotFound:
-        'Auf das Repository kann nicht zugegriffen werden. Prüfe den Namen und ob das Token Zugriff auf dieses Repository hat.',
-      noPushAccess:
-        'Das Token kann das Repository lesen, aber nicht schreiben. Erteile „Contents: Read and write“.',
+      repoNotFound: 'Auf das Repository {{repo}} kann mit diesem Token nicht zugegriffen werden.',
+      ownerNotFound: 'Es gibt kein GitHub-Konto und keine Organisation mit dem Namen „{{owner}}“.',
+      orgRepoNotAccessible: 'Dein Token sieht das Repository {{repo}} nicht.',
+      ownRepoNotAccessible:
+        'Dein Token sieht das Repository {{repo}} in deinem eigenen Konto nicht.',
+      personalRepoNotAccessible:
+        'Dein Token sieht das Repository {{repo}} nicht. Es gehört zum persönlichen Konto von {{owner}}.',
+      noPushAccess: 'Du kannst das Repository {{repo}} lesen, aber nicht schreiben.',
       offline: 'GitHub ist nicht erreichbar. Prüfe deine Internetverbindung.',
       rateLimit: 'GitHub-Anfragelimit erreicht. Versuche es nach {{time}} erneut.',
       unknown: 'Bei der Verbindung mit GitHub ist etwas schiefgelaufen. Bitte versuche es erneut.',
@@ -70,22 +79,21 @@ const de: Resources = {
       title: 'Wie bekomme ich ein Token?',
       intro:
         'Die App spricht direkt aus deinem Browser mit GitHub – mit einem persönlichen Zugriffstoken, das nur du kennst.',
+      orderTitle: 'Bevor du anfängst',
+      order:
+        'Nimm die Einladung in die Organisation an und prüfe, ob du das Daten-Repository auf GitHub öffnen kannst. Ein Token, das vor dem Zugriff erstellt wurde, funktioniert nicht.',
       fineTitle: 'Empfohlen: Fine-grained Token',
-      step1:
-        'Öffne GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.',
-      step2: 'Resource owner: das Konto oder die Organisation, der das Daten-Repository gehört.',
-      step3: 'Repository access: „Only select repositories“ → das Daten-Repository auswählen.',
-      step4:
-        'Permissions: Contents → Read and write. (Metadata → Read-only wird automatisch hinzugefügt.)',
-      step5: 'Token erzeugen, kopieren und oben einfügen.',
-      openGitHub: 'Fine-grained Token auf GitHub erstellen',
+      approval:
+        'Organisationen verlangen standardmäßig, dass ein Owner neue Tokens freigibt. Bis dahin schlägt die Anmeldung fehl. Owner geben frei unter Organisation → Settings → Personal access tokens → Pending requests.',
+      openGitHub: 'Vorausgefülltes Token-Formular auf GitHub öffnen',
       classicTitle: 'Repository gehört dem persönlichen Konto einer anderen Person?',
       classicText:
         'Fine-grained Tokens funktionieren nur für Repositories, die dir oder einer Organisation gehören, in der du Mitglied bist. Verwende sonst ein klassisches Token mit dem Scope „repo“.',
       classicWarning:
         'Achtung: Ein klassisches „repo“-Token hat Zugriff auf alle deine Repositories. Besser: Daten-Repository in eine kostenlose GitHub-Organisation verschieben.',
       openClassic: 'Klassisches Token auf GitHub erstellen',
-      security: 'Dein Token wird nur in diesem Browser gespeichert und nur an api.github.com gesendet.',
+      security:
+        'Dein Token wird nur in diesem Browser gespeichert und nur an api.github.com gesendet.',
     },
   },
   landing: {
@@ -108,21 +116,236 @@ const de: Resources = {
       teamText:
         'Rollen für Mitarbeiter, Bearbeiter und Teamleitung, dazu die Live-Ansicht „Team jetzt“, wer gerade Zeit erfasst.',
       timerTitle: 'Ein Timer, der mitkommt',
-      timerText: 'Am Laptop starten, am Handy stoppen. Einträge über Mitternacht funktionieren einfach.',
+      timerText:
+        'Am Laptop starten, am Handy stoppen. Einträge über Mitternacht funktionieren einfach.',
       reportsTitle: 'Auswertungen und Exporte',
-      reportsText: 'Diagramme nach Projekt, Tag und Mitglied. Export als PDF, Excel, OpenDocument oder CSV.',
+      reportsText:
+        'Diagramme nach Projekt, Tag und Mitglied. Export als PDF, Excel, OpenDocument oder CSV.',
       importTitle: 'Umstieg von Clockify',
       importText: 'Übernimm Projekte, Tags und Einträge mit dem eingebauten Import.',
       importGuide: 'Zur Import-Anleitung',
     },
     stepsTitle: 'So funktioniert’s',
+    setupTeam: 'Team einrichten',
     step1Title: 'Privates Repository anlegen',
     step1Text: 'Ein leeres privates Repository auf GitHub speichert die Daten deines Teams.',
+    step1Link: 'Einrichtungs-Anleitung öffnen',
     step2Title: 'Token erstellen',
     step2Text: 'Ein Fine-grained Token, das nur auf dieses Repository zugreifen kann.',
     step2Link: 'Zeig mir, wie',
     step3Title: 'Anmelden',
     step3Text: 'Repository und Token eingeben. Die App richtet beim ersten Mal alles ein.',
+    inviteHint:
+      'Du hast einen Einladungslink von deinem Team? Öffne ihn – er führt dich durch jeden Schritt.',
+  },
+  onboarding: {
+    back: 'Zurück zur Startseite',
+    onGitHub: 'Auf GitHub:',
+    done: 'Erledigt',
+    menu: {
+      createOrg: 'Profilbild → Your organizations → New organization',
+      newRepo: 'Organisationsseite → Repositories → New repository',
+      memberPrivileges: 'Organisation → Settings → Member privileges → Base permissions',
+      tokenPolicy: 'Organisation → Settings → Personal access tokens → Settings',
+      pendingTokens: 'Organisation → Settings → Personal access tokens → Pending requests',
+      people: 'Organisation → People → Invite member',
+      orgInvitation: 'E-Mail von GitHub oder Organisationsseite → Join',
+      repoInvitations: 'E-Mail von GitHub oder Repository-Seite → Accept invitation',
+      repo: 'github.com/{{repo}}',
+      repoAccess: 'Repository → Settings → Collaborators and teams',
+      newToken:
+        'Profilbild → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token',
+      tokens:
+        'Profilbild → Settings → Developer settings → Personal access tokens → Fine-grained tokens',
+    },
+    token: {
+      sudo: 'GitHub fragt eventuell zuerst nach einer Bestätigung (Passwort oder GitHub Mobile).',
+      owner:
+        'Resource owner: {{owner}} auswählen, auch wenn es schon angezeigt wird. Das lässt sich später nicht ändern.',
+      ownerGeneric:
+        'Resource owner: die Organisation, der das Daten-Repository gehört, nicht dein eigener Benutzername. Das lässt sich später nicht ändern.',
+      repo: 'Repository access: „Only select repositories“ → {{repo}}.',
+      repoGeneric: 'Repository access: „Only select repositories“ → das Daten-Repository.',
+      contents:
+        'Permissions: Contents → Read and write. Nach der Auswahl des Owners erneut prüfen. Metadata (read-only) kommt automatisch dazu.',
+      generate:
+        'Auf „Generate token“ klicken und das Token kopieren (es beginnt mit github_pat_). GitHub zeigt es nur einmal.',
+      open: 'Vorausgefülltes Token-Formular öffnen',
+    },
+    diagnosis: {
+      ownerNotFound:
+        'Prüfe die Schreibweise. Am einfachsten: Repository auf GitHub öffnen und besitzer/name aus der Adresszeile kopieren.',
+      likelyCauses: 'Wahrscheinlichste Ursachen, in dieser Reihenfolge:',
+      approval:
+        'Dein Token wartet auf Freigabe. Organisationen verlangen das standardmäßig. Ein Owner von {{org}} gibt es unter Pending requests frei.',
+      approvalLink: 'Pending requests (für Owner)',
+      invitation: 'Du hast die Einladung zu {{org}} noch nicht angenommen.',
+      invitationLink: 'Einladung öffnen',
+      repoOpen:
+        'Du hast noch keinen Zugriff auf das Repository. Öffne es im Browser: Zeigt GitHub eine 404-Seite, muss ein Owner dir Zugriff geben.',
+      repoOpenLink: '{{repo}} öffnen',
+      resourceOwner:
+        'Das Token hat den falschen Resource owner oder das Repository ist nicht ausgewählt. Resource owner muss {{org}} sein, und unter Repository access muss {{repo}} ausgewählt sein.',
+      tokensLink: 'Deine Tokens',
+      createdBefore:
+        'Du hast das Token erstellt, bevor du Zugriff hattest. So ein Token sieht das Repository nie: lösche es und erstelle ein neues.',
+      newTokenLink: 'Neues Token erstellen',
+      repoName:
+        'Der Repository-Name ist falsch geschrieben. Vergleiche ihn mit der Adresszeile auf GitHub.',
+      classicScope: 'Ein klassisches Token braucht den Scope „repo“.',
+      ownRepo:
+        'Prüfe den Repository-Namen und ob das Token darauf zugreifen darf (Repository access → Only select repositories → {{repo}}).',
+      personalFineGrained:
+        'Fine-grained Tokens können nur auf Repositories deines eigenen Kontos oder von Organisationen zugreifen, in denen du Mitglied bist. Bitte {{owner}}, das Repository in eine kostenlose GitHub-Organisation zu verschieben, oder verwende ein klassisches Token mit dem Scope „repo“ (es hat Zugriff auf alle deine Repositories).',
+      classicLink: 'Klassisches Token erstellen',
+      personalInvite:
+        'Nimm die Einladung zum Repository an. Gibt es keine, muss {{owner}} dich als Collaborator mit Write-Zugriff hinzufügen.',
+      readOnlyToken:
+        'Dein Token hat nur Contents: Read-only. Erstelle ein neues Token mit Contents: Read and write.',
+      readOnlyRole: 'Oder deine Rolle im Repository ist Read. Ein Owner muss dir Write geben.',
+      askOwner: 'Ein Owner muss etwas tun? Schick ihm diese Nachricht:',
+      copyOwnerMessage: 'Nachricht an den Owner kopieren',
+    },
+    ownerMsg: {
+      greeting: 'Hallo,',
+      noAccess:
+        'ich möchte mich bei unserer Zeiterfassung (Workaddict) anmelden, habe aber keinen Zugriff auf das Repository {{repo}}.',
+      readOnly:
+        'ich möchte mich bei unserer Zeiterfassung (Workaddict) anmelden, kann das Repository {{repo}} aber nur lesen, nicht schreiben.',
+      login: 'Mein GitHub-Benutzername: {{login}}',
+      pleaseCheck: 'Kannst du bitte Folgendes prüfen?',
+      checkMember: 'Ich bin Mitglied der Organisation {{org}} (People: {{link}})',
+      checkWrite: 'Ich habe Write-Zugriff auf {{repo}} (Collaborators and teams: {{link}})',
+      checkApproval:
+        'Mein Token ist freigegeben, falls die Organisation eine Freigabe verlangt (Pending requests: {{link}})',
+      checkCollaborator: 'Ich bin Collaborator mit Write-Zugriff auf {{repo}} ({{link}})',
+      thanks: 'Danke!',
+    },
+    inviteMsg: {
+      intro:
+        'Hallo! Wir erfassen unsere Zeiten mit Workaddict. Unsere Daten liegen im GitHub-Repository {{repo}}. So bist du dabei:',
+      accept:
+        'Nimm die Einladung in die GitHub-Organisation {{org}} an (E-Mail von GitHub oder hier: {{link}}).',
+      open: 'Öffne dann diesen Link und folge den Schritten: {{link}}',
+      approval: 'Sag mir Bescheid, wenn du dein Token erstellt hast, damit ich es freigeben kann.',
+    },
+    setup: {
+      title: 'Team einrichten',
+      intro:
+        'Etwa 10 Minuten, einmalig. Jeder Schritt öffnet die passende GitHub-Seite. Hake ab, was erledigt ist; dein Fortschritt bleibt in diesem Browser gespeichert.',
+      soloIntro:
+        'Etwa 3 Minuten, einmalig. Jeder Schritt öffnet die passende GitHub-Seite. Hake ab, was erledigt ist; dein Fortschritt bleibt in diesem Browser gespeichert.',
+      modeTitle: 'Für wen ist das?',
+      modeSolo: 'Nur für mich',
+      modeSoloHint: 'Ein privates Repository in deinem eigenen Konto. Drei Schritte.',
+      modeTeam: 'Für ein Team',
+      modeTeamHint: 'Eine GitHub-Organisation für alle. Etwa acht Schritte.',
+      modeLater:
+        'Unsicher? Fang mit „Nur für mich“ an. Du kannst später auf eine Organisation umsteigen; das Daten-Repository lässt sich übertragen.',
+      modeChange: 'Ändern',
+      org: 'Name der Organisation',
+      orgHint: 'Deine neue oder bestehende GitHub-Organisation, z. B. mein-team.',
+      orgInvalid: 'Nur Buchstaben, Ziffern und einzelne Bindestriche, höchstens 39 Zeichen.',
+      user: 'Dein GitHub-Benutzername',
+      userHint: 'Das Konto, zu dem das Repository gehören wird, z. B. mein-name.',
+      userInvalid: 'Nur Buchstaben, Ziffern und einzelne Bindestriche, höchstens 39 Zeichen.',
+      repo: 'Name des Repositorys',
+      repoInvalid: 'Nur Buchstaben, Ziffern, Punkte, Binde- und Unterstriche.',
+      needNames:
+        'Gib zuerst einen gültigen Namen für die Organisation ein. Die Links unten verwenden ihn.',
+      progress: '{{done}} von {{total}} erledigt',
+      reset: 'Neu beginnen',
+      orgTitle: 'Kostenlose Organisation anlegen',
+      orgText:
+        'Wähle den Free-Plan und nenne sie {{org}}. Mitglieder hinzufügen kannst du vorerst überspringen. Du hast schon eine Organisation? Dann einfach abhaken.',
+      orgWhy:
+        'Warum eine Organisation? Nur dann kann jedes Mitglied ein sicheres Token verwenden, das ausschließlich das Daten-Repository erreicht.',
+      orgLink: 'Organisation anlegen',
+      repoTitle: 'Privates Daten-Repository anlegen',
+      repoText:
+        'Das Formular ist vorausgefüllt: Owner {{org}}, Name {{repo}}, privat. README, .gitignore und Lizenz weglassen und auf „Create repository“ klicken.',
+      repoLink: '{{org}}/{{repo}} anlegen',
+      soloRepoText:
+        'Das Formular ist vorausgefüllt: Owner {{org}}, Name {{repo}}, privat. README, .gitignore und Lizenz weglassen und auf „Create repository“ klicken.',
+      soloTokenText:
+        'Das Token gehört zu deinem eigenen Konto und muss von niemandem freigegeben werden. Es erreicht nur dieses eine Repository.',
+      soloLater:
+        'Später zu mehreren? Übertrage das Repository in eine kostenlose GitHub-Organisation und durchlaufe diesen Assistenten noch einmal als Team. Ein Repository in einem persönlichen Konto lässt sich nicht mit fein abgestuften Tokens teilen.',
+      baseTitle: 'Mitgliedern Schreibzugriff geben',
+      baseText:
+        'Unter „Base permissions“ Write wählen. Dann kann jedes Mitglied ins Daten-Repository schreiben, und du musst niemanden einzeln hinzufügen.',
+      baseCaveat:
+        'Write gilt für alle Repositories von {{org}}. Verwende eine Organisation, die nur die Zeitdaten enthält.',
+      baseLink: 'Member privileges öffnen',
+      approvalTitle: 'Über die Token-Freigabe entscheiden',
+      approvalText:
+        'Neue Organisationen verlangen, dass ein Owner jedes Token eines Mitglieds freigibt. Bis dahin schlägt die Anmeldung des Mitglieds fehl. Im Reiter „Fine-grained tokens“ kannst du das ausschalten.',
+      approvalOff: 'Freigabe ausschalten (empfohlen für kleine Teams, denen du vertraust)',
+      approvalOffHint:
+        '„Do not require administrator approval“ wählen und auf Save klicken. Mitglieder können sich direkt nach dem Erstellen ihres Tokens anmelden.',
+      approvalOn: 'Freigabe beibehalten',
+      approvalOnHint:
+        'Du gibst jedes Token unter Pending requests frei. Die nächsten Schritte erinnern dich daran.',
+      approvalLink: 'Token-Richtlinie öffnen',
+      inviteTitle: 'Mitglieder einladen',
+      inviteText:
+        'Lade jede Person über ihren GitHub-Benutzernamen mit der Rolle Member ein. Sie bekommt eine E-Mail und muss die Einladung annehmen.',
+      inviteLink: 'People öffnen',
+      cliTitle: 'Schneller mit der GitHub CLI',
+      cliText:
+        'Du hast die GitHub CLI (gh) installiert? Gib die Benutzernamen ein und füge die Befehle in ein Terminal ein. Sie legen das Repository an, setzen die Base permission auf Write und laden alle ein – Schritt 2, 3 und 5 kannst du dann abhaken.',
+      cliUsers: 'GitHub-Benutzernamen (mit Komma oder Leerzeichen getrennt)',
+      cliInvalid: 'Keine gültigen GitHub-Benutzernamen: {{names}}',
+      cliCopy: 'Befehle kopieren',
+      tokenTitle: 'Eigenes Token erstellen',
+      tokenText: 'Als Owner braucht dein eigenes Token keine Freigabe.',
+      shareTitle: 'Team einladen',
+      shareText:
+        'Schick diese Nachricht an deine Mitglieder. Der Link führt sie in der richtigen Reihenfolge durch alles. Du findest ihn später auch unter Einstellungen.',
+      shareLinkLabel: 'Einladungslink',
+      copyLink: 'Link kopieren',
+      copyMessage: 'Nachricht kopieren',
+      shareApproval:
+        'Du hast die Freigabe beibehalten: Wenn ein Mitglied meldet, dass sein Token fertig ist, gib es hier frei.',
+      pendingLink: 'Pending requests öffnen',
+      signInTitle: 'Anmelden',
+      signInText: 'Füge dein Token ein. Die erste Anmeldung richtet das leere Repository ein.',
+    },
+    join: {
+      title: '{{repo}} beitreten',
+      intro:
+        'Vier kurze Schritte. Bitte in dieser Reihenfolge, sonst funktioniert das Token nicht.',
+      inviteTitle: 'Einladung annehmen',
+      inviteText:
+        'Du hast eine E-Mail von GitHub bekommen. Nimm die Einladung zu {{org}} dort oder hier an.',
+      inviteLink: 'Einladung öffnen',
+      inviteRepoHint: 'Zum Repository statt zu einer Organisation eingeladen?',
+      inviteRepoLink: 'Repository-Einladung öffnen',
+      accessTitle: 'Zugriff prüfen',
+      accessText:
+        'Öffne das Repository, während du bei GitHub angemeldet bist. Siehst du es? Es darf leer sein.',
+      accessLink: '{{repo}} öffnen',
+      accessYes: 'Ich sehe es',
+      accessNo: 'Ich bekomme eine 404-Seite',
+      accessMissing:
+        'Du hast noch keinen Zugriff. Erstelle jetzt noch kein Token: Ein Token, das vor dem Zugriff erstellt wird, funktioniert nicht. Schick diese Nachricht an den Owner und prüfe danach erneut.',
+      accessAgain: 'Erneut prüfen',
+      tokenTitle: 'Token erstellen',
+      tokenLocked: 'Wird freigeschaltet, sobald du das Repository siehst.',
+      signInTitle: 'Anmelden',
+      changeRepo: 'Repository ändern',
+      invalid:
+        'Dieser Einladungslink ist ungültig. Bitte die Person, die ihn geschickt hat, um einen neuen, oder gib das Repository unten ein.',
+    },
+    team: {
+      title: 'Mitglieder einladen',
+      text: 'Neue Mitglieder brauchen eine Einladung in die Organisation {{org}} und danach den Einladungslink. Er führt sie durch den Rest.',
+      addTitle: 'Mitglied hinzufügen',
+      addText:
+        'Lade die Person unter People mit der Rolle Member ein oder verwende die GitHub CLI.',
+      pendingText:
+        'Verlangt deine Organisation eine Token-Freigabe, gibst du neue Tokens hier frei:',
+    },
   },
   footer: {
     tagline: 'Kostenlose Open-Source-Zeiterfassung.',
@@ -262,8 +485,10 @@ const de: Resources = {
       'Tag „{{name}}“ löschen? Die Zahl der Einträge, die ihn verwenden, konnte nicht ermittelt werden.',
     nameTaken: 'Dieser Name existiert bereits.',
     nameRequired: 'Gib einen Namen ein.',
-    emptyProjects: 'Noch keine Projekte. Projekte gruppieren Einträge, z. B. nach Kunde oder Produkt.',
-    emptyTags: 'Noch keine Tags. Tags beschreiben die Art der Arbeit, z. B. „Meeting“ oder „Bugfix“.',
+    emptyProjects:
+      'Noch keine Projekte. Projekte gruppieren Einträge, z. B. nach Kunde oder Produkt.',
+    emptyTags:
+      'Noch keine Tags. Tags beschreiben die Art der Arbeit, z. B. „Meeting“ oder „Bugfix“.',
   },
   stats: {
     title: 'Statistik',
@@ -416,7 +641,8 @@ const de: Resources = {
     },
     checking: 'Wird geprüft…',
     workspace: 'Clockify-Workspace',
-    workspaceIntro: 'Dein Schlüssel hat Zugriff auf mehrere Workspaces. Wähle den zu importierenden aus.',
+    workspaceIntro:
+      'Dein Schlüssel hat Zugriff auf mehrere Workspaces. Wähle den zu importierenden aus.',
     loadingMeta: 'Nutzer, Projekte und Tags werden geladen…',
     mapIntro:
       'Wähle, wem die Zeiten jedes Clockify-Nutzers zugeordnet werden. Ehemalige Mitglieder zählen weiter in Statistiken und Exporten, ihre Einträge kann aber niemand bearbeiten.',
@@ -512,7 +738,8 @@ const de: Resources = {
     notOwner: 'Du kannst nur deinen eigenen Timer ändern.',
     forbiddenRole: 'Deine Rolle erlaubt das nicht. Frag eine Teamleitung oder den Besitzer.',
     invalid: 'Bitte prüfe deine Eingaben.',
-    notEmpty: 'Inzwischen wurden Daten hinzugefügt, daher wurde nichts importiert. Prüfe den Hinweis und versuche es erneut.',
+    notEmpty:
+      'Inzwischen wurden Daten hinzugefügt, daher wurde nichts importiert. Prüfe den Hinweis und versuche es erneut.',
     corruptData:
       'Die Datei {{path}} im Daten-Repository ist beschädigt und wurde daher nicht geändert. Bitte einen Owner, sie auf GitHub zu reparieren.',
     unknown: 'Etwas ist schiefgelaufen. Bitte versuche es erneut.',

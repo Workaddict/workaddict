@@ -77,7 +77,10 @@ describe('GitHub adapter specifics', () => {
     await a.init()
     await a.getWorkspace()
     const lagging = gh.head
-    await a.updateWorkspace((ws) => ({ ...ws, tags: [{ id: 't', name: 'T', archived: false }] }), 'add T')
+    await a.updateWorkspace(
+      (ws) => ({ ...ws, tags: [{ id: 't', name: 'T', archived: false }] }),
+      'add T',
+    )
     gh.head = lagging // the ref briefly reports the commit before our write
     gh.log = []
     expect((await a.getWorkspace()).tags).toHaveLength(1)
@@ -96,10 +99,15 @@ describe('GitHub adapter specifics', () => {
       }
     }
     gh.log = []
-    await a.updateWorkspace((ws) => ({ ...ws, tags: [...ws.tags, { id: 'a', name: 'A', archived: false }] }), 'add A')
+    await a.updateWorkspace(
+      (ws) => ({ ...ws, tags: [...ws.tags, { id: 'a', name: 'A', archived: false }] }),
+      'add A',
+    )
     // First attempt plus the retry after the conflict each list the files.
     expect(gh.count('GET /repos/team/data/git/trees')).toBe(2)
-    expect((gh.json('workspace.json') as { tags: { id: string }[] }).tags.map((t) => t.id)).toEqual(['b', 'a'])
+    expect((gh.json('workspace.json') as { tags: { id: string }[] }).tags.map((t) => t.id)).toEqual(
+      ['b', 'a'],
+    )
   })
 
   it('limits blob requests on a cold cache to 8 in flight, across concurrent reads', async () => {
@@ -219,8 +227,15 @@ describe('GitHub adapter specifics', () => {
       delete body.permissions
       return new Response(JSON.stringify(body), { status: 200 })
     }
-    expect(await adapterFor(gh, 'tok-c').getAccess()).toEqual({ login: 'carol', role: 'leader', owner: true })
-    expect(await adapterFor(gh, 'tok-b').getAccess()).toMatchObject({ role: 'worker', owner: false })
+    expect(await adapterFor(gh, 'tok-c').getAccess()).toEqual({
+      login: 'carol',
+      role: 'leader',
+      owner: true,
+    })
+    expect(await adapterFor(gh, 'tok-b').getAccess()).toMatchObject({
+      role: 'worker',
+      owner: false,
+    })
   })
 
   it('marks collaborators with admin permission as owners', async () => {
@@ -255,15 +270,23 @@ describe('GitHub adapter specifics', () => {
         injected = true
         gh.putRaw(
           'workspace.json',
-          JSON.stringify({ projects: [{ id: 'b', name: 'B', color: '#000', archived: false }], tags: [] }),
+          JSON.stringify({
+            projects: [{ id: 'b', name: 'B', color: '#000', archived: false }],
+            tags: [],
+          }),
         )
       }
     }
     await a.updateWorkspace(
-      (ws) => ({ ...ws, projects: [...ws.projects, { id: 'a', name: 'A', color: '#000', archived: false }] }),
+      (ws) => ({
+        ...ws,
+        projects: [...ws.projects, { id: 'a', name: 'A', color: '#000', archived: false }],
+      }),
       'add A',
     )
-    expect((gh.json('workspace.json') as { projects: { name: string }[] }).projects.map((p) => p.name)).toEqual(['B', 'A'])
+    expect(
+      (gh.json('workspace.json') as { projects: { name: string }[] }).projects.map((p) => p.name),
+    ).toEqual(['B', 'A'])
   })
 
   it('gives up after repeated conflicts', async () => {
@@ -273,7 +296,10 @@ describe('GitHub adapter specifics', () => {
     gh.beforePut = (path) => gh.putRaw(path, '{"projects":[],"tags":[]}\n')
     await expect(a.updateWorkspace((ws) => ws, 'noop')).resolves.toBeDefined() // unchanged → no write
     await expect(
-      a.updateWorkspace((ws) => ({ ...ws, tags: [{ id: 't', name: 'T', archived: false }] }), 'add T'),
+      a.updateWorkspace(
+        (ws) => ({ ...ws, tags: [{ id: 't', name: 'T', archived: false }] }),
+        'add T',
+      ),
     ).rejects.toSatisfy((e: unknown) => isStorageError(e, 'conflict'))
   })
 
@@ -511,7 +537,6 @@ describe('checkLogin', () => {
 
   it.each([
     [{ token: 'nope', repo: 'team/data' }, 'invalidToken'],
-    [{ token: 'tok-a', repo: 'team/other' }, 'repoNotFound'],
     [{ token: 'tok-a', repo: 'not a repo' }, 'badRepoFormat'],
   ])('rejects %o with %s', async (creds, error) => {
     expect(await checkLogin(creds, fake().fetch)).toMatchObject({ ok: false, error })
@@ -541,6 +566,59 @@ describe('checkLogin', () => {
     expect(await checkLogin({ token: 'tok-a', repo: 'team/data' }, gh.fetch)).toMatchObject({
       ok: false,
       error: 'noPushAccess',
+      user: { login: 'alice' },
+      ownerType: 'Organization',
+    })
+  })
+
+  it('reports the owner type of the repository', async () => {
+    expect(await checkLogin({ token: 'tok-a', repo: 'team/data' }, fake().fetch)).toMatchObject({
+      ok: true,
+      ownerType: 'Organization',
+    })
+  })
+
+  describe('diagnoses a repository the token cannot reach', () => {
+    it.each([
+      ['team/other', 'orgRepoNotAccessible', 'Organization'],
+      ['alice/data', 'ownRepoNotAccessible', 'User'],
+      ['Alice/data', 'ownRepoNotAccessible', 'User'],
+      ['bob/data', 'personalRepoNotAccessible', 'User'],
+      ['tema/data', 'ownerNotFound', undefined],
+    ])('%s → %s', async (repo, error, ownerType) => {
+      const r = await checkLogin({ token: 'tok-a', repo }, fake().fetch)
+      expect(r).toMatchObject({ ok: false, error, user: { login: 'alice' } })
+      expect(r.ok === false && r.ownerType).toBe(ownerType ?? undefined)
+    })
+
+    it('treats a forbidden repository like a missing one', async () => {
+      const gh = fake()
+      const forbidden: typeof fetch = async (input, init) =>
+        String(input).endsWith('/repos/team/secret')
+          ? new Response(JSON.stringify({ message: 'Resource not accessible' }), { status: 403 })
+          : gh.fetch(input, init)
+      expect(await checkLogin({ token: 'tok-a', repo: 'team/secret' }, forbidden)).toMatchObject({
+        ok: false,
+        error: 'orgRepoNotAccessible',
+      })
+    })
+
+    it('falls back to the general error when the owner lookup fails', async () => {
+      const gh = fake()
+      const failing: typeof fetch = async (input, init) =>
+        String(input).includes('/users/')
+          ? new Response(JSON.stringify({ message: 'Server error' }), { status: 500 })
+          : gh.fetch(input, init)
+      expect(await checkLogin({ token: 'tok-a', repo: 'team/other' }, failing)).toMatchObject({
+        ok: false,
+        error: 'repoNotFound',
+      })
+    })
+
+    it('asks for the owner only when the repository check fails', async () => {
+      const gh = fake()
+      await checkLogin({ token: 'tok-a', repo: 'team/data' }, gh.fetch)
+      expect(gh.count('GET /users/')).toBe(0)
     })
   })
 })

@@ -7,6 +7,8 @@ export {
   createGitHubAdapter,
   parseRepo,
   type GitHubCredentials,
+  type GitHubOwnerType,
   type LoginCheck,
+  type LoginError,
 } from './github/githubAdapter'
 export { clearBlobCache, createBlobCache } from './github/blobCache'

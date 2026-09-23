@@ -8,6 +8,8 @@ export class FakeGitHub {
   files = new Map<string, { sha: string; text: string }>()
   blobs = new Map<string, string>()
   users: Record<string, string> = {} // token → login
+  /** Accounts known to `/users/{login}`; the repo owner is an organization by default. */
+  accounts: Record<string, 'User' | 'Organization'> = {}
   collaboratorsForbidden = false
   push = true
   /** Logins with admin permission on the repository (owners). */
@@ -61,15 +63,28 @@ export class FakeGitHub {
     const path = decodeURIComponent(url.pathname)
     this.log.push(`${method} ${path}`)
     const res = (status: number, body: unknown) =>
-      new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } })
+      new Response(JSON.stringify(body), {
+        status,
+        headers: { 'Content-Type': 'application/json' },
+      })
 
     if (!login) return res(401, { message: 'Bad credentials' })
     const base = `/repos/${this.owner}/${this.repo}`
 
     if (path === '/user') return res(200, { login, avatar_url: `https://avatars/${login}` })
+    if (path.startsWith('/users/')) {
+      const name = path.slice('/users/'.length)
+      const accounts = { [this.owner]: 'Organization', ...this.accounts } as Record<string, string>
+      for (const l of Object.values(this.users)) accounts[l] ??= 'User'
+      const found = Object.keys(accounts).find((a) => a.toLowerCase() === name.toLowerCase())
+      return found
+        ? res(200, { login: found, type: accounts[found] })
+        : res(404, { message: 'Not Found' })
+    }
     if (path === base) {
       return res(200, {
         full_name: `${this.owner}/${this.repo}`,
+        owner: { login: this.owner, type: this.accounts[this.owner] ?? 'Organization' },
         default_branch: 'main',
         private: true,
         permissions: { push: this.push, pull: true, admin: this.admins.has(login) },
@@ -131,9 +146,17 @@ export class FakeGitHub {
       return res(201, { sha })
     }
     if (sub === '/git/commits' && method === 'POST') {
-      const body = JSON.parse(String(init?.body)) as { tree: string; parents: string[]; message: string }
+      const body = JSON.parse(String(init?.body)) as {
+        tree: string
+        parents: string[]
+        message: string
+      }
       const sha = `commit${++this.n}`
-      this.pendingCommits.set(sha, { tree: body.tree, parent: body.parents[0]!, message: body.message })
+      this.pendingCommits.set(sha, {
+        tree: body.tree,
+        parent: body.parents[0]!,
+        message: body.message,
+      })
       return res(201, { sha })
     }
     if (sub === '/git/refs/heads/main' && method === 'PATCH') {

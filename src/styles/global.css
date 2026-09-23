@@ -1246,6 +1246,201 @@ button.entry-duration,
   align-self: flex-start;
 }
 
+/* ---------- Onboarding (setup wizard, join flow, sign-in diagnosis) ---------- */
+a.btn {
+  text-decoration: none;
+}
+.brand-link:hover {
+  color: var(--text);
+}
+.landing-actions {
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.ob-main {
+  width: 100%;
+  max-width: 760px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+.ob-main h1 {
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  letter-spacing: -0.01em;
+}
+.ob-back {
+  align-self: flex-start;
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+.ob-names {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  padding: 18px;
+}
+.ob-invalid {
+  color: var(--danger);
+}
+.ob-modes {
+  gap: 12px;
+  align-items: stretch;
+  flex-wrap: wrap;
+}
+.ob-mode {
+  flex: 1 1 220px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  height: auto;
+  padding: 14px 16px;
+  text-align: left;
+  white-space: normal;
+}
+.ob-mode .small {
+  font-weight: 400;
+}
+.btn-primary.ob-mode .small {
+  color: inherit;
+  opacity: 0.85;
+}
+.ob-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.ob-step {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 18px;
+}
+.ob-step-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.ob-step-head h2 {
+  flex: 1;
+  min-width: 0;
+  font-size: 1.05rem;
+}
+.ob-step.is-done .step-num {
+  background: var(--success);
+}
+.ob-step.is-locked {
+  opacity: 0.65;
+}
+.ob-step.is-locked .step-num {
+  background: var(--text-faint);
+}
+.ob-step-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-left: 42px;
+}
+.ob-done {
+  flex: none;
+  font-size: 0.875rem;
+}
+.ob-choice {
+  align-items: flex-start;
+}
+.ob-choice input {
+  margin-top: 3px;
+}
+.ob-list {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.gh-link {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  max-width: 100%;
+}
+.ob-list .gh-link {
+  display: flex;
+  margin-top: 2px;
+}
+.ob-answers {
+  flex-wrap: wrap;
+}
+.ob-again {
+  align-self: flex-start;
+}
+.ob-cli summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.ob-cli[open] summary {
+  margin-bottom: 8px;
+}
+.ob-cli p {
+  margin-bottom: 8px;
+}
+.ob-change-repo {
+  align-self: flex-start;
+  margin-top: -10px;
+  font-size: 0.85rem;
+}
+.ob-diagnosis {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--text);
+}
+.ob-diagnosis > strong {
+  color: var(--danger);
+}
+.settings-row.ob-team {
+  align-items: stretch;
+  gap: 10px;
+}
+.ob-team h3 {
+  font-size: 1rem;
+}
+.copy-text {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.copy-field {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  width: 100%;
+  resize: vertical;
+}
+.copy-actions {
+  flex-wrap: wrap;
+}
+@media (max-width: 560px) {
+  .ob-names {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 14px;
+  }
+  .ob-step {
+    padding: 14px;
+  }
+  .ob-step-head {
+    flex-wrap: wrap;
+  }
+  .ob-step-body {
+    padding-left: 0;
+  }
+}
+
 /* ---------- Site footer ---------- */
 .site-footer {
   display: flex;

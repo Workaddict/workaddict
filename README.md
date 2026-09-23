@@ -47,6 +47,16 @@ Browser (this app, GitHub Pages)  ──GitHub REST API──►  private data r
 
 ## Setup
 
+### Quick start: let the app guide you
+
+Open the app (for example [workaddict.me](https://workaddict.me)):
+
+- **Team owner:** click **Set up a team**. Enter your organization name once; every step then opens the right GitHub page, prefilled: organization, private data repo, base permission, token approval, invitations (optionally as ready-made `gh` commands) and your own token. At the end you get an **invite link** and a message for your team. Later you find both under **Settings → Invite members**.
+- **Member:** open the **invite link** from your team owner. It walks you through accepting the invitation, checking your access, creating the token and signing in, in the right order.
+- **Sign-in fails?** The app looks up what's wrong, lists the most likely causes with links, and gives you a ready-made message for the owner.
+
+The sections below describe the same setup by hand and are the reference for special cases.
+
 You need two repositories:
 
 | Repository              | Visibility                              | Contents                              |
@@ -102,6 +112,8 @@ Being a member of the organization is not enough. By default, organization membe
 2. Click **Add people**, search for the member, select them, choose the role **Write**, and click **Add … to this repository**.
 3. Repeat for every member.
 
+**Simpler:** open the organization → **Settings** → **Member privileges** → **Base permissions** and choose **Write**. Then every member can write to the data repo, and you can skip adding people one by one. This applies to all repos of the organization, so use an organization that holds only the time data.
+
 **Tip for larger teams:** create a team (organization → **Teams** → **New team**, e.g. `trackers`), add all members to it, and then add the team to the data repo with the role **Write** via **Add teams**. New members then only have to be added to the team.
 
 Members who should be able to **assign roles** in the app need the role **Admin** instead of Write (see [Assign roles](#5-assign-roles)).
@@ -111,7 +123,7 @@ Members who should be able to **assign roles** in the app need the role **Admin*
 1. Open the organization page → **Settings** → in the left sidebar under _Third-party Access_ → **Personal access tokens** → **Settings** (or `https://github.com/organizations/my-team/settings/personal-access-tokens`).
 2. On the **Fine-grained tokens** tab:
    - **Allow access via fine-grained personal access tokens** must be selected. Otherwise nobody can use a fine-grained token for the data repo.
-   - **Require administrator approval:** if you select this, you have to approve every member's token before it works (step 2.3). If you select **Do not require administrator approval**, tokens work immediately. For a small team you trust, _no approval_ is simpler.
+   - **Require administrator approval is the default for new organizations.** Every member's token then stays _pending_, and their sign-in fails until an owner approves it (step 2.3). Your own token as an owner is approved automatically, so you won't notice the problem yourself. For a small team you trust, select **Do not require administrator approval**; tokens then work immediately.
 3. Click **Save**.
 
 **Checklist before members create their tokens:**
@@ -133,7 +145,7 @@ Every team member creates **their own** token on **their own** GitHub account. N
 
 #### 2.1 Create a fine-grained token (recommended)
 
-1. Sign in to GitHub with **your own** account and open <https://github.com/settings/personal-access-tokens/new>. Alternatively: click your profile picture (top right) → **Settings** → **Developer settings** (at the bottom of the left sidebar) → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
+1. Sign in to GitHub with **your own** account and open <https://github.com/settings/personal-access-tokens/new>. The **How do I get a token?** help on the app's sign-in page links a prefilled version of this form (name, expiration, Contents: Read and write). GitHub may first ask you to confirm it's you (password or GitHub Mobile). Alternatively: click your profile picture (top right) → **Settings** → **Developer settings** (at the bottom of the left sidebar) → **Personal access tokens** → **Fine-grained tokens** → **Generate new token**.
 2. **Token name:** something recognizable, e.g. `Workaddict`.
 3. **Description** (optional): e.g. `Time tracking`.
 4. **Resource owner:** open the dropdown and select the **organization** that owns the data repo (e.g. `my-team`), **not** your own username.
@@ -150,7 +162,7 @@ Every team member creates **their own** token on **their own** GitHub account. N
 
 #### 2.2 If you need approval
 
-If the organization requires approval (step 1.5), your token shows up as **pending** and every request to the data repo fails with _"The repository cannot be accessed"_ until an organization owner approves it. Tell your team owner that you created a token.
+If the organization requires approval (the default, see step 1.5), your token shows up as **pending** and every request to the data repo fails with _"Your token cannot see the repository"_ until an organization owner approves it. Tell your team owner that you created a token; the sign-in page has a **Copy message for the owner** button with the right link.
 
 #### 2.3 Approve tokens (team owner)
 
@@ -233,17 +245,20 @@ The login page first checks the token and then the data repo. The error message 
 | ------------------------- | ----- | --- |
 | _Enter the repository as owner/name_ | The repo field has the wrong format. | Enter `my-team/time-data`, with no `https://github.com/` in front. |
 | _GitHub rejected this token_ | Token incomplete, expired, or deleted. | Copy it again without spaces, or create a new one (step 2). |
-| _The repository cannot be accessed_ | The token is valid but can't see the repo. GitHub answers with **404** (visible in the browser console as `Failed to load resource: … 404`). | Work through the checklist below. |
-| _The token can read but not write this repository_ | **Contents** is only _Read-only_, or the member only has **Read** on the repo. | Set Contents to _Read and write_ (step 2.1, item 7) and give the member **Write** (step 1.4). |
+| _There is no GitHub account or organization named …_ | The owner part of the repo name is misspelled. | Copy `owner/name` from the address bar of the repo on GitHub. |
+| _Your token cannot see the repository …_ | The token is valid but can't see an organization's repo. GitHub answers with **404**. | The app lists the causes in order, starting with a token that waits for approval. See the checklist below. |
+| _… which belongs to the personal account of …_ | The repo is in another person's account. Fine-grained tokens can't reach it. | Move the repo into an organization, or use a classic token (step 2.4). |
+| _… in your own account_ | Wrong repo name, or the token doesn't include this repo. | Check the name and the token's _Repository access_. |
+| _You can read the repository …, but not write to it_ | **Contents** is only _Read-only_, or the member only has **Read** on the repo. | Set Contents to _Read and write_ (step 2.1, item 7) and give the member **Write** (step 1.4). |
 | _GitHub rate limit reached_ | Too many requests. | Wait until the time shown. See the note below. |
 
-**Checklist for _"The repository cannot be accessed"_ (404):**
+**Checklist for _"Your token cannot see the repository"_ (404):**
 
-1. **Was the token created before the member had access?** This is the most common cause. If the token was created before the member accepted the organization invitation or before they had Write on the data repo, it stays unable to reach the repo, and editing it later doesn't help. **Delete the token and create a new one** (step 2.1).
-2. **Can the member open the repo in the browser?** They open `https://github.com/my-team/time-data` while signed in. If they see a 404 page, the problem is their access, not the token. Go back to steps 1.3 and 1.4.
-3. **Is the resource owner correct?** Open the token under Settings → Developer settings → Fine-grained tokens. _Resource owner_ must be the **organization**. If it's the member's own account, create a new token.
-4. **Is the data repo selected?** On the same page, _Repository access_ must list the data repo.
-5. **Is the token still waiting for approval?** An organization owner checks **Pending requests** (step 2.3).
+1. **Is the token still waiting for approval?** Organizations require approval by default. An organization owner checks **Pending requests** (step 2.3). The owner's own token never needs approval, which is why sign-in can work for the owner but not for members.
+2. **Was the token created before the member had access?** If the token was created before the member accepted the organization invitation or before they had Write on the data repo, it stays unable to reach the repo, and editing it later doesn't help. **Delete the token and create a new one** (step 2.1).
+3. **Can the member open the repo in the browser?** They open `https://github.com/my-team/time-data` while signed in. If they see a 404 page, the problem is their access, not the token. Go back to steps 1.3 and 1.4.
+4. **Is the resource owner correct?** Open the token under Settings → Developer settings → Fine-grained tokens. _Resource owner_ must be the **organization**. If it's the member's own account, create a new token.
+5. **Is the data repo selected?** On the same page, _Repository access_ must list the data repo.
 6. **Is the repo name correct?** Compare it character by character with the address bar (hyphens vs. underscores, organization name vs. username).
 
 **Test without the app:** run this in a terminal with the member's token:

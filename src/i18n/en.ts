@@ -11,7 +11,8 @@ const en = {
     retry: 'Retry',
     reload: 'Reload page',
     pageLoadError: 'This page could not be loaded.',
-    pageLoadErrorHint: 'A new version of the app was probably published. Reload the page to continue.',
+    pageLoadErrorHint:
+      'A new version of the app was probably published. Reload the page to continue.',
     noDescription: '(no description)',
     noProject: 'No project',
     noTag: 'No tag',
@@ -24,6 +25,8 @@ const en = {
     language: 'Language',
     switchToDark: 'Switch to dark theme',
     switchToLight: 'Switch to light theme',
+    copied: 'Copied',
+    copyManually: 'Copying is not available. The text is selected: press Ctrl+C (⌘C on Mac).',
   },
   nav: {
     tracker: 'Tracker',
@@ -50,13 +53,19 @@ const en = {
     demo: 'Try the demo (nothing is saved)',
     or: 'or',
     sessionExpired: 'Your session has expired or the token was revoked. Please sign in again.',
+    setupPrompt: 'Setting up a new team?',
+    setupLink: 'Set up a team step by step',
     errors: {
       badRepoFormat: 'Enter the repository as owner/name, e.g. my-team/time-data.',
-      invalidToken: 'GitHub rejected this token. Check that it was copied completely and has not expired.',
-      repoNotFound:
-        'The repository cannot be accessed. Check the name and make sure the token has access to this repository.',
-      noPushAccess:
-        'The token can read but not write this repository. Grant “Contents: Read and write”.',
+      invalidToken:
+        'GitHub rejected this token. Check that it was copied completely and has not expired.',
+      repoNotFound: 'The repository {{repo}} cannot be accessed with this token.',
+      ownerNotFound: 'There is no GitHub account or organization named “{{owner}}”.',
+      orgRepoNotAccessible: 'Your token cannot see the repository {{repo}}.',
+      ownRepoNotAccessible: 'Your token cannot see the repository {{repo}} in your own account.',
+      personalRepoNotAccessible:
+        'Your token cannot see the repository {{repo}}, which belongs to the personal account of {{owner}}.',
+      noPushAccess: 'You can read the repository {{repo}}, but not write to it.',
       offline: 'Cannot reach GitHub. Check your internet connection.',
       rateLimit: 'GitHub rate limit reached. Try again after {{time}}.',
       unknown: 'Something went wrong while contacting GitHub. Please try again.',
@@ -65,29 +74,26 @@ const en = {
       title: 'How do I get a token?',
       intro:
         'The app talks to GitHub directly from your browser, using a personal access token that only you know.',
+      orderTitle: 'Before you start',
+      order:
+        'Accept the invitation to the organization and check that you can open the data repository on GitHub. A token created before you had access will not work.',
       fineTitle: 'Recommended: fine-grained token',
-      step1: 'Open GitHub → Settings → Developer settings → Personal access tokens → Fine-grained tokens.',
-      step2:
-        'Resource owner: the account or organization that owns the data repository.',
-      step3: 'Repository access: “Only select repositories” → choose the data repository.',
-      step4: 'Permissions: Contents → Read and write. (Metadata → Read-only is added automatically.)',
-      step5: 'Generate the token, copy it and paste it above.',
-      openGitHub: 'Create a fine-grained token on GitHub',
+      approval:
+        'Organizations require an owner to approve new tokens by default. Until then, sign-in fails. Owners approve under Organization → Settings → Personal access tokens → Pending requests.',
+      openGitHub: 'Open the prefilled token form on GitHub',
       classicTitle: 'Repository owned by someone else’s personal account?',
       classicText:
         'Fine-grained tokens only work for repositories owned by you or by an organization you belong to. Otherwise use a classic token with the “repo” scope.',
       classicWarning:
         'Warning: a classic “repo” token can access all of your repositories. Prefer moving the data repository into a free GitHub organization.',
       openClassic: 'Create a classic token on GitHub',
-      security:
-        'Your token is stored only in this browser and is sent only to api.github.com.',
+      security: 'Your token is stored only in this browser and is sent only to api.github.com.',
     },
   },
   // index.html has a static copy of this text for crawlers; update it when these strings change.
   landing: {
     headline: 'Free and open-source time tracking',
-    subline:
-      'A simple time tracker for you and your team. No subscription, no ads, no tracking.',
+    subline: 'A simple time tracker for you and your team. No subscription, no ads, no tracking.',
     factFree: 'Free. No paid plans, no limits.',
     factOpenSource: 'Open source.',
     factOpenSourceLink: 'Read the code on GitHub',
@@ -112,13 +118,218 @@ const en = {
       importGuide: 'Read the import guide',
     },
     stepsTitle: 'How it works',
+    setupTeam: 'Set up a team',
     step1Title: 'Create a private repository',
     step1Text: 'An empty private repository on GitHub holds your team’s data.',
+    step1Link: 'Open the setup guide',
     step2Title: 'Create a token',
     step2Text: 'A fine-grained token that can access only that repository.',
     step2Link: 'Show me how',
     step3Title: 'Sign in',
     step3Text: 'Enter the repository and the token. The app sets everything up on first use.',
+    inviteHint: 'Got an invite link from your team? Open it. It guides you through every step.',
+  },
+  onboarding: {
+    back: 'Back to the start page',
+    onGitHub: 'On GitHub:',
+    done: 'Done',
+    menu: {
+      createOrg: 'Profile picture → Your organizations → New organization',
+      newRepo: 'Organization page → Repositories → New repository',
+      memberPrivileges: 'Organization → Settings → Member privileges → Base permissions',
+      tokenPolicy: 'Organization → Settings → Personal access tokens → Settings',
+      pendingTokens: 'Organization → Settings → Personal access tokens → Pending requests',
+      people: 'Organization → People → Invite member',
+      orgInvitation: 'Email from GitHub, or the organization page → Join',
+      repoInvitations: 'Email from GitHub, or the repository page → Accept invitation',
+      repo: 'github.com/{{repo}}',
+      repoAccess: 'Repository → Settings → Collaborators and teams',
+      newToken:
+        'Profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens → Generate new token',
+      tokens:
+        'Profile picture → Settings → Developer settings → Personal access tokens → Fine-grained tokens',
+    },
+    token: {
+      sudo: 'GitHub may first ask you to confirm it’s you (password or GitHub Mobile).',
+      owner:
+        'Resource owner: select {{owner}}, even if it is already shown. It cannot be changed later.',
+      ownerGeneric:
+        'Resource owner: the organization that owns the data repository, not your own username. It cannot be changed later.',
+      repo: 'Repository access: “Only select repositories” → {{repo}}.',
+      repoGeneric: 'Repository access: “Only select repositories” → the data repository.',
+      contents:
+        'Permissions: Contents → Read and write. Check it again after selecting the owner. Metadata (read-only) is added automatically.',
+      generate:
+        'Click “Generate token” and copy the token (it starts with github_pat_). GitHub shows it only once.',
+      open: 'Open the prefilled token form',
+    },
+    diagnosis: {
+      ownerNotFound:
+        'Check the spelling. The easiest way: open the repository on GitHub and copy owner/name from the address bar.',
+      likelyCauses: 'Most likely causes, in this order:',
+      approval:
+        'Your token is waiting for approval. Organizations require this by default. An owner of {{org}} approves it under Pending requests.',
+      approvalLink: 'Pending requests (for owners)',
+      invitation: 'You have not accepted the invitation to {{org}} yet.',
+      invitationLink: 'Open the invitation',
+      repoOpen:
+        'You have no access to the repository yet. Open it in the browser: if GitHub shows a 404 page, an owner has to give you access.',
+      repoOpenLink: 'Open {{repo}}',
+      resourceOwner:
+        'The token has the wrong resource owner, or the repository is not selected. The resource owner must be {{org}}, and {{repo}} must be selected under Repository access.',
+      tokensLink: 'Your tokens',
+      createdBefore:
+        'You created the token before you had access. Such a token never sees the repository: delete it and create a new one.',
+      newTokenLink: 'Create a new token',
+      repoName: 'The repository name is misspelled. Compare it with the address bar on GitHub.',
+      classicScope: 'A classic token needs the “repo” scope.',
+      ownRepo:
+        'Check the repository name, and that the token can access it (Repository access → Only select repositories → {{repo}}).',
+      personalFineGrained:
+        'Fine-grained tokens can only access repositories of your own account or of organizations you belong to. Ask {{owner}} to move the repository into a free GitHub organization, or use a classic token with the “repo” scope (it can access all of your repositories).',
+      classicLink: 'Create a classic token',
+      personalInvite:
+        'Accept the invitation to the repository. If there is none, {{owner}} has to add you as a collaborator with Write access.',
+      readOnlyToken:
+        'Your token only has Contents: Read-only. Create a new token with Contents: Read and write.',
+      readOnlyRole: 'Or your role on the repository is Read. An owner has to give you Write.',
+      askOwner: 'An owner has to act? Send them this message:',
+      copyOwnerMessage: 'Copy message for the owner',
+    },
+    ownerMsg: {
+      greeting: 'Hi,',
+      noAccess:
+        'I want to sign in to our time tracking (Workaddict), but I cannot access the repository {{repo}}.',
+      readOnly:
+        'I want to sign in to our time tracking (Workaddict), but I can only read the repository {{repo}}, not write to it.',
+      login: 'My GitHub username: {{login}}',
+      pleaseCheck: 'Could you check the following?',
+      checkMember: 'I am a member of the organization {{org}} (People: {{link}})',
+      checkWrite: 'I have Write access to {{repo}} (Collaborators and teams: {{link}})',
+      checkApproval:
+        'My token is approved, if the organization requires approval (Pending requests: {{link}})',
+      checkCollaborator: 'I am a collaborator with Write access to {{repo}} ({{link}})',
+      thanks: 'Thank you!',
+    },
+    inviteMsg: {
+      intro:
+        'Hi! We track our time with Workaddict. Our data is in the GitHub repository {{repo}}. To join:',
+      accept:
+        'Accept the invitation to the GitHub organization {{org}} (email from GitHub, or here: {{link}}).',
+      open: 'Then open this link and follow the steps: {{link}}',
+      approval: 'When you have created your token, tell me so I can approve it.',
+    },
+    setup: {
+      title: 'Set up a team',
+      intro:
+        'About 10 minutes, once. Each step opens the right GitHub page. Tick off what is done; your progress is kept in this browser.',
+      soloIntro:
+        'About 3 minutes, once. Each step opens the right GitHub page. Tick off what is done; your progress is kept in this browser.',
+      modeTitle: 'Who is this for?',
+      modeSolo: 'Just me',
+      modeSoloHint: 'A private repository in your own account. Three steps.',
+      modeTeam: 'A team',
+      modeTeamHint: 'A GitHub organization everyone shares. About eight steps.',
+      modeLater:
+        'Not sure? Start with "Just me". You can move to an organization later; your data repository can be transferred.',
+      modeChange: 'Change',
+      org: 'Organization name',
+      orgHint: 'Your new or existing GitHub organization, e.g. my-team.',
+      orgInvalid: 'Only letters, digits and single hyphens, up to 39 characters.',
+      user: 'Your GitHub username',
+      userHint: 'The account the repository will belong to, e.g. my-name.',
+      userInvalid: 'Only letters, digits and single hyphens, up to 39 characters.',
+      repo: 'Repository name',
+      repoInvalid: 'Only letters, digits, dots, hyphens and underscores.',
+      needNames: 'Enter a valid organization name first. The links below use it.',
+      progress: '{{done}} of {{total}} done',
+      reset: 'Start over',
+      orgTitle: 'Create a free organization',
+      orgText:
+        'Choose the Free plan and name it {{org}}. You can skip adding members for now. Already have an organization? Just tick this off.',
+      orgWhy:
+        'Why an organization? Only then can every member use a safe token that reaches nothing but the data repository.',
+      orgLink: 'Create an organization',
+      repoTitle: 'Create the private data repository',
+      repoText:
+        'The form is prefilled: owner {{org}}, name {{repo}}, private. Leave README, .gitignore and license off and click “Create repository”.',
+      repoLink: 'Create {{org}}/{{repo}}',
+      soloRepoText:
+        'The form is prefilled: owner {{org}}, name {{repo}}, private. Leave README, .gitignore and license off and click “Create repository”.',
+      soloTokenText:
+        'The token belongs to your own account and needs no approval from anyone. It can only reach this one repository.',
+      soloLater:
+        'Working with other people later? Move the repository to a free GitHub organization and run this wizard again as a team. A repository in a personal account cannot be shared with fine-grained tokens.',
+      baseTitle: 'Give members write access',
+      baseText:
+        'Under “Base permissions”, choose Write. Then every member can write to the data repository, and you don’t have to add people one by one.',
+      baseCaveat:
+        'Write applies to all repositories of {{org}}. Use an organization that holds only the time data.',
+      baseLink: 'Open member privileges',
+      approvalTitle: 'Decide on token approval',
+      approvalText:
+        'New organizations require an owner to approve every member’s token. Until then, the member’s sign-in fails. You can turn this off on the “Fine-grained tokens” tab.',
+      approvalOff: 'Turn approval off (recommended for small teams you trust)',
+      approvalOffHint:
+        'Select “Do not require administrator approval” and click Save. Members can sign in right after creating their token.',
+      approvalOn: 'Keep approval on',
+      approvalOnHint:
+        'You approve each member’s token under Pending requests. The next steps remind you.',
+      approvalLink: 'Open the token policy',
+      inviteTitle: 'Invite your members',
+      inviteText:
+        'Invite each person by GitHub username with the role Member. They get an email and have to accept it.',
+      inviteLink: 'Open People',
+      cliTitle: 'Faster with the GitHub CLI',
+      cliText:
+        'Have the GitHub CLI (gh) installed? Enter the usernames and paste the commands into a terminal. They create the repository, set the base permission to Write and invite everyone, so you can tick off steps 2, 3 and 5.',
+      cliUsers: 'GitHub usernames (separated by commas or spaces)',
+      cliInvalid: 'Not valid GitHub usernames: {{names}}',
+      cliCopy: 'Copy commands',
+      tokenTitle: 'Create your own token',
+      tokenText: 'As an owner, your own token needs no approval.',
+      shareTitle: 'Invite the team',
+      shareText:
+        'Send this message to your members. The link guides them through everything in the right order. You find it later under Settings, too.',
+      shareLinkLabel: 'Invite link',
+      copyLink: 'Copy link',
+      copyMessage: 'Copy message',
+      shareApproval:
+        'You kept approval on: when a member says their token is ready, approve it here.',
+      pendingLink: 'Open pending requests',
+      signInTitle: 'Sign in',
+      signInText: 'Paste your token. The first sign-in sets up the empty repository.',
+    },
+    join: {
+      title: 'Join {{repo}}',
+      intro: 'Four short steps. Please do them in this order, otherwise the token won’t work.',
+      inviteTitle: 'Accept the invitation',
+      inviteText: 'You got an email from GitHub. Accept the invitation to {{org}} there or here.',
+      inviteLink: 'Open the invitation',
+      inviteRepoHint: 'Invited to the repository instead of an organization?',
+      inviteRepoLink: 'Open the repository invitation',
+      accessTitle: 'Check your access',
+      accessText: 'Open the repository while signed in to GitHub. Can you see it? It may be empty.',
+      accessLink: 'Open {{repo}}',
+      accessYes: 'I can see it',
+      accessNo: 'I get a 404 page',
+      accessMissing:
+        'You don’t have access yet. Don’t create a token now: a token created before you have access won’t work. Send this message to the owner, then check again.',
+      accessAgain: 'Check again',
+      tokenTitle: 'Create your token',
+      tokenLocked: 'Unlocks once you can see the repository.',
+      signInTitle: 'Sign in',
+      changeRepo: 'Change repository',
+      invalid:
+        'This invite link is invalid. Ask the person who sent it for a new one, or enter the repository below.',
+    },
+    team: {
+      title: 'Invite members',
+      text: 'New members need an invitation to the organization {{org}}, then the invite link. It guides them through the rest.',
+      addTitle: 'Add a member',
+      addText: 'Invite them under People with the role Member, or use the GitHub CLI.',
+      pendingText: 'If your organization requires token approval, approve new tokens here:',
+    },
   },
   footer: {
     tagline: 'Free and open-source time tracking.',
@@ -506,7 +717,8 @@ const en = {
     notOwner: 'You can only change your own timer.',
     forbiddenRole: 'Your role does not allow this. Ask a team leader or the owner.',
     invalid: 'Please check your input.',
-    notEmpty: 'Someone added data meanwhile, so nothing was imported. Review the warning and try again.',
+    notEmpty:
+      'Someone added data meanwhile, so nothing was imported. Review the warning and try again.',
     corruptData:
       'The file {{path}} in the data repository is damaged, so it was not changed. Ask an owner to fix it on GitHub.',
     unknown: 'Something went wrong. Please try again.',

@@ -11,8 +11,16 @@ interface GitHubUser {
   avatar_url: string
 }
 
+export type GitHubOwnerType = 'User' | 'Organization'
+
+interface GitHubAccount {
+  login: string
+  type: GitHubOwnerType | string
+}
+
 export interface GitHubRepoInfo {
   full_name: string
+  owner?: GitHubAccount
   default_branch: string
   private: boolean
   permissions?: { push?: boolean; pull?: boolean; admin?: boolean }
@@ -48,7 +56,9 @@ export class GitHubIdentity implements Identity {
 
   async listCollaborators(): Promise<Collaborator[] | null> {
     try {
-      const users = await this.client.get<GitHubCollaborator[]>(`${this.base}/collaborators?per_page=100`)
+      const users = await this.client.get<GitHubCollaborator[]>(
+        `${this.base}/collaborators?per_page=100`,
+      )
       return users.map((u) => ({
         login: u.login,
         avatarUrl: u.avatar_url,
@@ -105,9 +115,72 @@ export function parseRepo(full: string): { owner: string; repo: string } | null 
   return m ? { owner: m[1]!, repo: m[2]! } : null
 }
 
+/**
+ * Why a repository can't be reached with a valid token, found by looking up the owner account:
+ * - `ownerNotFound`: no account with that name (typo)
+ * - `orgRepoNotAccessible`: organization repo (invitation, write access, token owner or approval)
+ * - `ownRepoNotAccessible`: the token user's own account (repo name or token repo selection)
+ * - `personalRepoNotAccessible`: another person's account (collaborator invitation; fine-grained
+ *   tokens can't reach it at all)
+ * - `repoNotFound`: the owner lookup failed too
+ */
+export type RepoAccessError =
+  | 'ownerNotFound'
+  | 'orgRepoNotAccessible'
+  | 'ownRepoNotAccessible'
+  | 'personalRepoNotAccessible'
+  | 'repoNotFound'
+
+export type LoginError =
+  | 'badRepoFormat'
+  | 'invalidToken'
+  | RepoAccessError
+  | 'noPushAccess'
+  | 'offline'
+  | 'rateLimit'
+  | 'unknown'
+
 export type LoginCheck =
-  | { ok: true; user: Member; repo: GitHubRepoInfo; scopes: string[] | null }
-  | { ok: false; error: 'badRepoFormat' | 'invalidToken' | 'repoNotFound' | 'noPushAccess' | 'offline' | 'rateLimit' | 'unknown'; resetAt?: Date }
+  | {
+      ok: true
+      user: Member
+      repo: GitHubRepoInfo
+      ownerType?: GitHubOwnerType
+      scopes: string[] | null
+    }
+  | {
+      ok: false
+      error: LoginError
+      resetAt?: Date
+      /** The token's user, once the token was accepted. */
+      user?: Member
+      /** The repository owner's account type, when known. */
+      ownerType?: GitHubOwnerType
+    }
+
+function ownerTypeOf(account: GitHubAccount | undefined): GitHubOwnerType | undefined {
+  return account?.type === 'Organization' || account?.type === 'User' ? account.type : undefined
+}
+
+/** Looks up the owner of a repository the token can't reach, to tell the user why. */
+async function diagnoseRepoAccess(
+  client: GitHubClient,
+  owner: string,
+  login: string,
+): Promise<{ error: RepoAccessError; ownerType?: GitHubOwnerType }> {
+  try {
+    const account = await client.get<GitHubAccount>(`/users/${encodeURIComponent(owner)}`)
+    const ownerType = ownerTypeOf(account)
+    if (ownerType === 'Organization') return { error: 'orgRepoNotAccessible', ownerType }
+    if (ownerType === 'User') {
+      const own = account.login.toLowerCase() === login.toLowerCase()
+      return { error: own ? 'ownRepoNotAccessible' : 'personalRepoNotAccessible', ownerType }
+    }
+  } catch (e) {
+    if (isStorageError(e, 'notFound')) return { error: 'ownerNotFound' }
+  }
+  return { error: 'repoNotFound' }
+}
 
 /** Validates a token and repository before logging in. */
 export async function checkLogin(
@@ -119,6 +192,7 @@ export async function checkLogin(
   const client = new GitHubClient({ token: creds.token.trim(), fetchFn })
   try {
     const u = await client.get<GitHubUser>('/user')
+    const user = { login: u.login, avatarUrl: u.avatar_url }
     let repo: GitHubRepoInfo
     try {
       repo = await client.get<GitHubRepoInfo>(
@@ -126,12 +200,13 @@ export async function checkLogin(
       )
     } catch (e) {
       if (isStorageError(e, 'notFound') || isStorageError(e, 'forbidden')) {
-        return { ok: false, error: 'repoNotFound' }
+        return { ok: false, user, ...(await diagnoseRepoAccess(client, parsed.owner, u.login)) }
       }
       throw e
     }
-    if (!repo.permissions?.push) return { ok: false, error: 'noPushAccess' }
-    return { ok: true, user: { login: u.login, avatarUrl: u.avatar_url }, repo, scopes: client.scopes }
+    const ownerType = ownerTypeOf(repo.owner)
+    if (!repo.permissions?.push) return { ok: false, error: 'noPushAccess', user, ownerType }
+    return { ok: true, user, repo, ownerType, scopes: client.scopes }
   } catch (e) {
     if (e instanceof StorageError) {
       if (e.kind === 'auth') return { ok: false, error: 'invalidToken' }
