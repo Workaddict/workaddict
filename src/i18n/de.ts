@@ -346,6 +346,9 @@ const de: Resources = {
     themeSystem: 'System',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
+    timeFormat: 'Zeitformat',
+    timeFormat24: '24 Stunden (14:30)',
+    timeFormat12: '12 Stunden (2:30 PM)',
     timer: 'Timer',
     stopOnClose: 'Timer stoppen, wenn ich die Seite schließe',
     stopOnCloseHint:

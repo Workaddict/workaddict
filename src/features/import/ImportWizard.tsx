@@ -1,5 +1,4 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { format } from 'date-fns'
 import { useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import { Spinner } from '../../components/bits'
 import { Modal } from '../../components/Modal'
@@ -62,7 +61,7 @@ function decodeMapping(v: string): UserMapping {
  * built from it) and is gone when the wizard closes.
  */
 export default function ImportWizard({ onClose }: { onClose: () => void }) {
-  const { t, locale } = useI18n()
+  const { t, time } = useI18n()
   const { adapter } = useSessionData()
   const members = useMembers().data ?? []
   const qc = useQueryClient()
@@ -94,7 +93,7 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
     if (!isClockifyError(e)) return t('import.errors.unknown')
     if (e.kind === 'rateLimit') {
       return e.resetAt
-        ? t('import.errors.rateLimit', { time: format(e.resetAt, 'p', { locale }) })
+        ? t('import.errors.rateLimit', { time: time(e.resetAt) })
         : t('import.pausedUnknown')
     }
     return t(`import.errors.${e.kind}`)
@@ -247,9 +246,7 @@ export default function ImportWizard({ onClose }: { onClose: () => void }) {
     paused !== undefined ? (
       <div className="banner banner-warning row wrap">
         <span className="spacer">
-          {paused
-            ? t('import.paused', { time: format(paused, 'p', { locale }) })
-            : t('import.pausedUnknown')}
+          {paused ? t('import.paused', { time: time(paused) }) : t('import.pausedUnknown')}
         </span>
         <button className="btn btn-sm" onClick={resume} disabled={busy}>
           {t('import.resume')}

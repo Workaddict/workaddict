@@ -31,7 +31,8 @@ async function setup(opts: {
   running?: boolean
 }) {
   const start = Date.now() - 10 * HOUR
-  const files: Record<string, unknown> = opts.running === false ? {} : { 'timers/alice.json': timer(start) }
+  const files: Record<string, unknown> =
+    opts.running === false ? {} : { 'timers/alice.json': timer(start) }
   const adapter = createMemoryAdapter(alice, {
     store: new MemoryFileStore(files),
     collaborators: [alice],
@@ -51,6 +52,7 @@ async function setup(opts: {
 const leftHoursAgo = (h: number): PresenceSnapshot => ({
   lastAlive: Date.now() - h * HOUR,
   othersOpen: false,
+  reloaded: false,
 })
 
 describe('stop on page close', () => {
@@ -88,8 +90,13 @@ describe('stop on page close', () => {
   })
 
   it('does not ask after a reload', async () => {
-    await setup({ presence: { lastAlive: Date.now() - 5_000, othersOpen: false } })
+    await setup({ presence: { lastAlive: Date.now() - 5_000, othersOpen: false, reloaded: true } })
     expect(screen.queryByRole('dialog')).toBeNull()
+  })
+
+  it('asks when the tab was closed and the app opened again seconds later', async () => {
+    await setup({ presence: { lastAlive: Date.now() - 5_000, othersOpen: false, reloaded: false } })
+    expect(await screen.findByRole('dialog', { name: 'Your timer is still running' })).toBeTruthy()
   })
 
   it('does not ask while another tab is open', async () => {
@@ -118,7 +125,9 @@ describe('stop on page close', () => {
     await screen.findByRole('dialog')
     await adapter.stopTimer()
     fireEvent.click(screen.getByRole('button', { name: /^Stop at / }))
-    expect(await screen.findByText('This timer was already stopped on another device.')).toBeTruthy()
+    expect(
+      await screen.findByText('This timer was already stopped on another device.'),
+    ).toBeTruthy()
     expect(await adapter.listAllEntries()).toHaveLength(1)
   })
 })

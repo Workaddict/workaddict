@@ -1,17 +1,17 @@
-import { format } from 'date-fns'
 import { useCallback } from 'react'
+import { formatTime } from '../../domain/time'
 import { useI18n } from '../../i18n'
 import { StorageError } from '../../storage'
 import { useToast } from '../../components/Toasts'
 
 /** Maps any error to a clear, non-technical, localized message. */
 export function useErrorText() {
-  const { t, locale } = useI18n()
+  const { t, timeFormat } = useI18n()
   return useCallback(
     (e: unknown): string => {
       if (e instanceof StorageError) {
         if (e.kind === 'rateLimit') {
-          const time = e.resetAt ? format(e.resetAt, 'p', { locale }) : '…'
+          const time = e.resetAt ? formatTime(e.resetAt, timeFormat) : '…'
           return t('errors.rateLimit', { time })
         }
         if (e.kind === 'corruptData') return t('errors.corruptData', { path: e.path ?? '' })
@@ -19,7 +19,7 @@ export function useErrorText() {
       }
       return t('errors.unknown')
     },
-    [t, locale],
+    [t, timeFormat],
   )
 }
 

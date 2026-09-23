@@ -1,7 +1,9 @@
 import i18n from 'i18next'
 import { initReactI18next, useTranslation } from 'react-i18next'
 import { de as deLocale, enUS } from 'date-fns/locale'
-import type { Locale } from 'date-fns'
+import { format, type Locale } from 'date-fns'
+import { formatTime } from '../domain/time'
+import { useTimeFormat } from '../timeFormat'
 import de from './de'
 import en from './en'
 
@@ -25,7 +27,8 @@ function readStored(): Language | null {
 export function detectLanguage(): Language {
   const stored = readStored()
   if (stored) return stored
-  const langs = typeof navigator !== 'undefined' ? navigator.languages ?? [navigator.language] : []
+  const langs =
+    typeof navigator !== 'undefined' ? (navigator.languages ?? [navigator.language]) : []
   for (const l of langs) {
     const base = l?.slice(0, 2).toLowerCase()
     if (base === 'de' || base === 'en') return base
@@ -59,11 +62,26 @@ export function dateLocale(lang: string): Locale {
   return lang.startsWith('de') ? deLocale : enUS
 }
 
-/** Translation function plus the date-fns locale for the active language. */
+/**
+ * Translation function, the date-fns locale for the active language, and clock-time formatters
+ * that follow the device's 24h/12h choice.
+ */
 export function useI18n() {
   const { t, i18n: instance } = useTranslation()
+  const timeFormat = useTimeFormat()
   const lang = (instance.language?.startsWith('de') ? 'de' : 'en') as Language
-  return { t, lang, locale: dateLocale(lang) }
+  const locale = dateLocale(lang)
+  return {
+    t,
+    lang,
+    locale,
+    timeFormat,
+    /** "14:30" or "2:30 PM". */
+    time: (d: Date | string | number) => formatTime(d, timeFormat),
+    /** Short date plus time, e.g. "23.09.2026, 14:30". */
+    dateTime: (d: Date | string | number) =>
+      `${format(new Date(d), 'P', { locale })}, ${formatTime(d, timeFormat)}`,
+  }
 }
 
 export default i18n

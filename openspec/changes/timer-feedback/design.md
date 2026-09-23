@@ -42,7 +42,9 @@ A new module (e.g. `src/features/tracker/presence.ts`) runs once per document at
 2. Acquire the shared lock `workaddict-open` for the lifetime of the document (a request whose callback returns a never-resolving promise). Web Locks are released only when the document is destroyed, so a hidden, throttled or frozen tab still counts as open.
 3. Heartbeat: write `workaddict.lastAlive = now` every 30 s and on `pagehide` and `visibilitychange` (hidden). This gives the close time, not the open/closed decision.
 
-The page counts as "was closed" when no other document holds the lock (or Web Locks are missing) **and** `now − lastAlive > 2 min`. A reload writes `lastAlive` in `pagehide` just before, so it never asks. A sleeping laptop keeps its document, so no new load happens and nothing is checked.
+The page counts as "was closed" when no other document holds the lock (or Web Locks are missing) **and** either this page was opened anew (`PerformanceNavigationTiming.type` is `navigate`), or it was a `reload` / `back_forward` with `now − lastAlive > 2 min`. A reload writes `lastAlive` in `pagehide` just before, so it never asks.
+
+*Changed after the first live test:* the 2-minute gap originally applied to every load, so closing the tab and reopening it seconds later never asked, which read as "the timer does not stop". The navigation type separates a reload from a new open without any waiting period; the 2-minute window stays only as a safety margin for reloads and back/forward. A sleeping laptop keeps its document, so no new load happens and nothing is checked.
 
 Alternative: heartbeat age alone. It breaks when another tab is frozen or heavily throttled in the background (Chrome throttles timers to once a minute and may freeze tabs), which would wrongly ask in a new tab. Web Locks are supported in current Chrome, Edge, Firefox and Safari (15.4+); without them the heartbeat rule is the fallback.
 
@@ -71,6 +73,12 @@ A hook in the logged-in `Layout` remembers the title on mount and, while the own
 ### D8 Affordance for editable times
 
 Start, end and duration buttons in the entry list (and the new timer start) get a permanent dotted underline (`text-decoration: underline dotted`, muted color) in addition to the existing hover border, so they read as editable on touch screens. The description keeps the hover-only style, since underlining every description would be noisy. The "Timer saved" toast becomes "Saved. Tap a time in the list to correct it." in EN and DE.
+
+### D9 Time format: 24-hour by default, per device
+
+`workaddict.timeFormat` in localStorage (`'12h'` = 12-hour, missing = 24-hour), set in Settings next to language and theme, read through `useI18n()` (`time()`, `dateTime()`, `timeFormat`). It replaces every `format(d, 'p' | 'Pp', { locale })`, which followed the language (English meant AM/PM). The PDF export reads the same setting; CSV and ODS keep `HH:mm` as machine data.
+
+Native `<input type="time">` follows the browser's locale, not the app, and in the running-timer bar it shrank to an unreadable width. All clock-time inputs are therefore text inputs (`TimeInput`, and `InlineEdit type="time"`) with a fixed width, prefilled in the chosen format, `inputMode="decimal"` for 24-hour and `text` for 12-hour. `parseClockTime` accepts both formats so typing never depends on the setting.
 
 ## Risks / Trade-offs
 

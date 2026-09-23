@@ -17,11 +17,11 @@ import {
 } from './EntryFields'
 
 export function EntryEditModal({ entry, onClose }: { entry: TimeEntry; onClose: () => void }) {
-  const { t } = useI18n()
+  const { t, timeFormat } = useI18n()
   const toast = useToast()
   const onError = useErrorToast()
   const save = useSaveEntry()
-  const initialTimes = timeFieldsFrom(new Date(entry.start), new Date(entry.end))
+  const initialTimes = timeFieldsFrom(new Date(entry.start), new Date(entry.end), timeFormat)
   const [fields, setFields] = useState<WorkFields>({
     description: entry.description,
     projectId: entry.projectId,

@@ -25,7 +25,7 @@ const EMPTY: WorkFields = { description: '', projectId: null, tagIds: [] }
 
 /** "Running since 09:12" with the start time editable in place. */
 function TimerStart({ timer }: { timer: RunningTimer }) {
-  const { t, locale } = useI18n()
+  const { t, time } = useI18n()
   const { adapter } = useSessionData()
   const onError = useErrorToast()
   const errorText = useErrorText()
@@ -54,8 +54,8 @@ function TimerStart({ timer }: { timer: RunningTimer }) {
         editing={editing}
         onStart={() => setEditing(true)}
         onDone={() => setEditing(false)}
-        display={format(start, 'p', { locale })}
-        initial={format(start, 'HH:mm')}
+        display={time(start)}
+        initial={time(start)}
         label={t('timer.editStart')}
         onCommit={commit}
       />

@@ -25,8 +25,14 @@
 - [x] 4.6 Build the question modal with "Stop at <time>" (default), "Keep running" (sets `keep: true`) and "Stop now"; "Stop at" uses `max(lastAlive, timer.start)`; shows the saved or "already stopped" feedback; i18n EN/DE incl. relative duration ("2 h 10 min ago")
 - [x] 4.7 Tests for the spec scenarios: closed and reopened, keep running (no second question), stop now, reload, another tab open, timer from another device, setting off, already stopped elsewhere, demo and read-only skipped
 
-## 5. Verify
+## 5. Follow-up after the first live test (reopened 2026-09-23)
 
-- [x] 5.1 `npm test`, `npm run lint`, `npm run build` pass
-- [ ] 5.2 Manual check in Chrome and one other browser: tab title in a background tab, close the last tab and reopen after more than 2 minutes (question appears with the right time), reload (no question), two tabs (no question), phone width 360 px and dark mode for the timer start edit, the underline and the modal
-- [ ] 5.3 Tell the users who gave the feedback what changed (the four points) after deploy
+- [x] 5a.1 Stop on close asks when the app is opened anew seconds after closing; reload and back/forward keep the 2-minute window (`reloaded` in the presence snapshot from the navigation type); tests (design D2)
+- [x] 5a.2 Running-timer start edit: text input with a fixed width instead of the collapsing native time input
+- [x] 5a.3 Time format setting (24-hour default, 12-hour option) in Settings; all clock times via `useI18n().time/dateTime`; time inputs as text with `parseClockTime`; PDF export follows it; i18n EN/DE; tests (design D9)
+
+## 6. Verify
+
+- [x] 6.1 `npm test`, `npm run lint`, `npm run build` pass
+- [ ] 6.2 (phone width and dark mode approved by the user; still open: close/reopen, reload and two-tab check on the deployed site) Manual check in Chrome and one other browser: tab title in a background tab, close the last tab and reopen after a few seconds (question appears with the right time), reload (no question), two tabs (no question), phone width 360 px and dark mode for the timer start edit, the underline and the modal; switch to 12-hour and back
+- [x] 6.3 Tell the users who gave the feedback what changed (the four points, plus the 24h/12h setting) after deploy

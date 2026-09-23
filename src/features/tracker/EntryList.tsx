@@ -56,7 +56,7 @@ function EntryRow({
   editing: InlineField | null
   setEditing: (field: InlineField, active: boolean) => void
 }) {
-  const { t, locale } = useI18n()
+  const { t, time } = useI18n()
   const { user, adapter } = useSessionData()
   const { project, tag, member, workspace } = useLookups()
   const confirm = useConfirm()
@@ -71,8 +71,6 @@ function EntryRow({
   const editable =
     !adapter.readOnly && (entry.login === user.login || access.can('editOthersEntries'))
   const tags = entry.tagIds.map(tag).filter((x) => x !== undefined)
-  const time = (iso: string) => format(new Date(iso), 'p', { locale })
-  const inputTime = (iso: string) => format(new Date(iso), 'HH:mm')
 
   /** Saves a change; resolves to an error message for the field, or null on success. */
   const saveFields = async (patch: Partial<TimeEntry>): Promise<string | null> => {
@@ -115,7 +113,7 @@ function EntryRow({
             {...field('start')}
             type="time"
             display={time(entry.start)}
-            initial={inputTime(entry.start)}
+            initial={time(entry.start)}
             label={t('entries.editStart')}
             onCommit={saveTime('start')}
           />
@@ -124,7 +122,7 @@ function EntryRow({
             {...field('end')}
             type="time"
             display={time(entry.end)}
-            initial={inputTime(entry.end)}
+            initial={time(entry.end)}
             label={t('entries.editEnd')}
             onCommit={saveTime('end')}
           />

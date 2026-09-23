@@ -15,7 +15,9 @@ import { lazyWithReload } from '../../app/lazyPage'
 import { Avatar } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { LANGUAGES, setLanguage, useI18n, type Language } from '../../i18n'
+import type { TimeFormat } from '../../domain/time'
 import { setTheme, useThemePref, type ThemePref } from '../../theme'
+import { setTimeFormat, useTimeFormat } from '../../timeFormat'
 import { useAuth, useSessionData } from '../auth/AuthContext'
 import { tokenKind } from '../auth/session'
 import { useAccess } from '../data/hooks'
@@ -32,6 +34,7 @@ export default function SettingsPage() {
   const { logout } = useAuth()
   const { user, session, adapter } = useSessionData()
   const theme = useThemePref()
+  const timeFormat = useTimeFormat()
   const stopOnClose = useStopOnClose()
   const access = useAccess()
   const onError = useErrorToast()
@@ -122,6 +125,17 @@ export default function SettingsPage() {
               <option value="system">{t('settings.themeSystem')}</option>
               <option value="light">{t('settings.themeLight')}</option>
               <option value="dark">{t('settings.themeDark')}</option>
+            </select>
+          </label>
+          <label className="settings-row">
+            <span>{t('settings.timeFormat')}</span>
+            <select
+              className="select"
+              value={timeFormat}
+              onChange={(e) => setTimeFormat(e.target.value as TimeFormat)}
+            >
+              <option value="24h">{t('settings.timeFormat24')}</option>
+              <option value="12h">{t('settings.timeFormat12')}</option>
             </select>
           </label>
         </div>

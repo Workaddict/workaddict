@@ -806,6 +806,16 @@ button.entry-duration,
 .entry-time .input.inline-input {
   width: 7.5em;
 }
+/* The start of a running timer: wide enough for "12:30 PM" at full text size. */
+.timer-since .inline-edit-wrap {
+  vertical-align: middle;
+}
+.timer-since .input.inline-input {
+  width: 8em;
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text);
+}
 .entry-duration .input.inline-input {
   width: 5em;
   text-align: right;

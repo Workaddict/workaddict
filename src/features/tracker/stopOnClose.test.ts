@@ -31,6 +31,7 @@ function input(patch: Partial<CloseCheckInput> = {}): CloseCheckInput {
     device: { timerId: 't1', keep: false },
     lastAlive: LEFT,
     othersOpen: false,
+    reloaded: false,
     now: NOW,
     ...patch,
   }
@@ -45,8 +46,16 @@ describe('closedTimerSince', () => {
     expect(closedTimerSince(input({ lastAlive: START - 60_000 }))).toBe(START)
   })
 
-  it('does not ask after a reload (short gap)', () => {
-    expect(closedTimerSince(input({ lastAlive: NOW - 60_000 }))).toBeNull()
+  it('does not ask after a reload with a short gap', () => {
+    expect(closedTimerSince(input({ lastAlive: NOW - 60_000, reloaded: true }))).toBeNull()
+  })
+
+  it('asks after a reload with a long gap', () => {
+    expect(closedTimerSince(input({ reloaded: true }))).toBe(LEFT)
+  })
+
+  it('asks when the app is opened anew seconds after closing it', () => {
+    expect(closedTimerSince(input({ lastAlive: NOW - 5_000 }))).toBe(NOW - 5_000)
   })
 
   it('does not ask while another page is open', () => {

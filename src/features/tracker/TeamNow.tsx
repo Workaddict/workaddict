@@ -3,6 +3,7 @@ import { useMemo, useState, type FormEvent } from 'react'
 import { Avatar, ProjectChip } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { Modal, useConfirm } from '../../components/Modal'
+import { TimeInput } from '../../components/TimeInput'
 import { useToast } from '../../components/Toasts'
 import {
   buildTeamRows,
@@ -14,6 +15,7 @@ import {
   durationMs,
   formatClock,
   formatHM,
+  formatTime,
   isValidDuration,
   localDateTime,
 } from '../../domain/time'
@@ -127,7 +129,7 @@ function TeamNowRow({
   onStop: (timer: RunningTimer) => void
   onDiscard: (timer: RunningTimer) => void
 }) {
-  const { t, locale } = useI18n()
+  const { t, time } = useI18n()
   const { project, tag } = useLookups()
   const { member, timer } = row
   const tags = timer ? timer.tagIds.map(tag).filter((x) => x !== undefined) : []
@@ -146,7 +148,7 @@ function TeamNowRow({
           ) : (
             <span className="small muted">
               {row.lastEnd
-                ? t('team.lastActive', { time: format(new Date(row.lastEnd), 'p', { locale }) })
+                ? t('team.lastActive', { time: time(row.lastEnd) })
                 : t('team.noEntriesToday')}
             </span>
           )}
@@ -209,17 +211,17 @@ function StopOthersTimerDialog({
   onClose: () => void
   onSubmit: (end: Date) => void
 }) {
-  const { t, locale } = useI18n()
+  const { t, timeFormat, dateTime } = useI18n()
   const [opened] = useState(() => new Date())
   const now = useNow()
   const initial = suggestedStopEnd(timer.start, opened)
   const [date, setDate] = useState(format(initial, 'yyyy-MM-dd'))
-  const [time, setTime] = useState(format(initial, 'HH:mm'))
+  const [endTime, setEndTime] = useState(formatTime(initial, timeFormat))
   const [showErrors, setShowErrors] = useState(false)
   const start = new Date(timer.start)
   const tooLong = isRunningTooLong(start, opened)
 
-  const end = localDateTime(date, time)
+  const end = localDateTime(date, endTime)
   const error: StopError | null = !end
     ? 'invalidEnd'
     : end.getTime() <= start.getTime()
@@ -244,7 +246,7 @@ function StopOthersTimerDialog({
       <form className="stack" onSubmit={submit}>
         <p className="small muted" style={{ margin: 0 }}>
           {timer.description || t('common.noDescription')} ·{' '}
-          {t('timer.runningSince', { time: format(start, 'Pp', { locale }) })}
+          {t('timer.runningSince', { time: dateTime(start) })}
         </p>
         {tooLong && (
           <div className="banner banner-warning">
@@ -265,13 +267,11 @@ function StopOthersTimerDialog({
           </label>
           <label className="field">
             <span>{t('manual.end')}</span>
-            <input
-              className="input"
-              type="time"
+            <TimeInput
               required
-              value={time}
+              value={endTime}
               aria-invalid={showErrors && error !== null}
-              onChange={(e) => setTime(e.target.value)}
+              onChange={(e) => setEndTime(e.target.value)}
             />
           </label>
         </div>

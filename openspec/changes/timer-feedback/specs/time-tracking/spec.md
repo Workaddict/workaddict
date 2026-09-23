@@ -16,7 +16,7 @@ While the signed-in user's own timer is running, the system SHALL show its elaps
 - **THEN** the document title is the page's normal title
 
 ### Requirement: Stop on page close
-The system SHALL offer a per-device setting "Stop timer when I close the page", enabled by default. While the setting is on, the device on which the user started a timer SHALL remember the last time any Workaddict page was open on that device. When the app is loaded on that device and the user's running timer was started there, and no Workaddict page was open on the device for more than 2 minutes, the system SHALL ask the user what to do with the timer, offering "Stop at <last open time>" (the default action), "Keep running", and "Stop now". A tab that is only hidden, or a device that was asleep while the page stayed open, SHALL NOT count as closed. The system SHALL NOT ask about a timer that was started on another device, in demo mode, or for a read-only session, and SHALL ask at most once per timer after the user chose "Keep running". The stop SHALL use the same idempotent stop behavior as a normal stop; if the timer was already stopped or replaced meanwhile, the system SHALL create no entry and close the question.
+The system SHALL offer a per-device setting "Stop timer when I close the page", enabled by default. While the setting is on, the device on which the user started a timer SHALL remember the last time any Workaddict page was open on that device. When the app is loaded on that device, the user's running timer was started there, and no other Workaddict page is open on the device, the system SHALL ask when the page was opened anew (new tab, typed address, bookmark), however short the gap, or when it was reloaded or reached by back/forward after no Workaddict page was open for more than 2 minutes. It SHALL ask the user what to do with the timer, offering "Stop at <last open time>" (the default action), "Keep running", and "Stop now". A tab that is only hidden, or a device that was asleep while the page stayed open, SHALL NOT count as closed. The system SHALL NOT ask about a timer that was started on another device, in demo mode, or for a read-only session, and SHALL ask at most once per timer after the user chose "Keep running". The stop SHALL use the same idempotent stop behavior as a normal stop; if the timer was already stopped or replaced meanwhile, the system SHALL create no entry and close the question.
 
 #### Scenario: Page closed and reopened later
 - **WHEN** the user starts a timer at 09:00 on a laptop, closes the last Workaddict tab at 17:32, reopens the app the next morning, and chooses "Stop at 17:32"
@@ -29,6 +29,10 @@ The system SHALL offer a per-device setting "Stop timer when I close the page", 
 #### Scenario: Stop now
 - **WHEN** the question appears and the user chooses "Stop now"
 - **THEN** the timer becomes an entry ending at the current time
+
+#### Scenario: Closed and reopened seconds later
+- **WHEN** the user closes the only Workaddict tab and opens the app in a new tab 5 seconds later
+- **THEN** the question appears, offering to stop at the time the tab was closed
 
 #### Scenario: Reload
 - **WHEN** the user reloads the page while the timer is running
@@ -53,6 +57,21 @@ The system SHALL offer a per-device setting "Stop timer when I close the page", 
 #### Scenario: Timer already stopped elsewhere
 - **WHEN** the question is shown and the timer was stopped on another device meanwhile, and the user chooses "Stop at 17:32"
 - **THEN** no additional entry is created and the question closes with the "already stopped" notice
+
+### Requirement: Time format
+The system SHALL show clock times of day (entry times, timer start, "Team now", dialogs, notices and the PDF export) in the time format chosen on the device: 24-hour (`14:30`) by default, or 12-hour (`2:30 PM`). Time input fields SHALL show and prefill values in the chosen format and SHALL accept either format when typed, including `14:30`, `1430`, `14.30`, `9`, `2:30 pm` and `2pm`. Times SHALL be stored unchanged.
+
+#### Scenario: Default 24-hour
+- **WHEN** a user who never changed the time format views an entry from 14:30 to 15:00
+- **THEN** its times show as `14:30` and `15:00`, whatever the browser's language
+
+#### Scenario: 12-hour chosen
+- **WHEN** the user chose "12-hour" and views the same entry
+- **THEN** its times show as `2:30 PM` and `3:00 PM`
+
+#### Scenario: Typing the other format
+- **WHEN** the 24-hour format is chosen and the user types `2:30 pm` as the start time of an entry
+- **THEN** the start is saved as 14:30
 
 ## MODIFIED Requirements
 

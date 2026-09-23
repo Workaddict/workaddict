@@ -341,6 +341,9 @@ const en = {
     themeSystem: 'System',
     themeLight: 'Light',
     themeDark: 'Dark',
+    timeFormat: 'Time format',
+    timeFormat24: '24-hour (14:30)',
+    timeFormat12: '12-hour (2:30 PM)',
     timer: 'Timer',
     stopOnClose: 'Stop timer when I close the page',
     stopOnCloseHint:

@@ -4,6 +4,7 @@
  * Every page holds the shared Web Lock `workaddict-open` for its whole life, so a hidden, throttled
  * or frozen tab still counts as open. A heartbeat in localStorage records when a page was last
  * alive; that gives the close time. Both are read once, before this page adds its own.
+ * The navigation type tells a reload (or back/forward) from opening the app again after closing it.
  */
 
 const ALIVE_KEY = 'workaddict.lastAlive'
@@ -13,6 +14,8 @@ const BEAT_MS = 30_000
 export interface PresenceSnapshot {
   lastAlive: number | null
   othersOpen: boolean
+  /** This page was loaded by a reload or back/forward, not opened anew. */
+  reloaded: boolean
 }
 
 interface LockLike {
@@ -26,6 +29,8 @@ export interface PresenceEnv {
   target: Pick<Window, 'addEventListener' | 'removeEventListener'>
   doc: Pick<Document, 'addEventListener' | 'removeEventListener' | 'visibilityState'>
   now: () => number
+  /** `PerformanceNavigationTiming.type` of this page, if known. */
+  navigationType: string | undefined
 }
 
 /** Snapshots the previous state, then keeps this page's presence up. Returns the snapshot and a stop. */
@@ -41,6 +46,8 @@ export function startPresence(env: PresenceEnv): {
     // storage unavailable
   }
 
+  const reloaded = env.navigationType === 'reload' || env.navigationType === 'back_forward'
+
   let release: () => void = () => {}
   const snapshot = (async (): Promise<PresenceSnapshot> => {
     let othersOpen = false
@@ -53,7 +60,7 @@ export function startPresence(env: PresenceEnv): {
         // Web Locks unavailable (e.g. insecure context): the heartbeat alone decides
       }
     }
-    return { lastAlive, othersOpen }
+    return { lastAlive, othersOpen, reloaded }
   })()
 
   const beat = () => {
@@ -96,6 +103,15 @@ export function initPresence(): Promise<PresenceSnapshot> {
     target: window,
     doc: document,
     now: Date.now,
+    navigationType: (() => {
+      try {
+        return (
+          performance.getEntriesByType('navigation')[0] as PerformanceNavigationTiming | undefined
+        )?.type
+      } catch {
+        return undefined
+      }
+    })(),
   }).snapshot
   return current
 }

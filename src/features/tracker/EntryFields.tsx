@@ -1,6 +1,14 @@
 import { format } from 'date-fns'
 import { ProjectPicker, TagPicker } from '../../components/Pickers'
-import { durationMs, formatHM, resolveManualTimes, type ManualTimeResult } from '../../domain/time'
+import { TimeInput } from '../../components/TimeInput'
+import {
+  durationMs,
+  formatHM,
+  formatTime,
+  resolveManualTimes,
+  type ManualTimeResult,
+  type TimeFormat,
+} from '../../domain/time'
 import { useI18n } from '../../i18n'
 import { useAccess, useWorkspace } from '../data/hooks'
 import { useWorkspaceActions } from '../data/workspaceActions'
@@ -67,11 +75,11 @@ export interface TimeFields {
   useDuration: boolean
 }
 
-export function timeFieldsFrom(start: Date, end: Date): TimeFields {
+export function timeFieldsFrom(start: Date, end: Date, f: TimeFormat): TimeFields {
   return {
     date: format(start, 'yyyy-MM-dd'),
-    startTime: format(start, 'HH:mm'),
-    endTime: format(end, 'HH:mm'),
+    startTime: formatTime(start, f),
+    endTime: formatTime(end, f),
     duration: formatHM(durationMs(start, end)),
     useDuration: false,
   }
@@ -115,9 +123,7 @@ export function TimeInputs({
         </label>
         <label className="field">
           <span>{t('manual.start')}</span>
-          <input
-            className="input"
-            type="time"
+          <TimeInput
             required
             value={value.startTime}
             aria-invalid={showErrors && error === 'invalidStart'}
@@ -139,9 +145,7 @@ export function TimeInputs({
         ) : (
           <label className="field">
             <span>{t('manual.end')}</span>
-            <input
-              className="input"
-              type="time"
+            <TimeInput
               value={value.endTime}
               aria-invalid={showErrors && error !== null && error !== 'invalidStart'}
               onChange={(e) => onChange({ endTime: e.target.value })}

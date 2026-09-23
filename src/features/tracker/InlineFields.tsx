@@ -1,6 +1,7 @@
 import { useRef, useState, type ReactNode } from 'react'
 import { ProjectPicker, TagPicker } from '../../components/Pickers'
 import type { Project, Tag } from '../../domain/types'
+import { timeInputAttrs, useTimeFormat } from '../../timeFormat'
 
 interface InlineEditProps {
   /** Shown in display mode. */
@@ -32,6 +33,7 @@ export function InlineEdit(p: InlineEditProps) {
   const [busy, setBusy] = useState(false)
   const busyRef = useRef(false)
   const cancelled = useRef(false)
+  const timeFormat = useTimeFormat()
 
   if (!p.editable) return <span className={p.className}>{p.display}</span>
 
@@ -71,9 +73,9 @@ export function InlineEdit(p: InlineEditProps) {
       <input
         autoFocus
         className="input inline-input"
-        type={p.type ?? 'text'}
-        inputMode={p.inputMode}
-        placeholder={p.placeholder}
+        {...(p.type === 'time'
+          ? timeInputAttrs(timeFormat)
+          : { type: 'text', inputMode: p.inputMode, placeholder: p.placeholder })}
         aria-label={p.label}
         aria-invalid={error !== null}
         value={value}

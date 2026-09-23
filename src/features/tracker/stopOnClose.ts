@@ -8,7 +8,10 @@ import type { RunningTimer } from '../../domain/types'
 
 const SETTING_KEY = 'workaddict.stopOnClose'
 const DEVICE_KEY = 'workaddict.timerDevice'
-/** Closed for longer than this counts as "left"; shorter gaps are reloads and navigation. */
+/**
+ * After a reload or back/forward, only a gap longer than this counts as "left". A page opened anew
+ * (new tab, typed address, bookmark) with no other Workaddict page open counts as left at once.
+ */
 export const CLOSED_AFTER_MS = 2 * 60_000
 
 function read(key: string): string | null {
@@ -88,6 +91,8 @@ export interface CloseCheckInput {
   lastAlive: number | null
   /** Another Workaddict page on this device was still open when this one loaded. */
   othersOpen: boolean
+  /** This page was loaded by a reload or back/forward. */
+  reloaded: boolean
   now: number
 }
 
@@ -96,6 +101,6 @@ export function closedTimerSince(i: CloseCheckInput): number | null {
   if (!i.enabled || i.demo || i.readOnly || !i.timer || i.timer.id === 'pending') return null
   if (!i.device || i.device.keep || i.device.timerId !== i.timer.id) return null
   if (i.othersOpen || i.lastAlive === null) return null
-  if (i.now - i.lastAlive <= CLOSED_AFTER_MS) return null
+  if (i.reloaded && i.now - i.lastAlive <= CLOSED_AFTER_MS) return null
   return Math.max(i.lastAlive, new Date(i.timer.start).getTime())
 }

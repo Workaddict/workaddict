@@ -14,13 +14,16 @@ class FakeLocks {
 
 function env(locks: FakeLocks | null, storage = new Map<string, string>()) {
   const target = new EventTarget()
-  const doc = Object.assign(new EventTarget(), { visibilityState: 'visible' as DocumentVisibilityState })
+  const doc = Object.assign(new EventTarget(), {
+    visibilityState: 'visible' as DocumentVisibilityState,
+  })
   const e: PresenceEnv = {
     storage: { getItem: (k) => storage.get(k) ?? null, setItem: (k, v) => void storage.set(k, v) },
     locks,
     target: target as unknown as Window,
     doc: doc as unknown as Document,
     now: Date.now,
+    navigationType: 'navigate',
   }
   return { e, storage, target, doc }
 }
@@ -36,7 +39,7 @@ describe('presence', () => {
   it('snapshots the previous heartbeat before writing its own', async () => {
     const { e, storage } = env(null, new Map([['workaddict.lastAlive', '1000']]))
     const p = startPresence(e)
-    expect(await p.snapshot).toEqual({ lastAlive: 1000, othersOpen: false })
+    expect(await p.snapshot).toEqual({ lastAlive: 1000, othersOpen: false, reloaded: false })
     expect(storage.get('workaddict.lastAlive')).toBe(String(Date.now()))
     p.stop()
   })
@@ -76,10 +79,24 @@ describe('presence', () => {
     third.stop()
   })
 
+  it('marks a reload and back/forward, not a new navigation', async () => {
+    for (const [type, reloaded] of [
+      ['reload', true],
+      ['back_forward', true],
+      ['navigate', false],
+      [undefined, false],
+    ] as const) {
+      const { e } = env(null)
+      const p = startPresence({ ...e, navigationType: type })
+      expect((await p.snapshot).reloaded).toBe(reloaded)
+      p.stop()
+    }
+  })
+
   it('works without storage', async () => {
     const { e } = env(null)
     const p = startPresence({ ...e, storage: null })
-    expect(await p.snapshot).toEqual({ lastAlive: null, othersOpen: false })
+    expect(await p.snapshot).toEqual({ lastAlive: null, othersOpen: false, reloaded: false })
     p.stop()
   })
 })

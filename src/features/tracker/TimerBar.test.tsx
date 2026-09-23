@@ -1,10 +1,10 @@
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
-import { format } from 'date-fns'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { RunningTimer } from '../../domain/types'
 import '../../i18n'
 import { createMemoryAdapter, MemoryFileStore } from '../../storage'
 import { renderWithSession } from '../../test/renderWithSession'
+import { setTimeFormat } from '../../timeFormat'
 import { readTimerDevice } from './stopOnClose'
 import { TimerBar } from './TimerBar'
 
@@ -42,14 +42,30 @@ async function editStart(value: string, key: 'Enter' | 'Escape' = 'Enter') {
 describe('editing the start of a running timer', () => {
   afterEach(() => {
     vi.useRealTimers()
+    setTimeFormat('24h')
   })
 
   it('saves a new start time', async () => {
     vi.useFakeTimers({ now: at(10), toFake: ['Date'] })
     const { adapter } = await setup(at(9, 12))
-    expect(await screen.findByText(format(at(9, 12), 'p'))).toBeTruthy()
+    expect(await screen.findByText('09:12')).toBeTruthy()
     await editStart('08:45')
-    await waitFor(async () => expect((await adapter.getTimer())?.start).toBe(at(8, 45).toISOString()))
+    await waitFor(async () =>
+      expect((await adapter.getTimer())?.start).toBe(at(8, 45).toISOString()),
+    )
+  })
+
+  it('shows and accepts 12-hour times when chosen', async () => {
+    setTimeFormat('12h')
+    vi.useFakeTimers({ now: at(10), toFake: ['Date'] })
+    const { adapter } = await setup(at(9, 12))
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit start time' }))
+    expect((screen.getByLabelText('Edit start time') as HTMLInputElement).value).toBe('9:12 AM')
+    fireEvent.keyDown(screen.getByLabelText('Edit start time'), { key: 'Escape' })
+    await editStart('8:45 am')
+    await waitFor(async () =>
+      expect((await adapter.getTimer())?.start).toBe(at(8, 45).toISOString()),
+    )
   })
 
   it('cancels with Escape', async () => {

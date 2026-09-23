@@ -1,4 +1,3 @@
-import { format } from 'date-fns'
 import { useRef, useState, type FormEvent } from 'react'
 import { REPO_URL } from '../../app/about'
 import { Icon } from '../../components/Icon'
@@ -15,7 +14,7 @@ const FINE_GRAINED_URL = 'https://github.com/settings/personal-access-tokens/new
 const CLASSIC_URL = 'https://github.com/settings/tokens/new?scopes=repo&description=Workaddict'
 
 export function LoginPage() {
-  const { t, locale } = useI18n()
+  const { t, time } = useI18n()
   const { state, login } = useAuth()
   const [token, setToken] = useState('')
   const [repo, setRepo] = useState('')
@@ -45,7 +44,7 @@ export function LoginPage() {
       if (!res.ok) {
         setError(
           t(`login.errors.${res.error}`, {
-            time: res.resetAt ? format(res.resetAt, 'p', { locale }) : '…',
+            time: res.resetAt ? time(res.resetAt) : '…',
           }),
         )
         return

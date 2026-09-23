@@ -1,4 +1,4 @@
-import { format, formatDistanceStrict, isSameDay } from 'date-fns'
+import { formatDistanceStrict, isSameDay } from 'date-fns'
 import { useEffect, useState } from 'react'
 import { Modal } from '../../components/Modal'
 import { useI18n } from '../../i18n'
@@ -20,7 +20,7 @@ export function StopOnClosePrompt({
 }: {
   presence?: Promise<PresenceSnapshot> | null
 }) {
-  const { t, locale } = useI18n()
+  const { t, locale, time: fmtTime, dateTime } = useI18n()
   const { session, adapter } = useSessionData()
   const loaded = useTimers().isSuccess
   const timer = useMyTimer()
@@ -41,6 +41,7 @@ export function StopOnClosePrompt({
           device: readTimerDevice(),
           lastAlive: p.lastAlive,
           othersOpen: p.othersOpen,
+          reloaded: p.reloaded,
           now: Date.now(),
         }),
       ),
@@ -50,7 +51,7 @@ export function StopOnClosePrompt({
   if (since === null || !timer) return null
 
   const now = new Date()
-  const time = format(since, isSameDay(since, now) ? 'p' : 'Pp', { locale })
+  const time = isSameDay(since, now) ? fmtTime(since) : dateTime(since)
   const close = () => setSince(null)
 
   return (
@@ -90,7 +91,7 @@ export function StopOnClosePrompt({
             close()
           }}
         >
-          {t('closeStop.stopAt', { time: format(since, 'p', { locale }) })}
+          {t('closeStop.stopAt', { time: fmtTime(since) })}
         </button>
       </div>
     </Modal>

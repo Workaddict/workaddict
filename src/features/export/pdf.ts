@@ -1,7 +1,8 @@
 import { format } from 'date-fns'
 import { jsPDF } from 'jspdf'
 import { autoTable, type RowInput } from 'jspdf-autotable'
-import { formatHM } from '../../domain/time'
+import { formatHM, formatTime } from '../../domain/time'
+import { getTimeFormat } from '../../timeFormat'
 import type { BreakdownRow } from '../stats/stats'
 import type { Report } from './report'
 
@@ -23,6 +24,7 @@ export async function exportPdf(r: Report) {
   const { t, locale } = r
   const doc = new jsPDF({ unit: 'mm', format: 'a4' })
   const fmtDate = (d: Date) => format(d, 'P', { locale })
+  const fmtTime = (d: Date) => formatTime(d, getTimeFormat())
   let y = 20
 
   // Header
@@ -41,7 +43,13 @@ export async function exportPdf(r: Report) {
   )
   doc.text(filterLines, M, y)
   y += filterLines.length * 5
-  doc.text(t('exports.generated', { date: format(new Date(), 'PPp', { locale }) }), M, y)
+  doc.text(
+    t('exports.generated', {
+      date: `${format(new Date(), 'PP', { locale })}, ${fmtTime(new Date())}`,
+    }),
+    M,
+    y,
+  )
   y += 9
 
   // Summary
@@ -155,7 +163,7 @@ export async function exportPdf(r: Report) {
     ],
     body: r.entries.map((e) => [
       fmtDate(e.start),
-      `${format(e.start, 'p', { locale })}–${format(e.end, 'p', { locale })}`,
+      `${fmtTime(e.start)}–${fmtTime(e.end)}`,
       e.member,
       e.project,
       e.tags,

@@ -1,3 +1,5 @@
+import { format } from 'date-fns'
+
 const MINUTE = 60_000
 const HOUR = 60 * MINUTE
 export const MAX_ENTRY_MS = 24 * HOUR
@@ -23,15 +25,37 @@ export function parseDuration(input: string): number | null {
   return null
 }
 
-/** Combines a local date "yyyy-MM-dd" and local time "HH:mm" into a Date. */
+export type TimeFormat = '24h' | '12h'
+
+/** Clock time of day: "14:30" (24h) or "2:30 PM" (12h). */
+export function formatTime(d: Date | string | number, f: TimeFormat): string {
+  return format(new Date(d), f === '12h' ? 'h:mm a' : 'HH:mm')
+}
+
+/**
+ * Parses a typed clock time into hours and minutes, whatever the display format:
+ * "14:30", "14.30", "1430", "9", "930", "2:30 pm", "2pm", "12 a.m.". Returns null if invalid.
+ */
+export function parseClockTime(input: string): { h: number; m: number } | null {
+  const s = input.trim().toLowerCase().replace(/\s+/g, '')
+  const t = /^(\d{1,2})(?:[:.,h]?(\d{2}))?(?:([ap])\.?(?:m\.?)?)?$/.exec(s)
+  if (!t) return null
+  let h = Number(t[1])
+  const m = Number(t[2] ?? 0)
+  if (m > 59) return null
+  if (t[3]) {
+    if (h < 1 || h > 12) return null
+    h = (h % 12) + (t[3] === 'p' ? 12 : 0)
+  } else if (h > 23) return null
+  return { h, m }
+}
+
+/** Combines a local date "yyyy-MM-dd" and a typed clock time (see `parseClockTime`) into a Date. */
 export function localDateTime(date: string, time: string): Date | null {
   const d = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date)
-  const t = /^(\d{1,2}):(\d{2})$/.exec(time)
+  const t = parseClockTime(time)
   if (!d || !t) return null
-  const h = Number(t[1])
-  const min = Number(t[2])
-  if (h > 23 || min > 59) return null
-  return new Date(Number(d[1]), Number(d[2]) - 1, Number(d[3]), h, min, 0, 0)
+  return new Date(Number(d[1]), Number(d[2]) - 1, Number(d[3]), t.h, t.m, 0, 0)
 }
 
 export type ManualTimeInput = {
@@ -97,21 +121,20 @@ export function toHours(ms: number): number {
 
 export type InlineTimeField = 'start' | 'end' | 'duration'
 
-/** `base` with its local clock time replaced by "HH:mm" (seconds cleared). */
+/** `base` with its local clock time replaced by a typed time (seconds cleared). */
 function atLocalTime(base: Date, time: string): Date | null {
-  const t = /^(\d{1,2}):(\d{2})$/.exec(time.trim())
-  if (!t || Number(t[1]) > 23 || Number(t[2]) > 59) return null
+  const t = parseClockTime(time)
+  if (!t) return null
   const d = new Date(base)
-  d.setHours(Number(t[1]), Number(t[2]), 0, 0)
+  d.setHours(t.h, t.m, 0, 0)
   return d
 }
 
 export type TimerStartResult =
-  | { ok: true; start: Date }
-  | { ok: false; error: 'invalidStart' | 'startInFuture' }
+  { ok: true; start: Date } | { ok: false; error: 'invalidStart' | 'startInFuture' }
 
 /**
- * Resolves a new "HH:mm" start for a running timer: that time today, or the previous day when
+ * Resolves a newly typed start for a running timer: that time today, or the previous day when
  * it is later than now and the timer already started before today (a timer running past midnight).
  */
 export function resolveTimerStart(current: Date, input: string, now: Date): TimerStartResult {
@@ -152,7 +175,8 @@ export function applyInlineTime(
     if (ms === null) return { ok: false, error: 'invalidDuration' }
     nextEnd = new Date(start.getTime() + ms)
   }
-  if (!isValidDuration(durationMs(nextStart, nextEnd))) return { ok: false, error: 'invalidDuration' }
+  if (!isValidDuration(durationMs(nextStart, nextEnd)))
+    return { ok: false, error: 'invalidDuration' }
   return {
     ok: true,
     start: nextStart,
