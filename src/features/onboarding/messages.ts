@@ -41,6 +41,13 @@ export function ownerMessage(t: TFunction, m: OwnerMessageInput): string {
   } else {
     checks.push(t('onboarding.ownerMsg.checkCollaborator', { repo: full, link: access }))
   }
+  // A fine-grained token created for the member's own account gives the same 404 as a missing
+  // invitation, and the app cannot tell them apart. Without this line the owner checks three
+  // things that are all fine and the member stays stuck.
+  const closing =
+    m.problem === 'noAccess' && m.ownerType === 'Organization' && m.fineGrained
+      ? [t('onboarding.ownerMsg.elseResourceOwner', { org: m.owner }), '']
+      : []
   return [
     t('onboarding.ownerMsg.greeting'),
     '',
@@ -52,6 +59,7 @@ export function ownerMessage(t: TFunction, m: OwnerMessageInput): string {
     t('onboarding.ownerMsg.pleaseCheck'),
     ...checks.map((c) => `- ${c}`),
     '',
+    ...closing,
     t('onboarding.ownerMsg.thanks'),
   ].join('\n')
 }

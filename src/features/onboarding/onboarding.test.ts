@@ -141,6 +141,28 @@ describe('ownerMessage', () => {
     expect(text).toContain(
       'https://github.com/organizations/my-team/settings/personal-access-token-requests',
     )
+    // A token made for the member's own account gives the same 404 as a missing invitation, so
+    // the message has to name that case; otherwise the owner checks three correct things and the
+    // member is still locked out.
+    expect(text).toContain('my-team as its resource owner')
+  })
+
+  it('leaves out the resource-owner hint where it cannot apply', () => {
+    const classic = ownerMessage(t, {
+      ...base,
+      ownerType: 'Organization',
+      problem: 'noAccess',
+      fineGrained: false,
+    })
+    expect(classic).not.toContain('resource owner')
+
+    const readOnly = ownerMessage(t, {
+      ...base,
+      ownerType: 'Organization',
+      problem: 'readOnly',
+      fineGrained: true,
+    })
+    expect(readOnly).not.toContain('resource owner')
   })
 
   it('leaves out approval for classic tokens and unknown members', () => {

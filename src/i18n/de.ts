@@ -224,6 +224,8 @@ const de: Resources = {
       checkApproval:
         'Mein Token ist freigegeben, falls die Organisation eine Freigabe verlangt (Pending requests: {{link}})',
       checkCollaborator: 'Ich bin Collaborator mit Write-Zugriff auf {{repo}} ({{link}})',
+      elseResourceOwner:
+        'Falls das alles schon passt, liegt es wahrscheinlich an meinem Token: Es funktioniert nur, wenn es mit {{org}} als Resource owner erstellt wurde, nicht mit meinem eigenen Konto. Sag einfach Bescheid, dann erstelle ich ein neues.',
       thanks: 'Danke!',
     },
     inviteMsg: {

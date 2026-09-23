@@ -213,6 +213,8 @@ const en = {
       checkApproval:
         'My token is approved, if the organization requires approval (Pending requests: {{link}})',
       checkCollaborator: 'I am a collaborator with Write access to {{repo}} ({{link}})',
+      elseResourceOwner:
+        'If all of that is already in order, then my token is probably the problem: it only works if it was created with {{org}} as its resource owner, not my own account. Just tell me, and I will create a new one.',
       thanks: 'Thank you!',
     },
     inviteMsg: {

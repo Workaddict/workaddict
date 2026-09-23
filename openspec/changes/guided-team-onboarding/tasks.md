@@ -61,7 +61,7 @@ The wizard assumed every user sets up a team, so one person tracking their own t
 - [x] 10.3 Solo texts in `en.ts` and `de.ts` (`mode*`, `user*`, `soloIntro`, `soloRepoText`, `soloTokenText`, `soloLater`), including the note that a personal repository cannot be shared with fine-grained tokens
 - [x] 10.4 Styles for the two path buttons (`.ob-modes`, `.ob-mode`)
 - [x] 10.5 Tests: solo path skips the organization steps and builds the right links; switching paths; mode migration for old saved progress; `stepsFor`; existing wizard tests pick the team path first
-- [~] 10.6 Solo path checked in the browser in dark mode at 1440 px: heading, steps, links and menu paths are right and there is no horizontal overflow. Two bugs found and fixed (the heading still said "Set up a team", and step 1 pointed at an organization page). **Phone width is still unchecked**: the browser extension reported the window resize as successful but the viewport stayed at 1440, so no narrow-viewport look was possible. The CSS collapses `.ob-names` to one column below 560 px and `.ob-modes` wraps with no fixed widths, so it should hold, but nobody has seen it
+- [x] 10.6 Solo path checked in the browser: dark mode and 1440 px by me (two bugs found and fixed: the heading still said "Set up a team", and step 1 pointed at an organization page), phone width at 390 px confirmed by the user on 2026-09-23 - buttons stack, no clipping, no horizontal scroll
 - [x] 10.7 README quick start names both paths, and section 2.1 now says that only the token name and description can be prefilled
 
 ## 9. Verify
@@ -70,5 +70,10 @@ The wizard assumed every user sets up a team, so one person tracking their own t
 - [ ] 9.2 Manual end-to-end with a test organization and a second account: owner wizard with approval on, member joins via invite link, sees the approval diagnosis, owner approves, member signs in
 - [ ] 9.3 Manual check of the diagnosis cases: misspelled owner, token with the wrong resource owner, read-only token
   - [x] Misspelled owner, API layer verified live on 2026-09-23 with `gh`: `GET /users/Team-Welsx` → 404 (drives `ownerNotFound`), `GET /users/Team-Wels` → `type: Organization`, `GET /users/BenediktLehner` → `type: User`, `GET /repos/Team-Wels/does-not-exist` → 404. Matches what `fakeGitHub` returns, so the component tests rest on real behaviour
-  - [ ] Wrong resource owner and read-only token: still open, each needs a fine-grained token that only the owner can create
+  - [x] Wrong resource owner, checked on 2026-09-23: a fine-grained token whose resource owner is the
+    member's own account gives the same 404 as a missing invitation. The on-screen checklist already
+    covers it, but the copyable owner message did not: it asked the owner to check three things that
+    are all correct in that case. Added `ownerMsg.elseResourceOwner`, shown only for an organization
+    repo with a fine-grained token and no access
+  - [ ] Read-only token: still open, needs a token that only the repository owner can create
 - [x] 9.4 Check wizard and join flow at phone width and in dark mode
