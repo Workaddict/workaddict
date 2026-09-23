@@ -4,7 +4,7 @@
 TBD - created by archiving change build-time-tracker-mvp. Update Purpose after archive.
 ## Requirements
 ### Requirement: Live timer
-The system SHALL let a user start a timer with an optional description, project, and tags, display the elapsed time updating every second, and stop it to create a time entry.
+The system SHALL let a user start a timer with an optional description, project, and tags, display the elapsed time updating every second, and stop it to create a time entry. The user SHALL be able to change the start time of their running timer in place by clicking the shown start time; Enter or leaving the field SHALL save it, Escape SHALL cancel it. The entered time SHALL be read as that time today; if that is later than now, it SHALL be read as the previous day only when the timer's current start is before today, and SHALL otherwise be rejected with a validation error while keeping the typed value and saving nothing.
 
 #### Scenario: Start and stop
 - **WHEN** the user starts a timer at 09:00 and stops it at 10:30
@@ -13,6 +13,18 @@ The system SHALL let a user start a timer with an optional description, project,
 #### Scenario: Edit while running
 - **WHEN** the user changes the description, project, or tags of a running timer
 - **THEN** the changes are saved to the running timer and applied to the entry created on stop
+
+#### Scenario: Change start time while running
+- **WHEN** the timer shows "Running since 09:12" at 10:00 and the user clicks the time, enters 08:45, and presses Enter
+- **THEN** the timer is saved with start 08:45 today, the elapsed time shows 1:15:00, and the entry created on stop starts at 08:45
+
+#### Scenario: Start time in the future
+- **WHEN** at 10:00 the user enters 10:30 as the start time of a timer that started today
+- **THEN** the system shows a validation error, keeps the typed value, and saves nothing
+
+#### Scenario: Timer running past midnight
+- **WHEN** at 00:15 the user enters 23:00 as the start time of a timer that started yesterday at 23:30
+- **THEN** the timer is saved with start 23:00 yesterday
 
 #### Scenario: Discard timer
 - **WHEN** the user discards a running timer
@@ -101,7 +113,15 @@ The system SHALL let a user start a new timer pre-filled with an existing entry'
 - **THEN** a timer starts now with that entry's description, project, and tags
 
 ### Requirement: Inline entry editing
-The system SHALL let a user with permission to change an entry edit its description, project, tags, start time, end time, and duration directly in the entry list by clicking the field, without opening a dialog. Enter or leaving the field SHALL save the change, Escape SHALL cancel it, and an unchanged field SHALL NOT be saved. Invalid values SHALL be rejected with the same validation as manual entries while keeping the typed value. The edit dialog SHALL remain available for changing the date.
+The system SHALL let a user with permission to change an entry edit its description, project, tags, start time, end time, and duration directly in the entry list by clicking the field, without opening a dialog. Editable start time, end time, and duration SHALL be recognizable as editable without hovering, including on touch screens. After a timer is stopped, the confirmation SHALL tell the user that the times can be corrected in the entry list. Enter or leaving the field SHALL save the change, Escape SHALL cancel it, and an unchanged field SHALL NOT be saved. Invalid values SHALL be rejected with the same validation as manual entries while keeping the typed value. The edit dialog SHALL remain available for changing the date.
+
+#### Scenario: Editable times visible on touch screens
+- **WHEN** a user views their entries on a phone
+- **THEN** start time, end time, and duration show a visible edit affordance without any hover
+
+#### Scenario: Hint after stopping
+- **WHEN** the user stops their timer
+- **THEN** the confirmation says that the entry was saved and that its times can be corrected by tapping them in the list
 
 #### Scenario: Edit description inline
 - **WHEN** the user clicks the description of their entry, types "Review PR", and presses Enter
@@ -153,4 +173,58 @@ The system SHALL let a user with permission to stop other members' timers stop a
 #### Scenario: Worker tries to stop another timer
 - **WHEN** worker `bob`'s adapter is asked to stop or discard `carol`'s timer
 - **THEN** it writes nothing and throws `forbiddenRole`
+
+### Requirement: Elapsed time in the tab title
+While the signed-in user's own timer is running, the system SHALL show its elapsed time in the document title in the form `▶ <elapsed> · Workaddict`, using the same clock format as the timer display and updating it at least once per minute, also while the tab is in the background. When no own timer is running, or after signing out, the system SHALL restore the page's normal title. Timers of other members SHALL NOT affect the title.
+
+#### Scenario: Timer running
+- **WHEN** the user's timer has been running for 1 hour, 23 minutes and 45 seconds
+- **THEN** the document title is `▶ 1:23:45 · Workaddict`
+
+#### Scenario: Timer stopped
+- **WHEN** the user stops their timer
+- **THEN** the document title returns to the page's normal title
+
+#### Scenario: Only another member's timer runs
+- **WHEN** the user has no running timer and another member's timer is running
+- **THEN** the document title is the page's normal title
+
+### Requirement: Stop on page close
+The system SHALL offer a per-device setting "Stop timer when I close the page", enabled by default. While the setting is on, the device on which the user started a timer SHALL remember the last time any Workaddict page was open on that device. When the app is loaded on that device and the user's running timer was started there, and no Workaddict page was open on the device for more than 2 minutes, the system SHALL ask the user what to do with the timer, offering "Stop at <last open time>" (the default action), "Keep running", and "Stop now". A tab that is only hidden, or a device that was asleep while the page stayed open, SHALL NOT count as closed. The system SHALL NOT ask about a timer that was started on another device, in demo mode, or for a read-only session, and SHALL ask at most once per timer after the user chose "Keep running". The stop SHALL use the same idempotent stop behavior as a normal stop; if the timer was already stopped or replaced meanwhile, the system SHALL create no entry and close the question.
+
+#### Scenario: Page closed and reopened later
+- **WHEN** the user starts a timer at 09:00 on a laptop, closes the last Workaddict tab at 17:32, reopens the app the next morning, and chooses "Stop at 17:32"
+- **THEN** an entry from 09:00 to 17:32 is created and the timer is cleared
+
+#### Scenario: Keep running
+- **WHEN** the question appears and the user chooses "Keep running"
+- **THEN** the timer keeps running and the question does not appear again for this timer on this device
+
+#### Scenario: Stop now
+- **WHEN** the question appears and the user chooses "Stop now"
+- **THEN** the timer becomes an entry ending at the current time
+
+#### Scenario: Reload
+- **WHEN** the user reloads the page while the timer is running
+- **THEN** no question appears and the timer keeps running
+
+#### Scenario: Another tab stays open
+- **WHEN** the user closes one of two Workaddict tabs for an hour and then opens a new tab
+- **THEN** no question appears, because the other tab was open the whole time
+
+#### Scenario: Laptop asleep
+- **WHEN** the laptop sleeps for an hour with the Workaddict tab open and wakes up
+- **THEN** no question appears and the timer keeps running
+
+#### Scenario: Timer from another device
+- **WHEN** the timer was started on the phone and the user opens the app on a laptop where Workaddict was closed for a day
+- **THEN** no question appears on the laptop
+
+#### Scenario: Setting off
+- **WHEN** the user has turned the setting off on this device, closes the page while the timer runs, and reopens it an hour later
+- **THEN** no question appears and the timer keeps running
+
+#### Scenario: Timer already stopped elsewhere
+- **WHEN** the question is shown and the timer was stopped on another device meanwhile, and the user chooses "Stop at 17:32"
+- **THEN** no additional entry is created and the question closes with the "already stopped" notice
 
