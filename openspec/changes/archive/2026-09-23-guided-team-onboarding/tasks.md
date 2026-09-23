@@ -67,8 +67,8 @@ The wizard assumed every user sets up a team, so one person tracking their own t
 ## 9. Verify
 
 - [x] 9.1 `npm test`, `npm run lint`, `npm run build` pass
-- [ ] 9.2 Manual end-to-end with a test organization and a second account: owner wizard with approval on, member joins via invite link, sees the approval diagnosis, owner approves, member signs in
-- [ ] 9.3 Manual check of the diagnosis cases: misspelled owner, token with the wrong resource owner, read-only token
+- [ ] 9.2 (not done; archived on the user's request 2026-09-23) Manual end-to-end with a test organization and a second account: owner wizard with approval on, member joins via invite link, sees the approval diagnosis, owner approves, member signs in
+- [ ] 9.3 (read-only case not done; archived on the user's request 2026-09-23) Manual check of the diagnosis cases: misspelled owner, token with the wrong resource owner, read-only token
   - [x] Misspelled owner, API layer verified live on 2026-09-23 with `gh`: `GET /users/Team-Welsx` → 404 (drives `ownerNotFound`), `GET /users/Team-Wels` → `type: Organization`, `GET /users/BenediktLehner` → `type: User`, `GET /repos/Team-Wels/does-not-exist` → 404. Matches what `fakeGitHub` returns, so the component tests rest on real behaviour
   - [x] Wrong resource owner, checked on 2026-09-23: a fine-grained token whose resource owner is the
     member's own account gives the same 404 as a missing invitation. The on-screen checklist already
