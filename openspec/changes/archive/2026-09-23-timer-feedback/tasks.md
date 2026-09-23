@@ -34,5 +34,5 @@
 ## 6. Verify
 
 - [x] 6.1 `npm test`, `npm run lint`, `npm run build` pass
-- [ ] 6.2 (phone width and dark mode approved by the user; still open: close/reopen, reload and two-tab check on the deployed site) Manual check in Chrome and one other browser: tab title in a background tab, close the last tab and reopen after a few seconds (question appears with the right time), reload (no question), two tabs (no question), phone width 360 px and dark mode for the timer start edit, the underline and the modal; switch to 12-hour and back
+- [x] 6.2 (confirmed live by the user on 2026-09-23) Manual check in Chrome and one other browser: tab title in a background tab, close the last tab and reopen after a few seconds (question appears with the right time), reload (no question), two tabs (no question), phone width 360 px and dark mode for the timer start edit, the underline and the modal; switch to 12-hour and back
 - [x] 6.3 Tell the users who gave the feedback what changed (the four points, plus the 24h/12h setting) after deploy
