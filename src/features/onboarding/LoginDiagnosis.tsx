@@ -99,7 +99,7 @@ export function LoginDiagnosis({
               </li>
               <li>
                 {t('onboarding.diagnosis.createdBefore')}{' '}
-                <GitHubLink href={githubLinks.newToken(org)} menu={t('onboarding.menu.newToken')}>
+                <GitHubLink href={githubLinks.newToken()} menu={t('onboarding.menu.newToken')}>
                   {t('onboarding.diagnosis.newTokenLink')}
                 </GitHubLink>
               </li>
@@ -148,7 +148,7 @@ export function LoginDiagnosis({
       <ul className="ob-list">
         <li>
           {t('onboarding.diagnosis.readOnlyToken')}{' '}
-          <GitHubLink href={githubLinks.newToken(owner)} menu={t('onboarding.menu.newToken')}>
+          <GitHubLink href={githubLinks.newToken()} menu={t('onboarding.menu.newToken')}>
             {t('onboarding.diagnosis.newTokenLink')}
           </GitHubLink>
         </li>

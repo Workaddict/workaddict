@@ -1,7 +1,7 @@
 ## 1. Verify GitHub behavior (before building on it)
 
 - [x] 1.1 In a test organization, check that `https://github.com/new?owner=<org>&name=<repo>&visibility=private` prefills owner, name and private visibility; note which parameters work
-- [ ] 1.2 (Needs the owner: GitHub asks for sudo re-authentication before the form, see design D2) Check the prefilled fine-grained token URL (`name`, `description`, `expires_in`, `contents=write`, `target_name`): does `target_name` create the token under the organization (bug from community discussion #188111), and do the other parameters survive when the owner is changed in the dropdown? Record the result and the chosen parameter set in design.md D2
+- [x] 1.2 Checked live on 2026-09-23: the prefilled token URL applies only `name` and `description`. `target_name`, `expires_in` and `contents` are ignored (form opens on the personal account, 30-day default, empty permissions). Recorded in design D2; `githubLinks.newToken` now sends only the two working parameters and the checklist walks through the other four fields
 - [x] 1.3 Confirm the current paths for member privileges (base permission), personal access token policy, pending token requests, people, and the invitation page; confirm the default policy of a new organization is "require approval"
 - [x] 1.4 Confirm `GET /users/{owner}` with a fine-grained token returns `type` for organizations and users, and 404 for nonexistent accounts
 - [x] 1.5 Confirm the `gh` commands from design D7 work (repo create, `PATCH orgs/{org}` base permission, `PUT orgs/{org}/memberships/{user}`) and which scope refresh they need
@@ -69,4 +69,6 @@ The wizard assumed every user sets up a team, so one person tracking their own t
 - [x] 9.1 `npm test`, `npm run lint`, `npm run build` pass
 - [ ] 9.2 Manual end-to-end with a test organization and a second account: owner wizard with approval on, member joins via invite link, sees the approval diagnosis, owner approves, member signs in
 - [ ] 9.3 Manual check of the diagnosis cases: misspelled owner, token with the wrong resource owner, read-only token
+  - [x] Misspelled owner, API layer verified live on 2026-09-23 with `gh`: `GET /users/Team-Welsx` → 404 (drives `ownerNotFound`), `GET /users/Team-Wels` → `type: Organization`, `GET /users/BenediktLehner` → `type: User`, `GET /repos/Team-Wels/does-not-exist` → 404. Matches what `fakeGitHub` returns, so the component tests rest on real behaviour
+  - [ ] Wrong resource owner and read-only token: still open, each needs a fine-grained token that only the owner can create
 - [x] 9.4 Check wizard and join flow at phone width and in dark mode

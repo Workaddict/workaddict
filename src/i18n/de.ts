@@ -85,7 +85,7 @@ const de: Resources = {
       fineTitle: 'Empfohlen: Fine-grained Token',
       approval:
         'Organisationen verlangen standardmäßig, dass ein Owner neue Tokens freigibt. Bis dahin schlägt die Anmeldung fehl. Owner geben frei unter Organisation → Settings → Personal access tokens → Pending requests.',
-      openGitHub: 'Vorausgefülltes Token-Formular auf GitHub öffnen',
+      openGitHub: 'Token-Formular auf GitHub öffnen',
       classicTitle: 'Repository gehört dem persönlichen Konto einer anderen Person?',
       classicText:
         'Fine-grained Tokens funktionieren nur für Repositories, die dir oder einer Organisation gehören, in der du Mitglied bist. Verwende sonst ein klassisches Token mit dem Scope „repo“.',
@@ -160,17 +160,21 @@ const de: Resources = {
     },
     token: {
       sudo: 'GitHub fragt eventuell zuerst nach einer Bestätigung (Passwort oder GitHub Mobile).',
+      intro:
+        'GitHub füllt nur den Namen des Tokens aus. Die anderen vier Angaben musst du selbst setzen, in dieser Reihenfolge:',
       owner:
-        'Resource owner: {{owner}} auswählen, auch wenn es schon angezeigt wird. Das lässt sich später nicht ändern.',
+        'Resource owner: von deinem eigenen Benutzernamen auf {{owner}} umstellen. Das Formular öffnet immer mit deinem persönlichen Konto, und der Owner lässt sich später nicht ändern.',
       ownerGeneric:
-        'Resource owner: die Organisation, der das Daten-Repository gehört, nicht dein eigener Benutzername. Das lässt sich später nicht ändern.',
+        'Resource owner: von deinem eigenen Benutzernamen auf die Organisation umstellen, der das Daten-Repository gehört. Das Formular öffnet immer mit deinem persönlichen Konto, und der Owner lässt sich später nicht ändern.',
+      expiry:
+        'Expiration: 90 Tage oder länger. GitHub schlägt 30 Tage vor; danach meldest du dich mit einem neuen Token erneut an.',
       repo: 'Repository access: „Only select repositories“ → {{repo}}.',
       repoGeneric: 'Repository access: „Only select repositories“ → das Daten-Repository.',
       contents:
-        'Permissions: Contents → Read and write. Nach der Auswahl des Owners erneut prüfen. Metadata (read-only) kommt automatisch dazu.',
+        'Permissions: Contents → Read and write. Das ist zu Beginn leer. Metadata (read-only) kommt automatisch dazu.',
       generate:
         'Auf „Generate token“ klicken und das Token kopieren (es beginnt mit github_pat_). GitHub zeigt es nur einmal.',
-      open: 'Vorausgefülltes Token-Formular öffnen',
+      open: 'Token-Formular öffnen',
     },
     diagnosis: {
       ownerNotFound:

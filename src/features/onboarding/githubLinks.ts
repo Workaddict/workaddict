@@ -29,16 +29,15 @@ export const githubLinks = {
   repoAccess: (owner: string, repo: string) => `${GH}/${seg(owner)}/${seg(repo)}/settings/access`,
   tokens: () => `${GH}/settings/personal-access-tokens`,
   /**
-   * The fine-grained token form, prefilled. `target_name` preselects the resource owner; because
-   * GitHub has had bugs with it, the UI always asks to select the owner again and check Contents.
+   * The fine-grained token form. Verified against GitHub on 2026-09-23 (see design D2): only
+   * `name` and `description` are applied. `target_name`, `expires_in` and `contents` are ignored,
+   * so the form always opens on the personal account with a 30-day expiry and no permissions. The link therefore takes no owner; the checklist names the owner and walks the user through
+   * setting the other four fields by hand.
    */
-  newToken: (owner?: string) =>
+  newToken: () =>
     `${GH}/settings/personal-access-tokens/new?${new URLSearchParams({
       name: 'Workaddict',
       description: 'Time tracking with Workaddict',
-      ...(owner ? { target_name: owner } : {}),
-      expires_in: '90',
-      contents: 'write',
     })}`,
   classicToken: () => `${GH}/settings/tokens/new?scopes=repo&description=Workaddict`,
 }

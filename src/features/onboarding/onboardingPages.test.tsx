@@ -83,11 +83,12 @@ describe('start page', () => {
     expect(
       within(help).getByText(/created before you had access will not work/),
     ).toBeInTheDocument()
-    expect(within(help).getByText(/not your own username/)).toBeInTheDocument()
+    expect(within(help).getByText(/switch it from your own username/)).toBeInTheDocument()
     expect(within(help).getByText(/approve new tokens by default/)).toBeInTheDocument()
-    expect(
-      within(help).getByRole('link', { name: /Open the prefilled token form/ }),
-    ).toHaveAttribute('href', expect.stringContaining('contents=write'))
+    expect(within(help).getByRole('link', { name: /Open the token form/ })).toHaveAttribute(
+      'href',
+      expect.stringContaining('name=Workaddict'),
+    )
   })
 })
 
@@ -217,9 +218,9 @@ describe('setup wizard', () => {
       'href',
       'https://github.com/organizations/my-team/settings/personal-access-tokens',
     )
-    expect(screen.getByRole('link', { name: /Open the prefilled token form/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Open the token form/ })).toHaveAttribute(
       'href',
-      expect.stringContaining('target_name=my-team'),
+      expect.stringContaining('name=Workaddict'),
     )
     expect(screen.getByText(/Write applies to all repositories of my-team/)).toBeInTheDocument()
     expect(screen.getAllByText(/^On GitHub:/).length).toBeGreaterThanOrEqual(6)
@@ -306,9 +307,9 @@ describe('setup wizard', () => {
         /^https:\/\/github\.com\/new\?owner=my-name&name=time-data&visibility=private/,
       ),
     )
-    expect(screen.getByRole('link', { name: /Open the prefilled token form/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Open the token form/ })).toHaveAttribute(
       'href',
-      expect.stringContaining('target_name=my-name'),
+      expect.stringContaining('name=Workaddict'),
     )
     expect(screen.getByLabelText('Data repository')).toHaveValue('my-name/time-data')
     expect(screen.getByText(/cannot be shared with fine-grained tokens/)).toBeInTheDocument()
@@ -340,16 +341,16 @@ describe('join flow', () => {
 
   it('keeps the token step locked until the member can see the repository', () => {
     renderAt('/join?repo=my-team/time-data')
-    expect(screen.queryByRole('link', { name: /Open the prefilled token form/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Open the token form/ })).toBeNull()
     expect(screen.queryByLabelText('GitHub token')).toBeNull()
     expect(screen.getAllByText('Unlocks once you can see the repository.')).toHaveLength(2)
 
     fireEvent.click(screen.getByRole('button', { name: 'I can see it' }))
-    expect(screen.getByRole('link', { name: /Open the prefilled token form/ })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /Open the token form/ })).toHaveAttribute(
       'href',
-      expect.stringContaining('target_name=my-team'),
+      expect.stringContaining('name=Workaddict'),
     )
-    expect(screen.getByText(/Resource owner: select my-team/)).toBeInTheDocument()
+    expect(screen.getByText(/switch it from your own username to my-team/)).toBeInTheDocument()
     expect(screen.getByLabelText('Data repository')).toHaveValue('my-team/time-data')
     expect(screen.getByLabelText('Data repository')).toHaveAttribute('readonly')
     fireEvent.click(screen.getByRole('button', { name: 'Change repository' }))
@@ -361,7 +362,7 @@ describe('join flow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'I get a 404 page' }))
     const alert = screen.getByRole('alert')
     expect(alert).toHaveTextContent(/Don’t create a token now/)
-    expect(screen.queryByRole('link', { name: /Open the prefilled token form/ })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Open the token form/ })).toBeNull()
 
     const writeText = mockClipboard()
     fireEvent.click(within(alert).getByRole('button', { name: 'Copy message for the owner' }))

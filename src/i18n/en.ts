@@ -80,7 +80,7 @@ const en = {
       fineTitle: 'Recommended: fine-grained token',
       approval:
         'Organizations require an owner to approve new tokens by default. Until then, sign-in fails. Owners approve under Organization → Settings → Personal access tokens → Pending requests.',
-      openGitHub: 'Open the prefilled token form on GitHub',
+      openGitHub: 'Open the token form on GitHub',
       classicTitle: 'Repository owned by someone else’s personal account?',
       classicText:
         'Fine-grained tokens only work for repositories owned by you or by an organization you belong to. Otherwise use a classic token with the “repo” scope.',
@@ -151,17 +151,20 @@ const en = {
     },
     token: {
       sudo: 'GitHub may first ask you to confirm it’s you (password or GitHub Mobile).',
+      intro: 'GitHub fills in only the token name. Set the other four yourself, in this order:',
       owner:
-        'Resource owner: select {{owner}}, even if it is already shown. It cannot be changed later.',
+        'Resource owner: switch it from your own username to {{owner}}. The form always opens on your personal account, and the owner cannot be changed later.',
       ownerGeneric:
-        'Resource owner: the organization that owns the data repository, not your own username. It cannot be changed later.',
+        'Resource owner: switch it from your own username to the organization that owns the data repository. The form always opens on your personal account, and the owner cannot be changed later.',
+      expiry:
+        'Expiration: 90 days or longer. GitHub proposes 30 days; after that you sign in again with a new token.',
       repo: 'Repository access: “Only select repositories” → {{repo}}.',
       repoGeneric: 'Repository access: “Only select repositories” → the data repository.',
       contents:
-        'Permissions: Contents → Read and write. Check it again after selecting the owner. Metadata (read-only) is added automatically.',
+        'Permissions: Contents → Read and write. This starts out empty. Metadata (read-only) is added automatically.',
       generate:
         'Click “Generate token” and copy the token (it starts with github_pat_). GitHub shows it only once.',
-      open: 'Open the prefilled token form',
+      open: 'Open the token form',
     },
     diagnosis: {
       ownerNotFound:

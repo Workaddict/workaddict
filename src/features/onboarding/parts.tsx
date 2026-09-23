@@ -87,16 +87,18 @@ export function TokenChecklist({ owner, repo }: { owner?: string; repo?: string 
   const { t } = useI18n()
   return (
     <div className="stack" style={{ gap: 8 }}>
+      <p className="muted small">{t('onboarding.token.intro')}</p>
       <ol className="ob-list">
         <li>{t('onboarding.token.sudo')}</li>
         <li>
           {owner ? t('onboarding.token.owner', { owner }) : t('onboarding.token.ownerGeneric')}
         </li>
+        <li>{t('onboarding.token.expiry')}</li>
         <li>{repo ? t('onboarding.token.repo', { repo }) : t('onboarding.token.repoGeneric')}</li>
         <li>{t('onboarding.token.contents')}</li>
         <li>{t('onboarding.token.generate')}</li>
       </ol>
-      <GitHubLink href={githubLinks.newToken(owner)} menu={t('onboarding.menu.newToken')} primary>
+      <GitHubLink href={githubLinks.newToken()} menu={t('onboarding.menu.newToken')} primary>
         {t('onboarding.token.open')}
       </GitHubLink>
     </div>

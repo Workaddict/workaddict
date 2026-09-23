@@ -54,16 +54,17 @@ describe('githubLinks', () => {
     expect(url.searchParams.get('visibility')).toBe('private')
   })
 
-  it('prefills the token form', () => {
-    const url = new URL(githubLinks.newToken('my-team'))
+  it('only passes the parameters GitHub actually applies', () => {
+    // Checked against GitHub on 2026-09-23: the form applies `name` and `description` and ignores
+    // `target_name`, `expires_in` and `contents`. Sending them would promise a prefill that the
+    // page does not deliver, so the checklist walks the user through those fields instead.
+    const url = new URL(githubLinks.newToken())
     expect(url.pathname).toBe('/settings/personal-access-tokens/new')
-    expect(Object.fromEntries(url.searchParams)).toMatchObject({
+    expect(Object.fromEntries(url.searchParams)).toEqual({
       name: 'Workaddict',
-      target_name: 'my-team',
-      expires_in: '90',
-      contents: 'write',
+      description: 'Time tracking with Workaddict',
     })
-    expect(new URL(githubLinks.newToken()).searchParams.has('target_name')).toBe(false)
+    expect(url.searchParams.has('target_name')).toBe(false)
   })
 
   it('builds the organization pages', () => {
