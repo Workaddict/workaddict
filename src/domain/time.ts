@@ -106,6 +106,25 @@ function atLocalTime(base: Date, time: string): Date | null {
   return d
 }
 
+export type TimerStartResult =
+  | { ok: true; start: Date }
+  | { ok: false; error: 'invalidStart' | 'startInFuture' }
+
+/**
+ * Resolves a new "HH:mm" start for a running timer: that time today, or the previous day when
+ * it is later than now and the timer already started before today (a timer running past midnight).
+ */
+export function resolveTimerStart(current: Date, input: string, now: Date): TimerStartResult {
+  const start = atLocalTime(now, input)
+  if (!start) return { ok: false, error: 'invalidStart' }
+  if (start.getTime() <= now.getTime()) return { ok: true, start }
+  const today = new Date(now)
+  today.setHours(0, 0, 0, 0)
+  if (current.getTime() >= today.getTime()) return { ok: false, error: 'startInFuture' }
+  start.setDate(start.getDate() - 1)
+  return { ok: true, start }
+}
+
 /**
  * Applies an inline change to an entry's times, validated like manual entries:
  * a new start keeps the end, a new end lies on the start's day (or the next day when it is

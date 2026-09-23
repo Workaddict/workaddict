@@ -773,6 +773,20 @@ button.entry-duration {
   font-weight: 700;
   text-align: right;
 }
+/* Times read as editable without hover (touch screens): a quiet dotted underline. */
+.entry-time .inline-edit,
+button.entry-duration,
+.timer-since .inline-edit {
+  text-decoration: underline dotted var(--text-faint);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+.timer-since .inline-edit {
+  min-height: 28px;
+  margin: 0;
+  padding: 0 4px;
+  color: var(--text);
+}
 .inline-edit-wrap {
   position: relative;
   display: inline-flex;

@@ -151,8 +151,22 @@ const en = {
     modeManual: 'Manual',
     alreadyStopped: 'This timer was already stopped on another device.',
     previousStopped: 'The previous timer was stopped and saved.',
-    saved: 'Time entry saved.',
+    saved: 'Saved. Tap a time in the list to correct it.',
     runningSince: 'Running since {{time}}',
+    runningSinceLabel: 'Running since',
+    editStart: 'Edit start time',
+    errors: {
+      invalidStart: 'Enter a valid start time.',
+      startInFuture: 'The start cannot be in the future.',
+    },
+  },
+  closeStop: {
+    title: 'Your timer is still running',
+    message:
+      '“{{description}}” was still running when you closed Workaddict at {{time}} ({{ago}} ago).',
+    stopAt: 'Stop at {{time}}',
+    keep: 'Keep running',
+    stopNow: 'Stop now',
   },
   team: {
     title: 'Team now',
@@ -327,6 +341,10 @@ const en = {
     themeSystem: 'System',
     themeLight: 'Light',
     themeDark: 'Dark',
+    timer: 'Timer',
+    stopOnClose: 'Stop timer when I close the page',
+    stopOnCloseHint:
+      'Applies to this device. When you open Workaddict again, it asks whether to stop the timer at the time you left. Until then, other devices and “Team now” still show it as running.',
     data: 'Data',
     backupHint:
       'Download a complete backup of all members’ entries, projects and tags as a JSON file.',

@@ -6,6 +6,7 @@ import {
   isValidDuration,
   parseDuration,
   resolveManualTimes,
+  resolveTimerStart,
   toHours,
 } from './time'
 
@@ -154,5 +155,35 @@ describe('applyInlineTime', () => {
     const start = new Date(2026, 8, 21, 9, 0, 42)
     const r = applyInlineTime(start, at(10), 'duration', '1:00')
     expect(r).toMatchObject({ ok: true, start, end: new Date(2026, 8, 21, 10, 0, 42) })
+  })
+})
+
+describe('resolveTimerStart', () => {
+  const d = (day: number, h: number, m = 0) => new Date(2026, 8, day, h, m)
+
+  it('reads the time as today', () => {
+    expect(resolveTimerStart(d(23, 9, 12), '08:45', d(23, 10))).toEqual({ ok: true, start: d(23, 8, 45) })
+  })
+
+  it('rejects a start later than now for a timer started today', () => {
+    expect(resolveTimerStart(d(23, 9), '10:30', d(23, 10))).toEqual({ ok: false, error: 'startInFuture' })
+  })
+
+  it('reads a later time as yesterday for a timer running past midnight', () => {
+    expect(resolveTimerStart(d(22, 23, 30), '23:00', d(23, 0, 15))).toEqual({
+      ok: true,
+      start: d(22, 23),
+    })
+  })
+
+  it('keeps a time after midnight today for a timer started yesterday', () => {
+    expect(resolveTimerStart(d(22, 23, 30), '00:05', d(23, 0, 15))).toEqual({
+      ok: true,
+      start: d(23, 0, 5),
+    })
+  })
+
+  it('rejects malformed times', () => {
+    expect(resolveTimerStart(d(23, 9), '24:00', d(23, 10))).toEqual({ ok: false, error: 'invalidStart' })
   })
 })

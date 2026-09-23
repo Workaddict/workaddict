@@ -12,6 +12,7 @@ import { FrameGuard } from './app/FrameGuard'
 import { ConfirmProvider } from './components/Modal'
 import { ToastProvider } from './components/Toasts'
 import { AuthProvider } from './features/auth/AuthContext'
+import { initPresence } from './features/tracker/presence'
 import { reportError } from './features/auth/authEvents'
 import './i18n'
 import { isStorageError } from './storage'
@@ -19,6 +20,7 @@ import './styles/global.css'
 import { applyTheme } from './theme'
 
 applyTheme()
+void initPresence()
 
 // TanStack Query v5 only reacts to `visibilitychange`, which never fires when switching between
 // two visible windows (e.g. two browsers side by side). Also treat window focus as "refocused",

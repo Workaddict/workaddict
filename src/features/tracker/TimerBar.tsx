@@ -4,12 +4,12 @@ import { Icon } from '../../components/Icon'
 import { useConfirm } from '../../components/Modal'
 import { useToast } from '../../components/Toasts'
 import { newId } from '../../domain/ids'
-import { formatClock } from '../../domain/time'
+import { formatClock, resolveTimerStart } from '../../domain/time'
 import type { RunningTimer } from '../../domain/types'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
 import { useDiscardTimer, useSaveEntry, useUpdateTimer } from '../data/hooks'
-import { useErrorToast } from '../data/useErrorText'
+import { useErrorText, useErrorToast } from '../data/useErrorText'
 import {
   GroupPickers,
   resolveTimeFields,
@@ -17,13 +17,54 @@ import {
   type TimeFields,
   type WorkFields,
 } from './EntryFields'
+import { InlineEdit } from './InlineFields'
 import { useNow } from './useNow'
 import { useTimerActions } from './useTimerActions'
 
 const EMPTY: WorkFields = { description: '', projectId: null, tagIds: [] }
 
-function RunningTimerView({ timer }: { timer: RunningTimer }) {
+/** "Running since 09:12" with the start time editable in place. */
+function TimerStart({ timer }: { timer: RunningTimer }) {
   const { t, locale } = useI18n()
+  const { adapter } = useSessionData()
+  const onError = useErrorToast()
+  const errorText = useErrorText()
+  const update = useUpdateTimer()
+  const [editing, setEditing] = useState(false)
+  const start = new Date(timer.start)
+
+  const commit = async (value: string): Promise<string | null> => {
+    const r = resolveTimerStart(start, value, new Date())
+    if (!r.ok) return t(`timer.errors.${r.error}`)
+    try {
+      await update.mutateAsync({ start: r.start.toISOString() })
+      return null
+    } catch (e) {
+      onError(e)
+      return errorText(e)
+    }
+  }
+
+  return (
+    <span className="small muted timer-since">
+      {t('timer.runningSinceLabel')}{' '}
+      <InlineEdit
+        type="time"
+        editable={timer.id !== 'pending' && !adapter.readOnly}
+        editing={editing}
+        onStart={() => setEditing(true)}
+        onDone={() => setEditing(false)}
+        display={format(start, 'p', { locale })}
+        initial={format(start, 'HH:mm')}
+        label={t('timer.editStart')}
+        onCommit={commit}
+      />
+    </span>
+  )
+}
+
+function RunningTimerView({ timer }: { timer: RunningTimer }) {
+  const { t } = useI18n()
   const confirm = useConfirm()
   const onError = useErrorToast()
   const { stopTimer, busy } = useTimerActions()
@@ -65,9 +106,7 @@ function RunningTimerView({ timer }: { timer: RunningTimer }) {
         </div>
       </div>
       <div className="timer-foot">
-        <span className="small muted">
-          {t('timer.runningSince', { time: format(new Date(timer.start), 'p', { locale }) })}
-        </span>
+        <TimerStart timer={timer} />
         <div className="row">
           <button
             className="btn btn-icon"

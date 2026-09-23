@@ -22,7 +22,8 @@ export function useTimerActions() {
   })
 
   const startTimer = useCallback((fields: TimerFields) => start.mutate(fields), [start])
-  const stopTimer = useCallback(() => stop.mutate(), [stop])
+  const stopTimer = useCallback(() => stop.mutate(undefined), [stop])
+  const stopTimerAt = useCallback((end: Date) => stop.mutate(end), [stop])
 
-  return { timer, startTimer, stopTimer, busy: start.isPending || stop.isPending }
+  return { timer, startTimer, stopTimer, stopTimerAt, busy: start.isPending || stop.isPending }
 }

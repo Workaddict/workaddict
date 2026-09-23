@@ -21,6 +21,7 @@ import { tokenKind } from '../auth/session'
 import { useAccess } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { downloadBackup } from '../export/backup'
+import { setStopOnClose, useStopOnClose } from '../tracker/stopOnClose'
 import { ReassignEntriesModal } from './ReassignEntries'
 import { RoleBadge, TeamRolesSection } from './TeamRoles'
 
@@ -31,6 +32,7 @@ export default function SettingsPage() {
   const { logout } = useAuth()
   const { user, session, adapter } = useSessionData()
   const theme = useThemePref()
+  const stopOnClose = useStopOnClose()
   const access = useAccess()
   const onError = useErrorToast()
   const [backingUp, setBackingUp] = useState(false)
@@ -122,6 +124,25 @@ export default function SettingsPage() {
               <option value="dark">{t('settings.themeDark')}</option>
             </select>
           </label>
+        </div>
+      </section>
+
+      <section className="section">
+        <h2>{t('settings.timer')}</h2>
+        <div className="card settings-list">
+          <div className="settings-row">
+            <div className="stack" style={{ gap: 2 }}>
+              <label className="checkbox">
+                <input
+                  type="checkbox"
+                  checked={stopOnClose}
+                  onChange={(e) => setStopOnClose(e.target.checked)}
+                />
+                <span>{t('settings.stopOnClose')}</span>
+              </label>
+              <span className="muted small">{t('settings.stopOnCloseHint')}</span>
+            </div>
+          </div>
         </div>
       </section>
 

@@ -7,8 +7,10 @@ import { formatClock } from '../domain/time'
 import { useI18n } from '../i18n'
 import { useAuth, useSessionData } from '../features/auth/AuthContext'
 import { useNow } from '../features/tracker/useNow'
+import { StopOnClosePrompt } from '../features/tracker/StopOnClosePrompt'
 import { useStoppedByNotice } from '../features/tracker/useStoppedByNotice'
 import { useTimerActions } from '../features/tracker/useTimerActions'
+import { useTimerTitle } from '../features/tracker/useTimerTitle'
 import { DataProblemsNotice } from '../features/data/DataProblemsNotice'
 import { useAccess, useTeamRoles } from '../features/data/hooks'
 import { RoleBadge, TEAM_SECTION_ID } from '../features/settings/TeamRoles'
@@ -144,6 +146,7 @@ export function Layout() {
   const { adapter } = useSessionData()
   const { pathname } = useLocation()
   useStoppedByNotice()
+  useTimerTitle()
 
   return (
     <div className="app">
@@ -170,6 +173,7 @@ export function Layout() {
         {adapter.readOnly && <div className="banner banner-warning">{t('readOnly')}</div>}
         <DataProblemsNotice />
         <RolesHint />
+        <StopOnClosePrompt />
         {/* Keyed by path so an error on one page clears when the user navigates away. */}
         <PageErrorBoundary key={pathname}>
           <Suspense fallback={<Spinner />}>

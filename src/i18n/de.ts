@@ -155,8 +155,22 @@ const de: Resources = {
     modeManual: 'Manuell',
     alreadyStopped: 'Dieser Timer wurde bereits auf einem anderen Gerät gestoppt.',
     previousStopped: 'Der vorherige Timer wurde gestoppt und gespeichert.',
-    saved: 'Zeiteintrag gespeichert.',
+    saved: 'Gespeichert. Tippe in der Liste auf eine Zeit, um sie zu korrigieren.',
     runningSince: 'Läuft seit {{time}}',
+    runningSinceLabel: 'Läuft seit',
+    editStart: 'Startzeit bearbeiten',
+    errors: {
+      invalidStart: 'Gib eine gültige Startzeit ein.',
+      startInFuture: 'Der Start darf nicht in der Zukunft liegen.',
+    },
+  },
+  closeStop: {
+    title: 'Dein Timer läuft noch',
+    message:
+      '„{{description}}“ lief noch, als du Workaddict um {{time}} geschlossen hast (vor {{ago}}).',
+    stopAt: 'Um {{time}} stoppen',
+    keep: 'Weiterlaufen lassen',
+    stopNow: 'Jetzt stoppen',
   },
   team: {
     title: 'Team jetzt',
@@ -332,6 +346,10 @@ const de: Resources = {
     themeSystem: 'System',
     themeLight: 'Hell',
     themeDark: 'Dunkel',
+    timer: 'Timer',
+    stopOnClose: 'Timer stoppen, wenn ich die Seite schließe',
+    stopOnCloseHint:
+      'Gilt für dieses Gerät. Wenn du Workaddict wieder öffnest, fragt die App, ob der Timer zu dem Zeitpunkt gestoppt werden soll, als du gegangen bist. Bis dahin zeigen andere Geräte und „Team jetzt“ ihn weiter als laufend.',
     data: 'Daten',
     backupHint:
       'Lade eine vollständige Sicherung aller Einträge aller Mitglieder, Projekte und Tags als JSON-Datei herunter.',

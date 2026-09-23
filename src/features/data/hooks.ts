@@ -23,6 +23,7 @@ import type { StorageAdapter, TimerFields, TimerPatch, TimerTarget } from '../..
 
 type StartTimerResult = Awaited<ReturnType<StorageAdapter['startTimer']>>
 import { useSessionData } from '../auth/AuthContext'
+import { recordTimerStart } from '../tracker/stopOnClose'
 
 export const keys = {
   workspace: ['workspace'] as const,
@@ -223,6 +224,7 @@ export function useStartTimer(feedback?: MutationFeedback<StartTimerResult>) {
       return snap
     },
     onSuccess: (res) => {
+      recordTimerStart(res.timer.id)
       replaceTimer(qc, user.login, res.timer)
       if (res.stopped) patchEntries(qc, upsert(res.stopped))
       feedback?.onSuccess?.(res)
@@ -242,7 +244,7 @@ export function useStopTimer(feedback?: MutationFeedback<TimeEntry | null>) {
   const { adapter, user } = useSessionData()
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: () => adapter.stopTimer(new Date()),
+    mutationFn: (end?: Date) => adapter.stopTimer(end ?? new Date()),
     onMutate: async () => {
       const snap = await snapshot(qc, keys.timers)
       replaceTimer(qc, user.login, null)
