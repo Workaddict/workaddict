@@ -70,7 +70,7 @@ export function Step({
         )}
       </div>
       {locked ? (
-        <p className="muted">{lockedText}</p>
+        lockedText && <p className="muted">{lockedText}</p>
       ) : (
         <div className="ob-step-body">{children}</div>
       )}

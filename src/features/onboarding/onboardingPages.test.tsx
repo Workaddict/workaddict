@@ -193,16 +193,13 @@ describe('setup wizard', () => {
   /** The wizard asks who it is for first; most of these tests cover the team path. */
   const openTeamWizard = () => {
     renderAt('/setup')
-    fireEvent.click(screen.getByRole('button', { name: /A team/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /A team/ }))
   }
 
   it('builds every link from the entered names', () => {
     openTeamWizard()
-    expect(screen.getByText(/Enter a valid organization name first/)).toBeInTheDocument()
-    expect(screen.queryByRole('link', { name: /Create …/ })).toBeNull()
-
     fireEvent.change(screen.getByLabelText('Organization name'), { target: { value: 'my-team' } })
-    expect(screen.queryByText(/Enter a valid organization name first/)).toBeNull()
+    expect(screen.queryByText(/to open this step/)).toBeNull()
     const repoLink = screen.getByRole('link', { name: /Create my-team\/time-data/ })
     expect(repoLink).toHaveAttribute(
       'href',
@@ -231,8 +228,44 @@ describe('setup wizard', () => {
     openTeamWizard()
     fireEvent.change(screen.getByLabelText('Organization name'), { target: { value: 'my team' } })
     expect(screen.getByText(/Only letters, digits and single hyphens/)).toBeInTheDocument()
-    expect(screen.getByText(/Enter a valid organization name first/)).toBeInTheDocument()
+    expect(screen.getAllByText(/Enter a valid organization name above/)).toHaveLength(1)
     expect(screen.queryByRole('link', { name: /Open member privileges/ })).toBeNull()
+    expect(screen.queryByRole('checkbox', { name: 'Done' })).toBeNull()
+  })
+
+  it('locks every step until the names are valid', () => {
+    openTeamWizard()
+    // An empty name: steps show their titles but nothing to click.
+    expect(screen.getByRole('heading', { name: 'Create a free organization' })).toBeInTheDocument()
+    expect(screen.getAllByText(/Enter a valid organization name above/)).toHaveLength(1)
+    expect(screen.queryByRole('checkbox', { name: 'Done' })).toBeNull()
+    expect(screen.queryByRole('link', { name: /Create an organization/ })).toBeNull()
+    expect(screen.queryByLabelText('Data repository')).toBeNull()
+
+    fireEvent.change(screen.getByLabelText('Organization name'), { target: { value: 'my-team' } })
+    fireEvent.click(screen.getAllByRole('checkbox', { name: 'Done' })[0]!)
+
+    // A broken repository name locks everything again, but keeps what was ticked.
+    fireEvent.change(screen.getByLabelText('Repository name'), { target: { value: 'bad name' } })
+    expect(screen.getAllByText(/Fix the repository name above/)).toHaveLength(1)
+    expect(screen.queryByRole('checkbox', { name: 'Done' })).toBeNull()
+    expect(screen.getByText('1 of 7 done')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText('Repository name'), { target: { value: 'time-data' } })
+    expect(screen.getAllByRole('checkbox', { name: 'Done' })[0]).toBeChecked()
+  })
+
+  it('keeps the path choice visible and selected', () => {
+    renderAt('/setup')
+    expect(screen.getByRole('radio', { name: /Just me/ })).not.toBeChecked()
+    expect(screen.getByRole('radio', { name: /A team/ })).not.toBeChecked()
+    expect(screen.queryByLabelText('Organization name')).toBeNull()
+    expect(screen.queryByLabelText('Your GitHub username')).toBeNull()
+
+    fireEvent.click(screen.getByRole('radio', { name: /A team/ }))
+    expect(screen.getByRole('radio', { name: /A team/ })).toBeChecked()
+    expect(screen.getByRole('radio', { name: /Just me/ })).not.toBeChecked()
+    expect(screen.getByLabelText('Organization name')).toBeInTheDocument()
   })
 
   it('keeps progress across a reload', () => {
@@ -288,7 +321,7 @@ describe('setup wizard', () => {
 
   it('skips the organization steps when the setup is for one person', () => {
     renderAt('/setup')
-    fireEvent.click(screen.getByRole('button', { name: /Just me/ }))
+    fireEvent.click(screen.getByRole('radio', { name: /Just me/ }))
     fireEvent.change(screen.getByLabelText('Your GitHub username'), {
       target: { value: 'my-name' },
     })
@@ -320,12 +353,13 @@ describe('setup wizard', () => {
 
   it('lets the user switch between the solo and team paths', () => {
     renderAt('/setup')
-    fireEvent.click(screen.getByRole('button', { name: /Just me/ }))
-    expect(screen.getByLabelText('Your GitHub username')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: /Just me/ }))
+    fireEvent.change(screen.getByLabelText('Your GitHub username'), {
+      target: { value: 'my-name' },
+    })
 
-    fireEvent.click(screen.getByRole('button', { name: 'Change' }))
-    fireEvent.click(screen.getByRole('button', { name: /A team/ }))
-    expect(screen.getByLabelText('Organization name')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('radio', { name: /A team/ }))
+    expect(screen.getByLabelText('Organization name')).toHaveValue('my-name')
     expect(screen.getByText('0 of 7 done')).toBeInTheDocument()
   })
 })

@@ -250,7 +250,6 @@ const de: Resources = {
       modeTeamHint: 'Eine GitHub-Organisation für alle. Etwa acht Schritte.',
       modeLater:
         'Unsicher? Fang mit „Nur für mich“ an. Du kannst später auf eine Organisation umsteigen; das Daten-Repository lässt sich übertragen.',
-      modeChange: 'Ändern',
       org: 'Name der Organisation',
       orgHint: 'Deine neue oder bestehende GitHub-Organisation, z. B. mein-team.',
       orgInvalid: 'Nur Buchstaben, Ziffern und einzelne Bindestriche, höchstens 39 Zeichen.',
@@ -259,8 +258,11 @@ const de: Resources = {
       userInvalid: 'Nur Buchstaben, Ziffern und einzelne Bindestriche, höchstens 39 Zeichen.',
       repo: 'Name des Repositorys',
       repoInvalid: 'Nur Buchstaben, Ziffern, Punkte, Binde- und Unterstriche.',
-      needNames:
-        'Gib zuerst einen gültigen Namen für die Organisation ein. Die Links unten verwenden ihn.',
+      namesTitle: 'Deine GitHub-Namen',
+      lockedOrg:
+        'Gib oben einen gültigen Namen für die Organisation ein, um diesen Schritt zu öffnen.',
+      lockedUser: 'Gib oben einen gültigen GitHub-Benutzernamen ein, um diesen Schritt zu öffnen.',
+      lockedRepo: 'Korrigiere oben den Namen des Repositorys, um diesen Schritt zu öffnen.',
       progress: '{{done}} von {{total}} erledigt',
       reset: 'Neu beginnen',
       orgTitle: 'Kostenlose Organisation anlegen',
