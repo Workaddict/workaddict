@@ -1132,10 +1132,13 @@ button.entry-duration,
 .landing-main {
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(360px, 440px);
-  align-items: center;
+  align-items: start;
   gap: 48px;
 }
+/* Sticky, so the intro stays in view when the token help makes the sign-in card tall. */
 .landing-hero {
+  position: sticky;
+  top: 24px;
   display: flex;
   flex-direction: column;
   gap: 18px;
@@ -1574,6 +1577,9 @@ a.btn {
   .landing-main {
     grid-template-columns: minmax(0, 1fr);
     gap: 28px;
+  }
+  .landing-hero {
+    position: static;
   }
   .landing .login-card {
     justify-self: stretch;

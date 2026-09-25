@@ -27,6 +27,10 @@ The logged-out start page SHALL show, next to the sign-in form on wide screens a
 - **WHEN** a visitor opens the start page on a 1280 px wide screen
 - **THEN** the intro and the sign-in form are shown side by side and the form is visible without scrolling
 
+#### Scenario: Token help keeps the intro in view
+- **WHEN** a visitor on a 1280 px wide screen opens "How do I get a token?" and the sign-in card grows taller than the screen
+- **THEN** the intro stays aligned with the top of the card instead of moving down to its middle, and stays visible while the visitor scrolls through the help
+
 ### Requirement: How it works steps
 Below the highlights, the start page SHALL explain the setup in three numbered steps: create a private GitHub repository, create a fine-grained token for it, and sign in so the app sets up the repository. Step 1 SHALL offer a link that opens the setup wizard, step 2 SHALL offer a link that opens the existing token help, and step 3 SHALL offer a "Go to sign-in" link that scrolls the sign-in form into view and focuses its first field. All three step links SHALL look alike. Below the steps, a separate note SHALL tell members who received an invite link to open that link.
 
