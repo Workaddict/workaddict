@@ -65,4 +65,4 @@
 - [ ] 9.2 Manual check against a real data repo: hand-edit an entry file on GitHub to add a broken record, confirm the notice appears, add an entry in the app, and confirm the broken record is still in the file afterwards
 - [x] 9.3 Manual check: log in without "Remember me", load data, close the tab, reopen: IndexedDB `workaddict-cache` is empty
 - [x] 9.4 Manual check: embed the preview build in a local `iframe` page and confirm only the message renders
-- [ ] 9.5 Push to a branch and confirm the workflow passes with pinned actions and the audit step
+- [x] 9.5 Push to a branch and confirm the workflow passes with pinned actions and the audit step
