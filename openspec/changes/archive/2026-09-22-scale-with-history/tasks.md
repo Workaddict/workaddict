@@ -28,4 +28,4 @@
 
 - [x] 5.1 `npm test`, `npm run lint`, `npm run build` pass
 - [ ] 5.2 Manual check against a real data repo: in the Network tab, an idle 30 s poll shows only ref requests; opening Work Groups on a cold cache sends no blob requests until "Show total hours"
-- [ ] 5.3 Demo mode (in-memory adapter) still works on Work Groups
+- [x] 5.3 Demo mode (in-memory adapter) still works on Work Groups
