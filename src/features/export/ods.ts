@@ -5,7 +5,9 @@ import {
   cellValue,
   reportFileName,
   reportSheets,
+  shortDateParts,
   type CellKind,
+  type DatePart,
   type Report,
   type Sheet,
 } from './report'
@@ -40,31 +42,63 @@ export function xml(s: string): string {
   )
 }
 
-const dateParts =
-  '<number:year number:style="long"/><number:text>-</number:text>' +
-  '<number:month number:style="long"/><number:text>-</number:text>' +
-  '<number:day number:style="long"/>'
-const timeParts =
-  '<number:hours number:style="long"/><number:text>:</number:text><number:minutes number:style="long"/>'
+const style = (long: boolean) => (long ? ' number:style="long"' : '')
+
+function dateXml(parts: DatePart[]): string {
+  return parts
+    .map((p) => {
+      switch (p.kind) {
+        case 'day':
+          return `<number:day${style(p.long)}/>`
+        case 'month':
+          return `<number:month${style(p.long)}/>`
+        case 'year':
+          return '<number:year number:style="long"/>'
+        case 'text':
+          return `<number:text>${xml(p.text)}</number:text>`
+      }
+    })
+    .join('')
+}
+
+/** "16:20" (24h) or "4:20 PM" (12h), as in the app. */
+function timeXml(f: Report['timeFormat']): string {
+  return f === '12h'
+    ? '<number:hours/><number:text>:</number:text><number:minutes number:style="long"/><number:text> </number:text><number:am-pm/>'
+    : '<number:hours number:style="long"/><number:text>:</number:text><number:minutes number:style="long"/>'
+}
+
 const decimals = (n: number) =>
   `<number:number number:decimal-places="${n}" number:min-decimal-places="${n}" number:min-integer-digits="1"/>`
 
-const DATA_STYLES = [
-  `<number:date-style style:name="N_date">${dateParts}</number:date-style>`,
-  `<number:time-style style:name="N_time">${timeParts}</number:time-style>`,
-  `<number:date-style style:name="N_datetime">${dateParts}<number:text> </number:text>${timeParts}</number:date-style>`,
-  `<number:number-style style:name="N_hours">${decimals(2)}</number:number-style>`,
-  `<number:percentage-style style:name="N_percent">${decimals(1)}<number:text>%</number:text></number:percentage-style>`,
-].join('')
+/** Date and time styles follow the report's language and clock format. */
+function dataStyles(r: Report): string {
+  const date = dateXml(shortDateParts(r.locale))
+  const time = timeXml(r.timeFormat)
+  return [
+    `<number:date-style style:name="N_date">${date}</number:date-style>`,
+    `<number:time-style style:name="N_time">${time}</number:time-style>`,
+    `<number:date-style style:name="N_datetime">${date}<number:text> </number:text>${time}</number:date-style>`,
+    `<number:number-style style:name="N_number"><number:number number:min-integer-digits="1"/></number:number-style>`,
+    `<number:number-style style:name="N_hours">${decimals(2)}</number:number-style>`,
+    `<number:percentage-style style:name="N_percent">${decimals(1)}<number:text>%</number:text></number:percentage-style>`,
+  ].join('')
+}
+
+const START =
+  '<style:table-cell-properties style:text-align-source="fix"/><style:paragraph-properties fo:text-align="start"/>'
 
 const CELL_STYLES = [
-  ...(['date', 'time', 'datetime', 'hours', 'percent'] as const).map(
-    (k) =>
-      `<style:style style:name="ce_${k}" style:family="table-cell" style:data-style-name="N_${k}"/>`,
-  ),
+  ...(['date', 'time', 'datetime', 'hours', 'percent', 'number'] as const).flatMap((k) => [
+    `<style:style style:name="ce_${k}" style:family="table-cell" style:data-style-name="N_${k}"/>`,
+    // Left-aligned twin, for values that sit next to their label.
+    `<style:style style:name="ce_${k}_start" style:family="table-cell" style:data-style-name="N_${k}">${START}</style:style>`,
+  ]),
   '<style:style style:name="ce_head" style:family="table-cell">' +
     '<style:table-cell-properties fo:background-color="#4f46e5"/>' +
     '<style:text-properties fo:font-weight="bold" fo:color="#ffffff"/></style:style>',
+  '<style:style style:name="ce_title" style:family="table-cell">' +
+    '<style:text-properties fo:font-weight="bold" fo:font-size="12pt"/></style:style>',
 ].join('')
 
 const localIso = (d: Date) => format(d, "yyyy-MM-dd'T'HH:mm:ss")
@@ -75,8 +109,10 @@ function textCell(s: string, style = ''): string {
   return `<table:table-cell${style} office:value-type="string">${paras.join('')}</table:table-cell>`
 }
 
-function cell(kind: CellKind, v: string | number | Date): string {
-  const style = kind === 'text' || kind === 'number' ? '' : ` table:style-name="ce_${kind}"`
+function cell(kind: CellKind, v: string | number | Date, alignStart = false): string {
+  const name = alignStart ? `ce_${kind}_start` : `ce_${kind}`
+  const style =
+    kind === 'text' || (kind === 'number' && !alignStart) ? '' : ` table:style-name="${name}"`
   switch (kind) {
     case 'text':
       return textCell(String(v))
@@ -102,16 +138,27 @@ function table(sheet: Sheet, index: number): string {
   const cols = sheet.columns
     .map((_, i) => `<table:table-column table:style-name="co_${index}_${i}"/>`)
     .join('')
-  const head = `<table:table-header-rows><table:table-row>${sheet.columns
-    .map((c) => textCell(c.header, ' table:style-name="ce_head"'))
-    .join('')}</table:table-row></table:table-header-rows>`
+  // Only column A: an empty B1 lets the title run on across the sheet.
+  const title =
+    sheet.title === undefined
+      ? ''
+      : `<table:table-row>${textCell(sheet.title, ' table:style-name="ce_title"')}</table:table-row>`
+  const head =
+    sheet.header === false
+      ? ''
+      : `<table:table-header-rows><table:table-row>${sheet.columns
+          .map((c) => textCell(c.header, ' table:style-name="ce_head"'))
+          .join('')}</table:table-row></table:table-header-rows>`
   const rows = sheet.rows
-    .map(
-      (row) =>
-        `<table:table-row>${row.map((c, i) => cell(cellKind(c, sheet.columns[i]!), cellValue(c))).join('')}</table:table-row>`,
-    )
+    .map((row) => {
+      const cells = row.map((c, i) => {
+        const col = sheet.columns[i]!
+        return cell(cellKind(c, col), cellValue(c), col.alignStart)
+      })
+      return `<table:table-row>${cells.join('')}</table:table-row>`
+    })
     .join('')
-  return `<table:table table:name="${sheetName(sheet.name)}">${cols}${head}${rows}</table:table>`
+  return `<table:table table:name="${sheetName(sheet.name)}">${cols}${title}${head}${rows}</table:table>`
 }
 
 function columnStyles(sheets: Sheet[]): string {
@@ -132,7 +179,7 @@ export function odsFiles(r: Report, now = new Date()): ZipEntry[] {
   const content =
     XML_HEAD +
     `<office:document-content ${NS} office:version="1.3">` +
-    `<office:automatic-styles>${DATA_STYLES}${CELL_STYLES}${columnStyles(sheets)}</office:automatic-styles>` +
+    `<office:automatic-styles>${dataStyles(r)}${CELL_STYLES}${columnStyles(sheets)}</office:automatic-styles>` +
     `<office:body><office:spreadsheet>${sheets.map(table).join('')}</office:spreadsheet></office:body>` +
     '</office:document-content>'
   const meta =

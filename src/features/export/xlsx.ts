@@ -2,7 +2,7 @@ import { format } from 'date-fns'
 import type { Worksheet } from 'exceljs'
 import type { BreakdownRow } from '../stats/stats'
 import { downloadBlob } from './download'
-import type { Report } from './report'
+import { shortDateParts, type DatePart, type Report } from './report'
 
 const HOUR = 3_600_000
 
@@ -16,6 +16,29 @@ function excelDate(d: Date): Date {
   )
 }
 
+/** Excel number format for the locale's short date: `dd.mm.yyyy`, `mm/dd/yyyy`. */
+export function xlsxDateFormat(parts: DatePart[]): string {
+  return parts
+    .map((p) => {
+      switch (p.kind) {
+        case 'day':
+          return p.long ? 'dd' : 'd'
+        case 'month':
+          return p.long ? 'mm' : 'm'
+        case 'year':
+          return 'yyyy'
+        case 'text':
+          // Escaped, so Excel keeps the character instead of swapping in its own separator.
+          return [...p.text].map((c) => `\\${c}`).join('')
+      }
+    })
+    .join('')
+}
+
+export function xlsxTimeFormat(f: Report['timeFormat']): string {
+  return f === '12h' ? 'h:mm AM/PM' : 'hh:mm'
+}
+
 function styleHeader(ws: Worksheet) {
   const row = ws.getRow(1)
   row.font = { bold: true, color: { argb: 'FFFFFFFF' } }
@@ -23,42 +46,44 @@ function styleHeader(ws: Worksheet) {
   ws.views = [{ state: 'frozen', ySplit: 1 }]
 }
 
-export async function exportXlsx(r: Report) {
+/** The workbook for a report (split from the download so tests can inspect it). */
+export async function xlsxWorkbook(r: Report) {
   const mod = (await import('exceljs')) as typeof import('exceljs') & {
     default?: typeof import('exceljs')
   }
   const Excel = mod.default ?? mod
   const { t, locale } = r
+  const dateFmt = xlsxDateFormat(shortDateParts(locale))
+  const timeFmt = xlsxTimeFormat(r.timeFormat)
   const wb = new Excel.Workbook()
   wb.creator = 'Workaddict'
   wb.created = new Date()
 
-  // Summary
+  // Summary: a title row, then labels with their values; no header row (same layout as the .ods).
   const summary = wb.addWorksheet(t('exports.summary'))
   summary.columns = [
-    { header: t('exports.name'), key: 'k', width: 26 },
-    { header: t('exports.value'), key: 'v', width: 60 },
+    { key: 'k', width: 30 },
+    // Sized for the numbers and the date; the filter text runs on into the empty columns.
+    { key: 'v', width: 20 },
   ]
-  summary.addRows([
-    { k: t('exports.reportTitle'), v: `${format(r.range.from, 'P', { locale })} – ${format(r.range.to, 'P', { locale })}` },
-    { k: t('exports.filtersLabel'), v: r.filtersText },
-    { k: `${t('stats.total')} (${t('exports.hours')})`, v: r.summary.totalMs / HOUR },
-    { k: t('stats.entryCount'), v: r.summary.count },
-    { k: `${t('stats.avgPerDay')} (${t('exports.hours')})`, v: r.summary.avgPerDayMs / HOUR },
-    { k: t('exports.generated', { date: '' }).trim(), v: excelDate(new Date()) },
+  const title = summary.addRow([
+    `${t('exports.reportTitle')} ${format(r.range.from, 'P', { locale })} – ${format(r.range.to, 'P', { locale })}`,
   ])
-  summary.getCell('B4').numFmt = '0.00'
-  summary.getCell('B6').numFmt = '0.00'
-  summary.getCell('B7').numFmt = 'yyyy-mm-dd hh:mm'
-  summary.getColumn('v').alignment = { horizontal: 'left', wrapText: true }
-  styleHeader(summary)
+  title.font = { bold: true, size: 12 }
+  summary.addRow([t('exports.filtersLabel'), r.filtersText])
+  summary.addRow([`${t('stats.total')} (${t('exports.hours')})`, r.summary.totalMs / HOUR]).getCell(2).numFmt = '0.00'
+  summary.addRow([t('stats.entryCount'), r.summary.count])
+  summary.addRow([`${t('stats.avgPerDay')} (${t('exports.hours')})`, r.summary.avgPerDayMs / HOUR]).getCell(2).numFmt = '0.00'
+  summary.addRow([t('exports.generated', { date: '' }).trim(), excelDate(new Date())]).getCell(2).numFmt =
+    `${dateFmt} ${timeFmt}`
+  summary.getColumn(2).alignment = { horizontal: 'left' }
 
   // Entries
   const entries = wb.addWorksheet(t('exports.entries'))
   entries.columns = [
-    { header: t('stats.date'), key: 'date', width: 12, style: { numFmt: 'yyyy-mm-dd' } },
-    { header: t('exports.start'), key: 'start', width: 8, style: { numFmt: 'hh:mm' } },
-    { header: t('exports.end'), key: 'end', width: 8, style: { numFmt: 'hh:mm' } },
+    { header: t('stats.date'), key: 'date', width: 12, style: { numFmt: dateFmt } },
+    { header: t('exports.start'), key: 'start', width: 9, style: { numFmt: timeFmt } },
+    { header: t('exports.end'), key: 'end', width: 9, style: { numFmt: timeFmt } },
     { header: t('stats.member'), key: 'member', width: 16 },
     { header: t('stats.project'), key: 'project', width: 22 },
     { header: t('stats.tagsCol'), key: 'tags', width: 22 },
@@ -93,8 +118,11 @@ export async function exportXlsx(r: Report) {
   }
   breakdownSheet(t('stats.byProject'), r.projects)
   breakdownSheet(t('stats.byMember'), r.members)
+  return wb
+}
 
-  const buffer = await wb.xlsx.writeBuffer()
+export async function exportXlsx(r: Report) {
+  const buffer = await (await xlsxWorkbook(r)).xlsx.writeBuffer()
   downloadBlob(
     new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }),
     `time-report_${format(r.range.from, 'yyyy-MM-dd')}_${format(r.range.to, 'yyyy-MM-dd')}.xlsx`,

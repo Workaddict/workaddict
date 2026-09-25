@@ -6,6 +6,7 @@ import { useToast } from '../../components/Toasts'
 import { durationMs, formatHM } from '../../domain/time'
 import { EMPTY_WORKSPACE, type DateRange, type TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
+import { getTimeFormat } from '../../timeFormat'
 import { useEntries, useLookups } from '../data/hooks'
 import { loadWriter, type ExportFormat } from '../export/formats'
 import { buildReport, chartToPng } from '../export/report'
@@ -245,7 +246,16 @@ export default function StatsPage() {
         format === 'pdf'
           ? { bars: await chartToPng(barRef.current), share: await chartToPng(shareRef.current) }
           : {}
-      const report = buildReport({ entries: filtered, ws, range, filtersText: filtersText(), charts, t, locale })
+      const report = buildReport({
+        entries: filtered,
+        ws,
+        range,
+        filtersText: filtersText(),
+        charts,
+        t,
+        locale,
+        timeFormat: getTimeFormat(),
+      })
       await (await loadWriter(format))(report)
     } catch (e) {
       console.error(e)

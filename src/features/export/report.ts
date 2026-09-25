@@ -1,7 +1,7 @@
 import type { TFunction } from 'i18next'
 import { format, type Locale } from 'date-fns'
 import type { DateRange, TimeEntry, Workspace } from '../../domain/types'
-import { durationMs } from '../../domain/time'
+import { durationMs, type TimeFormat } from '../../domain/time'
 import {
   byMember,
   byProject,
@@ -34,6 +34,8 @@ export interface Report {
   charts: { bars?: string; share?: string }
   t: TFunction
   locale: Locale
+  /** Clock format for time cells in the spreadsheets, as in the app. */
+  timeFormat: TimeFormat
 }
 
 export function buildReport(args: {
@@ -44,6 +46,7 @@ export function buildReport(args: {
   charts: Report['charts']
   t: TFunction
   locale: Locale
+  timeFormat?: TimeFormat
 }): Report {
   const { entries, ws, t } = args
   const projects = new Map(ws.projects.map((p) => [p.id, p]))
@@ -73,6 +76,7 @@ export function buildReport(args: {
     charts: args.charts,
     t,
     locale: args.locale,
+    timeFormat: args.timeFormat ?? '24h',
   }
 }
 
@@ -122,12 +126,43 @@ export interface SheetColumn {
   kind: CellKind
   /** Approximate width in characters. */
   width: number
+  /** Left-align numbers and dates too (the summary keeps values next to their labels). */
+  alignStart?: boolean
 }
 
 export interface Sheet {
   name: string
   columns: SheetColumn[]
   rows: Cell[][]
+  /** A bold first row in column A; long text runs on into the empty cells beside it. */
+  title?: string
+  /** `false` for sheets without a column header row. */
+  header?: false
+}
+
+export type DatePart = { kind: 'day' | 'month'; long: boolean } | { kind: 'year' } | { kind: 'text'; text: string }
+
+/**
+ * The locale's short date pattern (the one date-fns `'P'` uses, as in the app and the PDF) as parts:
+ * `dd.MM.y` for German, `MM/dd/yyyy` for US English.
+ */
+export function shortDateParts(locale: Locale): DatePart[] {
+  const pattern = locale.formatLong?.date({ width: 'short' }) ?? 'yyyy-MM-dd'
+  const parts: DatePart[] = []
+  const text = (t: string) => {
+    const last = parts[parts.length - 1]
+    if (last?.kind === 'text') last.text += t
+    else parts.push({ kind: 'text', text: t })
+  }
+  for (const m of pattern.matchAll(/d+|M+|y+|'([^']*)'|./g)) {
+    const tok = m[0]
+    if (tok[0] === 'd') parts.push({ kind: 'day', long: tok.length > 1 })
+    else if (tok[0] === 'M') parts.push({ kind: 'month', long: tok.length > 1 })
+    else if (tok[0] === 'y') parts.push({ kind: 'year' })
+    else if (tok[0] === "'") text(m[1] ?? '')
+    else text(tok)
+  }
+  return parts
 }
 
 export function cellValue(c: Cell): string | number | Date {
@@ -153,12 +188,14 @@ export function reportSheets(r: Report): Sheet[] {
   return [
     {
       name: t('exports.summary'),
+      title: `${t('exports.reportTitle')} ${format(r.range.from, 'P', { locale })} – ${format(r.range.to, 'P', { locale })}`,
+      header: false,
       columns: [
-        { header: t('exports.name'), kind: 'text', width: 26 },
-        { header: t('exports.value'), kind: 'text', width: 60 },
+        { header: t('exports.name'), kind: 'text', width: 30 },
+        // Sized for the numbers and the date; the filter text runs on into the empty columns.
+        { header: t('exports.value'), kind: 'text', width: 20, alignStart: true },
       ],
       rows: [
-        [t('exports.reportTitle'), `${format(r.range.from, 'P', { locale })} – ${format(r.range.to, 'P', { locale })}`],
         [t('exports.filtersLabel'), r.filtersText],
         [`${t('stats.total')} (${t('exports.hours')})`, { value: r.summary.totalMs / HOUR, kind: 'hours' }],
         [t('stats.entryCount'), { value: r.summary.count, kind: 'number' }],
