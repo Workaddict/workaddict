@@ -13,12 +13,14 @@ import { tokenKind } from './session'
  * invite link and can only be changed on purpose.
  */
 export function SignInForm({
+  id,
   initialRepo = '',
   lockRepo = false,
   className = 'stack',
   header,
   footer,
 }: {
+  id?: string
   initialRepo?: string
   lockRepo?: boolean
   className?: string
@@ -67,7 +69,7 @@ export function SignInForm({
   }
 
   return (
-    <form className={className} onSubmit={submit}>
+    <form id={id} className={className} onSubmit={submit}>
       {header}
 
       <label className="field">

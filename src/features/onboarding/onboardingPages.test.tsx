@@ -64,11 +64,8 @@ describe('CopyText', () => {
 describe('start page', () => {
   it('opens the setup wizard from the hero, the sign-in card and the steps', () => {
     renderAt('/')
-    expect(screen.getByRole('link', { name: 'Set up a team' })).toHaveAttribute('href', '/setup')
-    expect(screen.getByRole('link', { name: 'Set up a team step by step' })).toHaveAttribute(
-      'href',
-      '/setup',
-    )
+    expect(screen.getByRole('link', { name: 'Set up for free' })).toHaveAttribute('href', '/setup')
+    expect(screen.getByRole('link', { name: 'Start the setup' })).toHaveAttribute('href', '/setup')
     const steps = screen.getByRole('region', { name: 'How it works' })
     expect(within(steps).getByRole('link', { name: 'Open the setup guide' })).toHaveAttribute(
       'href',
@@ -415,7 +412,7 @@ describe('join flow', () => {
     renderAt('/join?repo=not%20a%20repo')
     expect(screen.getByText(/This invite link is invalid/)).toBeInTheDocument()
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Free and open-source time tracking' }),
+      screen.getByRole('heading', { level: 1, name: 'Free time tracking. Your data stays yours.' }),
     ).toBeInTheDocument()
   })
 })

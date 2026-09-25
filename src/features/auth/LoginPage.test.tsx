@@ -25,7 +25,7 @@ describe('landing page', () => {
   it('says the app is free and open source', () => {
     renderLanding()
     expect(
-      screen.getByRole('heading', { level: 1, name: 'Free and open-source time tracking' }),
+      screen.getByRole('heading', { level: 1, name: 'Free time tracking. Your data stays yours.' }),
     ).toBeInTheDocument()
     expect(screen.getByText(/No paid plans/)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Read the code on GitHub' })).toHaveAttribute(
@@ -38,6 +38,18 @@ describe('landing page', () => {
     const { login } = renderLanding()
     fireEvent.click(screen.getByRole('button', { name: 'Try the demo' }))
     expect(login).toHaveBeenCalledWith({ mode: 'demo' }, false)
+  })
+
+  it('offers the demo only once, in the intro', () => {
+    renderLanding()
+    expect(screen.getAllByRole('button', { name: /demo/i })).toHaveLength(1)
+    expect(screen.getByRole('heading', { name: 'Already set up? Sign in' })).toBeInTheDocument()
+  })
+
+  it('moves to the sign-in form from the how-it-works steps', () => {
+    renderLanding()
+    fireEvent.click(screen.getByRole('button', { name: 'Go to sign-in' }))
+    expect(screen.getByPlaceholderText('owner/name')).toHaveFocus()
   })
 
   it('lists the benefit highlights and setup steps', () => {
@@ -107,6 +119,13 @@ describe('landing page', () => {
         'href',
         './de/import-from-clockify/',
       )
+      expect(
+        screen.getByRole('heading', {
+          level: 1,
+          name: 'Kostenlose Zeiterfassung. Deine Daten bleiben bei dir.',
+        }),
+      ).toBeInTheDocument()
+      expect(screen.getByRole('link', { name: 'Kostenlos einrichten' })).toBeInTheDocument()
     } finally {
       act(() => setLanguage('en'))
     }

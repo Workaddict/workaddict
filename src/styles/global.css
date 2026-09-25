@@ -1245,6 +1245,14 @@ button.entry-duration,
 .step-link {
   align-self: flex-start;
 }
+/* Button-style step links look like the anchor ones next to them. */
+.link-btn.step-link {
+  font-size: inherit;
+  text-decoration: underline;
+}
+.steps-note {
+  margin-top: 16px;
+}
 
 /* ---------- Onboarding (setup wizard, join flow, sign-in diagnosis) ---------- */
 a.btn {

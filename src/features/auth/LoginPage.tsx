@@ -11,6 +11,8 @@ import { Highlights, HowItWorks } from './Landing'
 import { PublicHeader } from './PublicHeader'
 import { SignInForm } from './SignInForm'
 
+const SIGN_IN_ID = 'sign-in'
+
 export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
   const { t } = useI18n()
   const { state, login } = useAuth()
@@ -22,10 +24,20 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
 
   const startDemo = () => void login({ mode: 'demo' }, false)
 
+  const scrollIntoView = (el: Element | null | undefined) => {
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    el?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+  }
+
   const showTokenHelp = () => {
     setHelpOpen(true)
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    helpRef.current?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
+    scrollIntoView(helpRef.current)
+  }
+
+  const showSignIn = () => {
+    const form = document.getElementById(SIGN_IN_ID)
+    scrollIntoView(form)
+    form?.querySelector<HTMLInputElement>('input:not([readonly])')?.focus({ preventScroll: true })
   }
 
   return (
@@ -61,13 +73,14 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
               {t('landing.demo')}
             </button>
             <Link to="/setup" className="btn btn-lg">
-              <Icon name="users" size={16} />
-              {t('landing.setupTeam')}
+              <Icon name="settings" size={16} />
+              {t('landing.setup')}
             </Link>
           </div>
         </section>
 
         <SignInForm
+          id={SIGN_IN_ID}
           className="card login-card"
           header={
             <>
@@ -98,7 +111,7 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
               )}
             </>
           }
-          footer={(busy) => (
+          footer={() => (
             <>
               <details
                 ref={helpRef}
@@ -134,18 +147,13 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
               <p className="small">
                 {t('login.setupPrompt')} <Link to="/setup">{t('login.setupLink')}</Link>
               </p>
-
-              <div className="divider">{t('login.or')}</div>
-              <button type="button" className="btn btn-wrap" disabled={busy} onClick={startDemo}>
-                {t('login.demo')}
-              </button>
             </>
           )}
         />
       </div>
 
       <Highlights />
-      <HowItWorks onTokenHelp={showTokenHelp} />
+      <HowItWorks onTokenHelp={showTokenHelp} onSignIn={showSignIn} />
       <SiteFooter />
     </div>
   )

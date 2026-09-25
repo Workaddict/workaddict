@@ -37,7 +37,13 @@ export function Highlights() {
   )
 }
 
-export function HowItWorks({ onTokenHelp }: { onTokenHelp: () => void }) {
+export function HowItWorks({
+  onTokenHelp,
+  onSignIn,
+}: {
+  onTokenHelp: () => void
+  onSignIn: () => void
+}) {
   const { t } = useI18n()
   return (
     <section className="landing-section" aria-labelledby="landing-steps">
@@ -61,11 +67,16 @@ export function HowItWorks({ onTokenHelp }: { onTokenHelp: () => void }) {
                   {t('landing.step2Link')}
                 </button>
               )}
-              {n === 3 && <p className="muted">{t('landing.inviteHint')}</p>}
+              {n === 3 && (
+                <button type="button" className="link-btn step-link" onClick={onSignIn}>
+                  {t('landing.step3Link')}
+                </button>
+              )}
             </div>
           </li>
         ))}
       </ol>
+      <p className="muted steps-note">{t('landing.inviteHint')}</p>
     </section>
   )
 }

@@ -36,7 +36,7 @@ const en = {
     logout: 'Log out',
   },
   login: {
-    title: 'Sign in',
+    title: 'Already set up? Sign in',
     subtitle: 'Connect your data repository with a GitHub token.',
     token: 'GitHub token',
     tokenPlaceholder: 'github_pat_…',
@@ -50,11 +50,9 @@ const en = {
     classicTokenLink: 'Create a fine-grained token',
     submit: 'Sign in',
     checking: 'Checking…',
-    demo: 'Try the demo (nothing is saved)',
-    or: 'or',
     sessionExpired: 'Your session has expired or the token was revoked. Please sign in again.',
-    setupPrompt: 'Setting up a new team?',
-    setupLink: 'Set up a team step by step',
+    setupPrompt: 'No data repository yet?',
+    setupLink: 'Start the setup',
     errors: {
       badRepoFormat: 'Enter the repository as owner/name, e.g. my-team/time-data.',
       invalidToken:
@@ -92,8 +90,8 @@ const en = {
   },
   // index.html has a static copy of this text for crawlers; update it when these strings change.
   landing: {
-    headline: 'Free and open-source time tracking',
-    subline: 'A simple time tracker for you and your team. No subscription, no ads, no tracking.',
+    headline: 'Free time tracking. Your data stays yours.',
+    subline: 'Track time alone or with your team. No subscription, no ads, no tracking.',
     factFree: 'Free. No paid plans, no limits.',
     factOpenSource: 'Open source.',
     factOpenSourceLink: 'Read the code on GitHub',
@@ -109,7 +107,7 @@ const en = {
       teamTitle: 'Made for teams',
       teamText:
         'Worker, editor and team leader roles, plus a live “Team now” view of who is tracking right now.',
-      timerTitle: 'A timer that follows you',
+      timerTitle: 'One timer on all your devices',
       timerText: 'Start on your laptop, stop on your phone. Overnight entries just work.',
       reportsTitle: 'Reports and exports',
       reportsText: 'Charts by project, tag and member. Export to PDF, Excel, OpenDocument or CSV.',
@@ -118,7 +116,7 @@ const en = {
       importGuide: 'Read the import guide',
     },
     stepsTitle: 'How it works',
-    setupTeam: 'Set up a team',
+    setup: 'Set up for free',
     step1Title: 'Create a private repository',
     step1Text: 'An empty private repository on GitHub holds your team’s data.',
     step1Link: 'Open the setup guide',
@@ -127,7 +125,8 @@ const en = {
     step2Link: 'Show me how',
     step3Title: 'Sign in',
     step3Text: 'Enter the repository and the token. The app sets everything up on first use.',
-    inviteHint: 'Got an invite link from your team? Open it. It guides you through every step.',
+    step3Link: 'Go to sign-in',
+    inviteHint: 'Got an invite link from your team? Open it; it guides you through every step.',
   },
   onboarding: {
     back: 'Back to the start page',
@@ -299,7 +298,7 @@ const en = {
       tokenText: 'As an owner, your own token needs no approval.',
       shareTitle: 'Invite the team',
       shareText:
-        'Send this message to your members. The link guides them through everything in the right order. You find it later under Settings, too.',
+        'Send this message to your members. The link guides them through everything in the right order. You can also find it later in Settings.',
       shareLinkLabel: 'Invite link',
       copyLink: 'Copy link',
       copyMessage: 'Copy message',
@@ -633,7 +632,7 @@ const en = {
     workspaceIntro: 'Your key has access to several workspaces. Choose the one to import.',
     loadingMeta: 'Loading users, projects and tags…',
     mapIntro:
-      'Choose whose entries each Clockify user’s time becomes. Former members keep their hours in statistics and exports, but nobody can edit their entries.',
+      'Choose which member each Clockify user’s time entries belong to. Former members keep their hours in statistics and exports, but nobody can edit their entries.',
     mapUser: 'Clockify user',
     mapTarget: 'Import as',
     deactivated: 'deactivated',
@@ -680,7 +679,7 @@ const en = {
     deleteKey:
       'Now delete the API key in Clockify (Profile settings → API). This app has not stored it.',
     errors: {
-      invalidKey: 'Clockify API key is not valid',
+      invalidKey: 'Clockify API key is not valid.',
       forbidden: 'This key is not allowed to read the Clockify data.',
       rateLimit: 'Clockify limit reached. Continue after {{time}}.',
       network: 'Clockify could not be reached. Check your connection and try again.',
