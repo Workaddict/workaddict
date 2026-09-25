@@ -65,11 +65,12 @@ describe('landing page', () => {
   it('links the token help page from the sign-in card and the steps', () => {
     renderLanding()
     expect(screen.queryByRole('group')).toBeNull()
-    expect(screen.getByRole('link', { name: 'How do I get a token?' })).toHaveAttribute(
-      'href',
-      '/token-help',
-    )
-    expect(screen.getByRole('link', { name: 'Show me how' })).toHaveAttribute('href', '/token-help')
+    for (const name of ['How do I get a token?', 'Show me how']) {
+      const link = screen.getByRole('link', { name })
+      expect(link).toHaveAttribute('href', '/token-help')
+      expect(link).toHaveAttribute('target', '_blank')
+      expect(link).toHaveAttribute('rel', 'noreferrer')
+    }
   })
 
   it('credits the author and links the project in the footer', () => {

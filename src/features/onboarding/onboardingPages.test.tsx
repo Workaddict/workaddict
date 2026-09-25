@@ -91,10 +91,8 @@ describe('start page', () => {
       'href',
       expect.stringContaining('name=Workaddict'),
     )
-    expect(within(help).getAllByRole('link', { name: /Back to sign-in/ })[0]).toHaveAttribute(
-      'href',
-      '/',
-    )
+    expect(within(help).getByRole('link', { name: /Back to sign-in/ })).toHaveAttribute('href', '/')
+    expect(within(help).getByRole('button', { name: 'Back to sign-in' })).toBeInTheDocument()
   })
 })
 

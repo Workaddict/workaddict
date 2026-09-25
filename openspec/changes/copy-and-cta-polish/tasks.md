@@ -43,4 +43,4 @@
 
 - [x] 7.1 Keep the intro top-aligned and sticky next to the sign-in card on wide screens.
 - [x] 7.2 Move the token help out of the `<details>` in the sign-in card into `TokenHelpPage` at `#/token-help`, with a back link and a "Back to sign-in" button.
-- [x] 7.3 Link "How do I get a token?" (card) and "Show me how" (step 2) to the new page; update tests.
+- [x] 7.3 Link "How do I get a token?" (card) and "Show me how" (step 2) to the new page in a new tab (↗); "Back to sign-in" closes the tab; update tests.

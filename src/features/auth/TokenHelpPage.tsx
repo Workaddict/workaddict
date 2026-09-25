@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { SiteFooter } from '../../components/SiteFooter'
 import { useI18n } from '../../i18n'
 import { githubLinks } from '../onboarding/githubLinks'
@@ -9,6 +9,14 @@ import { PublicHeader } from './PublicHeader'
 /** Logged-out page that explains how to create a token, linked from the sign-in card. */
 export function TokenHelpPage() {
   const { t } = useI18n()
+  const navigate = useNavigate()
+
+  // The page opens in its own tab from the sign-in card: close it to get back there. Browsers may
+  // refuse to close a tab that was opened directly, so fall back to the start page.
+  const done = () => {
+    window.close()
+    window.setTimeout(() => navigate('/'), 200)
+  }
 
   useEffect(() => {
     document.documentElement.scrollTop = 0
@@ -47,9 +55,9 @@ export function TokenHelpPage() {
         </section>
 
         <p className="muted small">{t('login.help.security')}</p>
-        <Link to="/" className="btn btn-primary btn-lg help-done">
+        <button type="button" className="btn btn-primary btn-lg help-done" onClick={done}>
           {t('login.help.back')}
-        </Link>
+        </button>
       </main>
       <SiteFooter />
     </div>

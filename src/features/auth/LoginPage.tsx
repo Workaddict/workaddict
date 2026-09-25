@@ -98,8 +98,8 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
           }
           footer={() => (
             <>
-              <Link to="/token-help" className="small">
-                {t('login.help.title')}
+              <Link to="/token-help" target="_blank" rel="noreferrer" className="small">
+                {t('login.help.title')} <span aria-hidden="true">↗</span>
               </Link>
 
               <p className="small">
