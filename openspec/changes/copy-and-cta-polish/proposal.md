@@ -38,6 +38,7 @@ No behavior changes to sign-in, the timer, roles, or data. Role keys, the Englis
 ### Modified Capabilities
 - `landing-page`: intro headline text, hero button labels, sign-in card without its own demo button, sign-in link in the "How it works" steps.
 - `search-visibility`: the crawlable static headline scenario uses the new English headline.
+- `auth-and-workspace`: the token help moves from a dropdown in the sign-in card to its own page `#/token-help`.
 - `app-shell`: new requirement for consistent UI terminology in German (Label, Owner, Teamleitung) across all pages.
 
 ## Impact

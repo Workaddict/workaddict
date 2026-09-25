@@ -7,6 +7,7 @@ import { CopyText } from '../../components/CopyText'
 import { FakeGitHub } from '../../storage/github/fakeGitHub'
 import { AuthContext } from '../auth/AuthContext'
 import { LoginPage } from '../auth/LoginPage'
+import { TokenHelpPage } from '../auth/TokenHelpPage'
 import { JoinPage } from './JoinPage'
 import { SetupPage } from './SetupPage'
 
@@ -20,6 +21,7 @@ function renderAt(path: string) {
           <Routes>
             <Route path="setup" element={<SetupPage />} />
             <Route path="join" element={<JoinPage />} />
+            <Route path="token-help" element={<TokenHelpPage />} />
             <Route path="*" element={<LoginPage />} />
           </Routes>
         </MemoryRouter>
@@ -74,9 +76,12 @@ describe('start page', () => {
     expect(within(steps).getByText(/Got an invite link/)).toBeInTheDocument()
   })
 
-  it('explains order, owner and approval in the token help', () => {
-    renderAt('/')
-    const help = screen.getByText('How do I get a token?').closest('details')!
+  it('explains order, owner and approval on the token help page', () => {
+    renderAt('/token-help')
+    expect(
+      screen.getByRole('heading', { level: 1, name: 'How do I get a token?' }),
+    ).toBeInTheDocument()
+    const help = screen.getByRole('main')
     expect(
       within(help).getByText(/created before you had access will not work/),
     ).toBeInTheDocument()
@@ -85,6 +90,10 @@ describe('start page', () => {
     expect(within(help).getByRole('link', { name: /Open the token form/ })).toHaveAttribute(
       'href',
       expect.stringContaining('name=Workaddict'),
+    )
+    expect(within(help).getAllByRole('link', { name: /Back to sign-in/ })[0]).toHaveAttribute(
+      'href',
+      '/',
     )
   })
 })

@@ -37,13 +37,7 @@ export function Highlights() {
   )
 }
 
-export function HowItWorks({
-  onTokenHelp,
-  onSignIn,
-}: {
-  onTokenHelp: () => void
-  onSignIn: () => void
-}) {
+export function HowItWorks({ onSignIn }: { onSignIn: () => void }) {
   const { t } = useI18n()
   return (
     <section className="landing-section" aria-labelledby="landing-steps">
@@ -63,9 +57,9 @@ export function HowItWorks({
                 </Link>
               )}
               {n === 2 && (
-                <button type="button" className="link-btn step-link" onClick={onTokenHelp}>
+                <Link to="/token-help" className="step-link">
                   {t('landing.step2Link')}
-                </button>
+                </Link>
               )}
               {n === 3 && (
                 <button type="button" className="link-btn step-link" onClick={onSignIn}>

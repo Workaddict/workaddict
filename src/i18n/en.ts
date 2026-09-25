@@ -70,6 +70,7 @@ const en = {
     },
     help: {
       title: 'How do I get a token?',
+      back: 'Back to sign-in',
       intro:
         'The app talks to GitHub directly from your browser, using a personal access token that only you know.',
       orderTitle: 'Before you start',

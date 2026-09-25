@@ -1256,6 +1256,18 @@ button.entry-duration,
 .steps-note {
   margin-top: 16px;
 }
+.help-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 18px;
+}
+.help-section h2 {
+  font-size: 1.05rem;
+}
+.help-done {
+  align-self: flex-start;
+}
 
 /* ---------- Onboarding (setup wizard, join flow, sign-in diagnosis) ---------- */
 a.btn {

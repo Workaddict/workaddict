@@ -62,12 +62,14 @@ describe('landing page', () => {
     expect(within(steps).getAllByRole('listitem')).toHaveLength(3)
   })
 
-  it('opens the token help from the how-it-works steps', () => {
+  it('links the token help page from the sign-in card and the steps', () => {
     renderLanding()
-    const help = screen.getByText('How do I get a token?').closest('details')!
-    expect(help.open).toBe(false)
-    fireEvent.click(screen.getByRole('button', { name: 'Show me how' }))
-    expect(help.open).toBe(true)
+    expect(screen.queryByRole('group')).toBeNull()
+    expect(screen.getByRole('link', { name: 'How do I get a token?' })).toHaveAttribute(
+      'href',
+      '/token-help',
+    )
+    expect(screen.getByRole('link', { name: 'Show me how' })).toHaveAttribute('href', '/token-help')
   })
 
   it('credits the author and links the project in the footer', () => {

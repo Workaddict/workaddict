@@ -75,6 +75,7 @@ const de: Resources = {
     },
     help: {
       title: 'Wie bekomme ich ein Token?',
+      back: 'Zurück zur Anmeldung',
       intro:
         'Die App verbindet sich direkt aus deinem Browser mit GitHub. Dafür nutzt sie ein persönliches Zugriffstoken, das nur du kennst.',
       orderTitle: 'Bevor du anfängst',

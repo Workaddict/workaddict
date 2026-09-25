@@ -2,6 +2,7 @@ import { HashRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Spinner } from '../components/bits'
 import { useAuth } from '../features/auth/AuthContext'
 import { LoginPage } from '../features/auth/LoginPage'
+import { TokenHelpPage } from '../features/auth/TokenHelpPage'
 import { JoinPage } from '../features/onboarding/JoinPage'
 import { SetupPage } from '../features/onboarding/SetupPage'
 import { TrackerPage } from '../features/tracker/TrackerPage'
@@ -26,6 +27,7 @@ export function App() {
         <Routes>
           <Route path="setup" element={<SetupPage />} />
           <Route path="join" element={<JoinPage />} />
+          <Route path="token-help" element={<TokenHelpPage />} />
           <Route path="*" element={<LoginPage />} />
         </Routes>
       ) : (

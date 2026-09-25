@@ -38,3 +38,9 @@
 - [x] 6.1 Update tests that assert on changed strings (`TeamRoles.test.tsx`, landing/login tests, demo button queries that expect two buttons), and add a test for the step 3 sign-in link focus.
 - [x] 6.2 Run `npm test`, `npm run lint`, `npm run build`. The headline sync test must pass.
 - [x] 6.3 Check the start page in the browser in DE and EN, light and dark, at 360 px and 1280 px: no horizontal scroll, one demo button, link styles alike.
+
+## 7. Token help as its own page
+
+- [x] 7.1 Keep the intro top-aligned and sticky next to the sign-in card on wide screens.
+- [x] 7.2 Move the token help out of the `<details>` in the sign-in card into `TokenHelpPage` at `#/token-help`, with a back link and a "Back to sign-in" button.
+- [x] 7.3 Link "How do I get a token?" (card) and "Show me how" (step 2) to the new page; update tests.

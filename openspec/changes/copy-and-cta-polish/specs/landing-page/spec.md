@@ -27,16 +27,16 @@ The logged-out start page SHALL show, next to the sign-in form on wide screens a
 - **WHEN** a visitor opens the start page on a 1280 px wide screen
 - **THEN** the intro and the sign-in form are shown side by side and the form is visible without scrolling
 
-#### Scenario: Token help keeps the intro in view
-- **WHEN** a visitor on a 1280 px wide screen opens "How do I get a token?" and the sign-in card grows taller than the screen
-- **THEN** the intro stays aligned with the top of the card instead of moving down to its middle, and stays visible while the visitor scrolls through the help
+#### Scenario: Tall sign-in card keeps the intro in view
+- **WHEN** a visitor on a 1280 px wide screen gets a sign-in diagnosis that makes the sign-in card taller than the screen
+- **THEN** the intro stays aligned with the top of the card instead of moving down to its middle, and stays visible while the visitor scrolls
 
 ### Requirement: How it works steps
-Below the highlights, the start page SHALL explain the setup in three numbered steps: create a private GitHub repository, create a fine-grained token for it, and sign in so the app sets up the repository. Step 1 SHALL offer a link that opens the setup wizard, step 2 SHALL offer a link that opens the existing token help, and step 3 SHALL offer a "Go to sign-in" link that scrolls the sign-in form into view and focuses its first field. All three step links SHALL look alike. Below the steps, a separate note SHALL tell members who received an invite link to open that link.
+Below the highlights, the start page SHALL explain the setup in three numbered steps: create a private GitHub repository, create a fine-grained token for it, and sign in so the app sets up the repository. Step 1 SHALL offer a link that opens the setup wizard, step 2 SHALL offer a link that opens the token help page at `#/token-help`, and step 3 SHALL offer a "Go to sign-in" link that scrolls the sign-in form into view and focuses its first field. All three step links SHALL look alike. Below the steps, a separate note SHALL tell members who received an invite link to open that link.
 
 #### Scenario: Open token help from steps
 - **WHEN** the visitor clicks the token help link in the "How it works" steps
-- **THEN** the token help in the sign-in form is expanded and scrolled into view
+- **THEN** the token help page opens at `#/token-help`
 
 #### Scenario: Open setup wizard from steps
 - **WHEN** the visitor clicks the setup wizard link in the "How it works" steps
@@ -47,7 +47,7 @@ Below the highlights, the start page SHALL explain the setup in three numbered s
 - **THEN** the sign-in form is scrolled into view and its first field has focus
 
 ### Requirement: Unchanged sign-in behavior
-The sign-in form on the start page SHALL keep its fields, validation, classic-token warning, remember-me option, and session-expired and offline banners as before. Its heading SHALL address returning users ("Already set up? Sign in"). The form SHALL NOT repeat the demo button or an "or" divider, since the intro already offers the demo. Its setup link SHALL address visitors without a data repository ("No data repository yet? Start the setup"). Error messages and the token help MAY change as defined by the auth-and-workspace capability.
+The sign-in form on the start page SHALL keep its fields, validation, classic-token warning, remember-me option, and session-expired and offline banners as before. Its heading SHALL address returning users ("Already set up? Sign in"). The form SHALL NOT repeat the demo button or an "or" divider, since the intro already offers the demo. Its setup link SHALL address visitors without a data repository ("No data repository yet? Start the setup"). The token help SHALL NOT be expanded inside the card; the card SHALL instead link to the token help page at `#/token-help`, so the card keeps its size. Error messages and the token help MAY change as defined by the auth-and-workspace capability.
 
 #### Scenario: Sign in from start page
 - **WHEN** a visitor enters a valid repository and token in the form on the start page and submits
@@ -56,6 +56,10 @@ The sign-in form on the start page SHALL keep its fields, validation, classic-to
 #### Scenario: Session expired banner
 - **WHEN** the start page opens because the session expired
 - **THEN** the "session expired" banner is shown inside the sign-in form
+
+#### Scenario: Token help link in the card
+- **WHEN** the visitor clicks "How do I get a token?" in the sign-in card
+- **THEN** the token help page opens and the start page layout does not change
 
 #### Scenario: Single demo entry point
 - **WHEN** a visitor views the start page

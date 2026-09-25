@@ -1,11 +1,8 @@
-import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { REPO_URL } from '../../app/about'
 import { Icon } from '../../components/Icon'
 import { SiteFooter } from '../../components/SiteFooter'
 import { useI18n } from '../../i18n'
-import { githubLinks } from '../onboarding/githubLinks'
-import { TokenChecklist } from '../onboarding/parts'
 import { useAuth } from './AuthContext'
 import { Highlights, HowItWorks } from './Landing'
 import { PublicHeader } from './PublicHeader'
@@ -19,24 +16,12 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
 
   const reason = state.status === 'loggedOut' ? state.reason : undefined
 
-  const [helpOpen, setHelpOpen] = useState(false)
-  const helpRef = useRef<HTMLDetailsElement>(null)
-
   const startDemo = () => void login({ mode: 'demo' }, false)
-
-  const scrollIntoView = (el: Element | null | undefined) => {
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    el?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
-  }
-
-  const showTokenHelp = () => {
-    setHelpOpen(true)
-    scrollIntoView(helpRef.current)
-  }
 
   const showSignIn = () => {
     const form = document.getElementById(SIGN_IN_ID)
-    scrollIntoView(form)
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+    form?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
     form?.querySelector<HTMLInputElement>('input:not([readonly])')?.focus({ preventScroll: true })
   }
 
@@ -113,36 +98,9 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
           }
           footer={() => (
             <>
-              <details
-                ref={helpRef}
-                open={helpOpen}
-                onToggle={(e) => setHelpOpen(e.currentTarget.open)}
-              >
-                <summary>{t('login.help.title')}</summary>
-                <p style={{ marginTop: 8 }}>{t('login.help.intro')}</p>
-                <p style={{ marginTop: 10 }}>
-                  <strong>{t('login.help.orderTitle')}</strong>
-                </p>
-                <p>{t('login.help.order')}</p>
-                <p style={{ marginTop: 10 }}>
-                  <strong>{t('login.help.fineTitle')}</strong>
-                </p>
-                <TokenChecklist />
-                <p style={{ marginTop: 10 }}>{t('login.help.approval')}</p>
-                <p style={{ marginTop: 12 }}>
-                  <strong>{t('login.help.classicTitle')}</strong>
-                </p>
-                <p>{t('login.help.classicText')}</p>
-                <div className="banner banner-warning" style={{ margin: '8px 0' }}>
-                  {t('login.help.classicWarning')}
-                </div>
-                <a href={githubLinks.classicToken()} target="_blank" rel="noreferrer">
-                  {t('login.help.openClassic')} ↗
-                </a>
-                <p className="muted" style={{ marginTop: 12 }}>
-                  {t('login.help.security')}
-                </p>
-              </details>
+              <Link to="/token-help" className="small">
+                {t('login.help.title')}
+              </Link>
 
               <p className="small">
                 {t('login.setupPrompt')} <Link to="/setup">{t('login.setupLink')}</Link>
@@ -153,7 +111,7 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
       </div>
 
       <Highlights />
-      <HowItWorks onTokenHelp={showTokenHelp} onSignIn={showSignIn} />
+      <HowItWorks onSignIn={showSignIn} />
       <SiteFooter />
     </div>
   )
