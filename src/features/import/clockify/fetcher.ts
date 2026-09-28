@@ -89,7 +89,8 @@ export class ClockifyFetcher {
   }
 
   result(): ClockifyRaw {
-    const entries: Record<string, ClockifyTimeEntry[]> = {}
+    // Null prototype so a user id of "__proto__" stays an own key instead of overwriting the prototype.
+    const entries = Object.create(null) as Record<string, ClockifyTimeEntry[]>
     const noAccess: string[] = []
     for (const p of this.progress.values()) {
       if (p.status === 'done') entries[p.userId] = p.entries.items

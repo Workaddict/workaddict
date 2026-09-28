@@ -41,7 +41,8 @@ export function SignInForm({
   const [repoLocked, setRepoLocked] = useState(
     lockRepo && initialRepo !== '' && (resume?.repo ?? initialRepo) === initialRepo,
   )
-  const [remember, setRemember] = useState(resume?.remember ?? true)
+  // Opt-in: persisting the token is the riskier choice, so a fresh sign-in must ask for it.
+  const [remember, setRemember] = useState(resume?.remember ?? false)
   const { submit: signIn, busy } = useSignIn()
   const formRef = useRef<HTMLFormElement>(null)
 
