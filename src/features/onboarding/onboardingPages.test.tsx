@@ -196,7 +196,7 @@ describe('sign-in failure', () => {
     await waitFor(() => expect(login).toHaveBeenCalled())
     expect(login).toHaveBeenCalledWith(
       expect.objectContaining({ token: 'github_pat_anna', repo: 'my-team/time-data' }),
-      true,
+      false,
     )
   })
 
@@ -261,7 +261,7 @@ describe('sign-in failure', () => {
         repo: 'my-team/time-data',
         ownerType: 'Organization',
       }),
-      true,
+      false,
     ])
   })
 
