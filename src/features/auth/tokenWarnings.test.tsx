@@ -9,11 +9,12 @@ import SettingsPage from '../settings/SettingsPage'
 import { AuthContext, type AuthState } from './AuthContext'
 import { LoginPage } from './LoginPage'
 import { tokenKind, type Session } from './session'
+import { fakeAuth } from '../../test/fakeAuth'
 
 const CLASSIC_WARNING = /This is a classic token/
 
 function renderWith(state: AuthState, ui: React.ReactNode) {
-  const auth = { state, login: async () => {}, logout: async () => {} }
+  const auth = fakeAuth(state)
   return render(
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider value={auth}>
@@ -60,9 +61,12 @@ describe('login page token warnings', () => {
     expect(screen.queryByText(CLASSIC_WARNING)).toBeNull()
   })
 
-  it('explains that "Remember me" is for personal devices', () => {
+  it('explains that saving a profile is for personal devices', () => {
     renderWith({ status: 'loggedOut' }, <LoginPage />)
-    expect(screen.getByText(/Use it only on your own device/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Save as a workspace on this device')).toBeChecked()
+    expect(
+      screen.getByText(/encrypted with your passphrase.*only on your own device/),
+    ).toBeInTheDocument()
   })
 })
 

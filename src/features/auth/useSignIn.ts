@@ -1,15 +1,22 @@
 import { useCallback, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { checkLogin } from '../../storage'
-import { useAuth } from './AuthContext'
+import { useAuth, type NewVault } from './AuthContext'
 import { signInAttempt, type LoginFailure, type SignInFrom } from './signInAttempt'
 
 export interface SignInInput {
   token: string
   repo: string
-  remember: boolean
+  save: boolean
   from: SignInFrom
+  profileId?: string
+  reused?: boolean
+  newVault?: NewVault
 }
+
+/** Flows that always end in a saved profile. */
+export const savesProfile = (input: Pick<SignInInput, 'save' | 'from'>) =>
+  input.save || input.from === 'add' || input.from === 'profile'
 
 /**
  * The fix page for a failed sign-in. Only non-secret facts go into the URL: the error, the entered
@@ -25,8 +32,9 @@ export function fixPath(input: Pick<SignInInput, 'repo' | 'from'>, failure: Logi
 }
 
 /**
- * Checks the token and repository and signs in. On failure the attempt is kept in memory and the
- * app moves to the fix page for that error.
+ * Checks the token and repository and signs in (or adds the profile, or replaces its token). On
+ * failure the attempt is kept in memory and the app moves to the fix page for that error; a
+ * signed-in profile stays signed in.
  */
 export function useSignIn() {
   const { login } = useAuth()
@@ -49,9 +57,16 @@ export function useSignIn() {
               ...(res.scopes ? { scopes: res.scopes } : {}),
               ...(res.ownerType ? { ownerType: res.ownerType } : {}),
             },
-            input.remember,
+            savesProfile(input)
+              ? {
+                  login: res.user.login,
+                  replaceProfileId: input.from === 'profile' ? input.profileId : undefined,
+                  newVault: input.newVault,
+                }
+              : false,
           )
           signInAttempt.clear()
+          navigate('/', { replace: true })
           return
         }
         failure = res

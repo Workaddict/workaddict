@@ -38,7 +38,7 @@ async function setup(opts: {
     collaborators: [alice],
     admins: ['alice'],
   })
-  if (opts.startedHere !== false) recordTimerStart('t1')
+  if (opts.startedHere !== false) recordTimerStart('team/time-data', 't1')
   await renderWithSession(
     <StopOnClosePrompt presence={Promise.resolve(opts.presence)} />,
     adapter,
@@ -76,7 +76,7 @@ describe('stop on page close', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Keep running' }))
     expect(screen.queryByRole('dialog')).toBeNull()
     expect(await adapter.getTimer()).not.toBeNull()
-    expect(readTimerDevice()).toEqual({ timerId: 't1', keep: true })
+    expect(readTimerDevice('team/time-data')).toEqual({ timerId: 't1', keep: true })
   })
 
   it('stops now', async () => {

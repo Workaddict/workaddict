@@ -9,19 +9,23 @@ import { ownerMessage } from '../onboarding/messages'
 import { joinTarget } from '../onboarding/names'
 import { GitHubLink, TokenChecklist } from '../onboarding/parts'
 import { fixSteps, needsOwner, parseLoginError, setupStepFor } from './fixSteps'
+import { useAuth } from './AuthContext'
 import { PublicHeader } from './PublicHeader'
 import { tokenKind } from './session'
 import { signInAttempt, type SignInFrom } from './signInAttempt'
 import { useSignIn } from './useSignIn'
 
 function parseFrom(value: string | null): SignInFrom {
-  return value === 'setup' || value === 'join' ? value : 'start'
+  return value === 'setup' || value === 'join' || value === 'add' || value === 'profile'
+    ? value
+    : 'start'
 }
 
 /**
- * Logged-out page for one failed sign-in (`#/fix?e=…&repo=…&from=…`): what went wrong, the steps
- * the member can take, a message for the owner where one has to act, and a retry. Nothing else, so
- * the right button is easy to find.
+ * Page for one failed sign-in (`#/fix?e=…&repo=…&from=…`): what went wrong, the steps the member
+ * can take, a message for the owner where one has to act, and a retry. Nothing else, so the right
+ * button is easy to find. Also reachable while signed in, for adding a project or replacing a
+ * rejected token; the current profile then stays signed in.
  */
 export function FixPage() {
   const { t, time } = useI18n()
@@ -31,6 +35,7 @@ export function FixPage() {
   const target = joinTarget(rawRepo)
   const from = parseFrom(params.get('from'))
   const { submit, busy } = useSignIn()
+  const signedIn = useAuth().state.status === 'ready'
   const [checkedAt, setCheckedAt] = useState<Date | null>(null)
 
   // The attempt is only in memory while the tab lives; after a reload the page shows the steps
@@ -75,14 +80,22 @@ export function FixPage() {
 
   // From the setup wizard, go back to the step that most likely needs to be redone.
   const setupStep = from === 'setup' ? setupStepFor(error) : null
-  const back =
+  const repoParam = target ? `${target.owner}/${target.repo}` : ''
+  const change =
     from === 'setup'
       ? setupStep
         ? `/setup?step=${setupStep}`
         : '/setup'
       : from === 'join' && target
-        ? `/join?repo=${target.owner}/${target.repo}`
-        : '/'
+        ? `/join?repo=${repoParam}`
+        : from === 'add'
+          ? `/add-project${target ? `?repo=${repoParam}` : ''}`
+          : from === 'profile' && target
+            ? `/replace-token?repo=${repoParam}`
+            : '/'
+  // Signed in, "Back" returns to the tracker of the current profile.
+  const back = signedIn ? '/' : change
+  const backLabel = signedIn ? t('profiles.back') : t('fix.back')
 
   useEffect(() => {
     document.documentElement.scrollTop = 0
@@ -90,8 +103,8 @@ export function FixPage() {
 
   const retry = async () => {
     if (!attempt) return
-    const { token, repo, remember } = attempt
-    await submit({ token, repo, remember, from }, { replace: true })
+    const { token, repo, save, profileId, reused, newVault } = attempt
+    await submit({ token, repo, save, from, profileId, reused, newVault }, { replace: true })
     setCheckedAt(new Date())
   }
 
@@ -100,7 +113,7 @@ export function FixPage() {
       <PublicHeader />
       <main className="ob-main">
         <Link to={back} state={{ resume: true }} className="ob-back">
-          ← {t('fix.back')}
+          ← {backLabel}
         </Link>
         <div className="stack" style={{ gap: 6 }}>
           <span className="fix-eyebrow">{t('fix.title')}</span>
@@ -134,7 +147,7 @@ export function FixPage() {
         {setupStep && (
           <p className="banner banner-info fix-setup-step">
             {t('fix.setupStep', { title: t(`onboarding.setup.${setupStep}Title`) })}{' '}
-            <Link to={back}>{t('fix.setupStepLink')}</Link>
+            <Link to={change}>{t('fix.setupStepLink')}</Link>
           </p>
         )}
 
@@ -158,13 +171,17 @@ export function FixPage() {
                 <Icon name="github" size={18} />
                 {busy ? t('login.checking') : t('fix.retry')}
               </button>
-              <Link to={back} state={{ resume: true }} className="btn btn-lg">
+              <Link to={change} state={{ resume: true }} className="btn btn-lg">
                 {t('fix.change')}
               </Link>
             </>
+          ) : from === 'profile' && target ? (
+            <Link to={change} className="btn btn-primary btn-lg">
+              {t('profiles.replaceToken')}
+            </Link>
           ) : (
             <Link to={back} state={{ resume: true }} className="btn btn-primary btn-lg">
-              {t('fix.back')}
+              {backLabel}
             </Link>
           )}
         </div>

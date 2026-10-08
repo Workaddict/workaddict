@@ -6,7 +6,13 @@ import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
 import { useMyTimer, useTimers } from '../data/hooks'
 import { presenceSnapshot, type PresenceSnapshot } from './presence'
-import { closedTimerSince, keepTimerRunning, readTimerDevice, useStopOnClose } from './stopOnClose'
+import {
+  closedTimerSince,
+  keepTimerRunning,
+  readTimerDevice,
+  timerDeviceKey,
+  useStopOnClose,
+} from './stopOnClose'
 import { useTimerActions } from './useTimerActions'
 
 /** Snapshots already checked: the question is asked at most once per page load. */
@@ -39,7 +45,7 @@ export function StopOnClosePrompt({
           demo: session.mode === 'demo',
           readOnly: adapter.readOnly,
           timer,
-          device: readTimerDevice(),
+          device: readTimerDevice(timerDeviceKey(session)),
           lastAlive: p.lastAlive,
           othersOpen: p.othersOpen,
           reloaded: p.reloaded,
@@ -47,7 +53,7 @@ export function StopOnClosePrompt({
         }),
       ),
     )
-  }, [presence, loaded, enabled, session.mode, adapter.readOnly, timer])
+  }, [presence, loaded, enabled, session, adapter.readOnly, timer])
 
   if (since === null || !timer) return null
 
@@ -69,7 +75,7 @@ export function StopOnClosePrompt({
           className="btn"
           data-autofocus-skip
           onClick={() => {
-            keepTimerRunning(timer.id)
+            keepTimerRunning(timerDeviceKey(session), timer.id)
             close()
           }}
         >

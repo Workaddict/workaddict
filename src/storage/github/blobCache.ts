@@ -18,7 +18,7 @@ function store(): UseStore {
 
 /**
  * With `persist: false` the cache lives in memory only, so no repository content is left on
- * disk after the session (used when the user did not choose "Remember me").
+ * disk after the session (used unless the vault stays unlocked on this device).
  */
 export function createBlobCache(opts: { persist?: boolean } = {}): BlobCache {
   const persist = opts.persist ?? true
@@ -56,7 +56,7 @@ export function createBlobCache(opts: { persist?: boolean } = {}): BlobCache {
   }
 }
 
-/** Removes all cached repository data from this browser (on logout, and on startup without a remembered session). */
+/** Removes all cached repository data from this browser (on sign-out, and on startup without a stored key). */
 export async function clearBlobCache(): Promise<void> {
   try {
     await clear(store())

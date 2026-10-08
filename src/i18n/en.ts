@@ -33,7 +33,7 @@ const en = {
     stats: 'Statistics',
     workGroups: 'Projects & Tags',
     settings: 'Settings',
-    logout: 'Log out',
+    logout: 'Sign out',
   },
   login: {
     title: 'Already set up? Sign in',
@@ -42,9 +42,9 @@ const en = {
     tokenPlaceholder: 'github_pat_…',
     repo: 'Data repository',
     repoPlaceholder: 'owner/name',
-    remember: 'Remember me on this device',
-    rememberHint:
-      'Saves the token and cached data on this device. Use it only on your own device, not on shared computers.',
+    saveProfile: 'Save as a workspace on this device',
+    saveProfileHint:
+      'Saves the token on this device, encrypted with your passphrase, so you can switch between workspaces. Use it only on your own device, not on shared computers.',
     classicToken:
       'This is a classic token. It usually grants access to all of your repositories. A fine-grained token limited to the data repository is safer.',
     classicTokenLink: 'Create a fine-grained token',
@@ -88,6 +88,125 @@ const en = {
       openClassic: 'Create a classic token on GitHub',
       security: 'Your token is stored only in this browser and is sent only to api.github.com.',
     },
+  },
+  profiles: {
+    title: 'Workspaces',
+    demo: 'Demo',
+    rename: 'Rename',
+    name: 'Workspace name',
+    nameHint: 'Shown in the top bar and the switcher. Leave empty for {{repo}}.',
+    renamed: 'Workspace renamed.',
+    switcher: 'Workspace: {{name}}. Switch workspace',
+    add: 'Add workspace',
+    addTitle: 'Add a workspace',
+    addIntro:
+      'Enter the data repository of another team or client. It is saved as a workspace on this device, so you can switch to it with one click.',
+    addSubmit: 'Add workspace',
+    back: 'Back',
+    current: 'Current',
+    none: 'No saved workspaces yet.',
+    pickerTitle: 'Choose a workspace',
+    signInWithoutSaving: 'Sign in without saving',
+    lock: 'Lock',
+    remove: 'Remove',
+    removeThis: 'Remove this workspace',
+    removeConfirm:
+      'Remove the workspace {{repo}} from this device? Its token is deleted here when no other workspace uses it. Nothing changes on GitHub.',
+    switchFailed: 'This workspace could not be opened. Check your connection and try again.',
+    openFailed: 'Could not be opened',
+    timerRunning: 'Timer running',
+    tokenRejected: 'Token rejected',
+    tokenRejectedNotice:
+      'GitHub rejected the saved token. Replace it to continue with the affected workspaces.',
+    exists: 'You already have a workspace for {{repo}}.',
+    openExisting: 'Open it',
+    replaceToken: 'Replace token for this workspace',
+    replaceTitle: 'Replace the token for {{repo}}',
+    replaceIntro: 'Enter a new token. It replaces the stored one for every workspace that used it.',
+    replaceSubmit: 'Replace token',
+    noProfile: 'There is no saved workspace for {{repo}} on this device.',
+    reuse: 'Use your token for {{owner}}',
+    reuseClassic: 'Use your classic token ({{login}})',
+    newToken: 'Enter a new token',
+    passphrase: 'Passphrase',
+    newPassphrase: 'New passphrase',
+    confirmPassphrase: 'Repeat the passphrase',
+    currentPassphrase: 'Current passphrase',
+    minLength: 'At least {{count}} characters. A few words are easy to remember.',
+    strength: {
+      weak: 'weak',
+      fair: 'fair',
+      strong: 'strong',
+    },
+    errors: {
+      tooShort: 'The passphrase needs at least {{count}} characters.',
+      mismatch: 'The two passphrases do not match.',
+    },
+    noRecovery:
+      'The passphrase cannot be recovered. If you forget it, you have to enter your tokens again. Nothing on GitHub is lost.',
+    createTitle: 'Protect your workspaces with a passphrase',
+    createIntro:
+      'Your tokens are saved on this device, encrypted with a passphrase you choose. It never leaves this browser.',
+    unlockMode: 'When to ask for the passphrase',
+    mode: {
+      ask: 'Ask for the passphrase on every visit',
+      askHint: 'Open tabs share the unlocked state. After closing all tabs, the app asks again.',
+      stay: 'Stay unlocked on this device',
+      stayHint:
+        'Keeps a key in this browser that cannot be read out, so you are not asked again. Only for personal devices.',
+    },
+    working: 'Working…',
+    unlock: 'Unlock',
+    unlockTitle: 'Unlock your workspaces',
+    unlockIntro: 'Your saved workspaces are encrypted on this device. Enter your passphrase.',
+    unlockToSave: 'Unlock your workspaces to save this one.',
+    wrongPassphrase: 'Wrong passphrase',
+    forgot: 'Forgot passphrase?',
+    forgotText:
+      'The passphrase cannot be recovered. You can reset the workspaces on this device and sign in with your tokens again. Nothing changes on GitHub.',
+    reset: 'Reset workspaces',
+    resetConfirm:
+      'Delete all saved workspaces, tokens and cached data on this device? You have to enter your tokens again. Nothing changes on GitHub.',
+    forgetAll: 'Forget all workspaces on this device',
+    forgetHint:
+      'Removes every saved workspace and token, the stored key and all cached data from this browser.',
+    forgetConfirm:
+      'Forget all workspaces on this device? Every open tab is signed out and you have to enter your tokens again. Nothing changes on GitHub.',
+    changePassphrase: 'Change passphrase',
+    changePassphraseExports: 'Files you exported earlier still need the old passphrase.',
+    passphraseChanged: 'Passphrase changed.',
+    export: 'Export workspaces',
+    exportTitle: 'Export workspaces',
+    exportWarning:
+      'The file contains your tokens, encrypted with your passphrase. Anyone with the file and the passphrase gets your access. Without the passphrase the file is useless, also to you.',
+    import: 'Import workspaces',
+    importTitle: 'Import workspaces',
+    importPrompt: 'Workspaces exported from another device?',
+    importIntro: 'Choose a file exported from Workaddict (workaddict-workspaces-….json).',
+    importFile: 'File',
+    importReplacesLocked:
+      'The imported file replaces the locked workspaces on this device and its passphrase becomes yours.',
+    filePassphrase: 'Passphrase of the file',
+    continue: 'Continue',
+    importPassphraseKept: 'The passphrase of the file becomes the passphrase on this device.',
+    importMergeIntro:
+      'The file holds {{count}} workspaces. New ones are added; your passphrase stays the same.',
+    importConflict: '{{repo}} has a different token in the file',
+    keepLocal: 'Keep this device’s token',
+    useImported: 'Use the imported token',
+    importErrors: {
+      format: 'This is not a Workaddict workspaces file.',
+      version: 'This file was made by a newer version of Workaddict. Update the app first.',
+      passphrase: 'Wrong passphrase for this file. Nothing was imported.',
+    },
+    migrationNotice:
+      'Your token is saved unencrypted on this device. Protect it with a passphrase and add more workspaces.',
+    protect: 'Protect with a passphrase and enable workspaces',
+    protectTitle: 'Protect your token',
+    protected: 'Your token is now encrypted on this device.',
+    tabOnlyHint:
+      'This session lasts for this tab only. Save it as a workspace to switch back later.',
+    saveCurrent: 'Save as a workspace',
   },
   // index.html has a static copy of this text for crawlers; update it when these strings change.
   landing: {

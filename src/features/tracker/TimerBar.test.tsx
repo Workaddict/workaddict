@@ -101,7 +101,9 @@ describe('starting a timer', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Start' }))
     await waitFor(async () => expect(await adapter.getTimer()).not.toBeNull())
     const timer = await adapter.getTimer()
-    await waitFor(() => expect(readTimerDevice()).toEqual({ timerId: timer!.id, keep: false }))
+    await waitFor(() =>
+      expect(readTimerDevice('demo')).toEqual({ timerId: timer!.id, keep: false }),
+    )
     localStorage.clear()
   })
 })

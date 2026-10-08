@@ -93,12 +93,29 @@ describe('device state', () => {
   })
 
   it('records the started timer and "Keep running"', () => {
-    expect(readTimerDevice()).toBeNull()
-    recordTimerStart('t1')
-    expect(readTimerDevice()).toEqual({ timerId: 't1', keep: false })
-    keepTimerRunning('t1')
-    expect(readTimerDevice()).toEqual({ timerId: 't1', keep: true })
-    recordTimerStart('t2')
-    expect(readTimerDevice()).toEqual({ timerId: 't2', keep: false })
+    const repo = 'acme/time-data'
+    expect(readTimerDevice(repo)).toBeNull()
+    recordTimerStart(repo, 't1')
+    expect(readTimerDevice(repo)).toEqual({ timerId: 't1', keep: false })
+    keepTimerRunning(repo, 't1')
+    expect(readTimerDevice(repo)).toEqual({ timerId: 't1', keep: true })
+    recordTimerStart(repo, 't2')
+    expect(readTimerDevice(repo)).toEqual({ timerId: 't2', keep: false })
+  })
+
+  it('tracks timers in two profiles separately', () => {
+    recordTimerStart('acme/time-data', 't1')
+    recordTimerStart('globex/hours', 't2')
+    expect(readTimerDevice('ACME/Time-Data')).toEqual({ timerId: 't1', keep: false })
+    expect(readTimerDevice('globex/hours')).toEqual({ timerId: 't2', keep: false })
+  })
+
+  it('migrates the single record of earlier versions to the first repository asking', () => {
+    localStorage.setItem('workaddict.timerDevice', JSON.stringify({ timerId: 't1', keep: true }))
+    expect(readTimerDevice('acme/time-data')).toEqual({ timerId: 't1', keep: true })
+    expect(JSON.parse(localStorage.getItem('workaddict.timerDevice')!)).toEqual({
+      'acme/time-data': { timerId: 't1', keep: true },
+    })
+    expect(readTimerDevice('globex/hours')).toBeNull()
   })
 })

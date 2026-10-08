@@ -45,9 +45,9 @@ const de: Resources = {
     tokenPlaceholder: 'github_pat_…',
     repo: 'Daten-Repository',
     repoPlaceholder: 'owner/name',
-    remember: 'Auf diesem Gerät angemeldet bleiben',
-    rememberHint:
-      'Speichert das Token und zwischengespeicherte Daten auf diesem Gerät. Nur auf dem eigenen Gerät verwenden, nicht auf gemeinsam genutzten Computern.',
+    saveProfile: 'Als Arbeitsbereich auf diesem Gerät speichern',
+    saveProfileHint:
+      'Speichert das Token auf diesem Gerät, verschlüsselt mit deiner Passphrase, damit du zwischen Arbeitsbereichen wechseln kannst. Nur auf dem eigenen Gerät verwenden, nicht auf gemeinsam genutzten Computern.',
     classicToken:
       'Das ist ein klassisches Token. Es hat meist Zugriff auf alle deine Repositories. Sicherer ist ein Fine-grained Token, das nur auf das Daten-Repository zugreifen kann.',
     classicTokenLink: 'Fine-grained Token erstellen',
@@ -94,6 +94,130 @@ const de: Resources = {
       security:
         'Dein Token wird nur in diesem Browser gespeichert und nur an api.github.com gesendet.',
     },
+  },
+  profiles: {
+    title: 'Arbeitsbereiche',
+    demo: 'Demo',
+    rename: 'Umbenennen',
+    name: 'Name des Arbeitsbereichs',
+    nameHint: 'Wird in der oberen Leiste und im Umschalter angezeigt. Leer lassen für {{repo}}.',
+    renamed: 'Arbeitsbereich umbenannt.',
+    switcher: 'Arbeitsbereich: {{name}}. Arbeitsbereich wechseln',
+    add: 'Arbeitsbereich hinzufügen',
+    addTitle: 'Arbeitsbereich hinzufügen',
+    addIntro:
+      'Gib das Daten-Repository eines anderen Teams oder Kunden ein. Es wird als Arbeitsbereich auf diesem Gerät gespeichert, damit du mit einem Klick wechseln kannst.',
+    addSubmit: 'Arbeitsbereich hinzufügen',
+    back: 'Zurück',
+    current: 'Aktuell',
+    none: 'Noch keine gespeicherten Arbeitsbereiche.',
+    pickerTitle: 'Arbeitsbereich wählen',
+    signInWithoutSaving: 'Ohne Speichern anmelden',
+    lock: 'Sperren',
+    remove: 'Entfernen',
+    removeThis: 'Diesen Arbeitsbereich entfernen',
+    removeConfirm:
+      'Arbeitsbereich {{repo}} von diesem Gerät entfernen? Sein Token wird hier gelöscht, wenn kein anderer Arbeitsbereich es nutzt. Auf GitHub ändert sich nichts.',
+    switchFailed:
+      'Dieser Arbeitsbereich konnte nicht geöffnet werden. Prüfe deine Verbindung und versuche es erneut.',
+    openFailed: 'Konnte nicht geöffnet werden',
+    timerRunning: 'Timer läuft',
+    tokenRejected: 'Token abgelehnt',
+    tokenRejectedNotice:
+      'GitHub hat das gespeicherte Token abgelehnt. Ersetze es, um mit den betroffenen Arbeitsbereichen weiterzuarbeiten.',
+    exists: 'Für {{repo}} gibt es schon einen Arbeitsbereich.',
+    openExisting: 'Öffnen',
+    replaceToken: 'Token für diesen Arbeitsbereich ersetzen',
+    replaceTitle: 'Token für {{repo}} ersetzen',
+    replaceIntro:
+      'Gib ein neues Token ein. Es ersetzt das gespeicherte für alle Arbeitsbereiche, die es genutzt haben.',
+    replaceSubmit: 'Token ersetzen',
+    noProfile: 'Für {{repo}} gibt es auf diesem Gerät keinen gespeicherten Arbeitsbereich.',
+    reuse: 'Dein Token für {{owner}} verwenden',
+    reuseClassic: 'Dein klassisches Token verwenden ({{login}})',
+    newToken: 'Neues Token eingeben',
+    passphrase: 'Passphrase',
+    newPassphrase: 'Neue Passphrase',
+    confirmPassphrase: 'Passphrase wiederholen',
+    currentPassphrase: 'Aktuelle Passphrase',
+    minLength: 'Mindestens {{count}} Zeichen. Ein paar Wörter merkt man sich leicht.',
+    strength: {
+      weak: 'schwach',
+      fair: 'mittel',
+      strong: 'stark',
+    },
+    errors: {
+      tooShort: 'Die Passphrase braucht mindestens {{count}} Zeichen.',
+      mismatch: 'Die beiden Passphrasen stimmen nicht überein.',
+    },
+    noRecovery:
+      'Die Passphrase lässt sich nicht wiederherstellen. Wenn du sie vergisst, musst du deine Tokens neu eingeben. Auf GitHub geht nichts verloren.',
+    createTitle: 'Arbeitsbereiche mit einer Passphrase schützen',
+    createIntro:
+      'Deine Tokens werden auf diesem Gerät gespeichert, verschlüsselt mit einer Passphrase, die du wählst. Sie verlässt diesen Browser nie.',
+    unlockMode: 'Wann nach der Passphrase gefragt wird',
+    mode: {
+      ask: 'Bei jedem Besuch nach der Passphrase fragen',
+      askHint:
+        'Offene Tabs teilen den entsperrten Zustand. Nachdem alle Tabs geschlossen sind, fragt die App erneut.',
+      stay: 'Auf diesem Gerät entsperrt bleiben',
+      stayHint:
+        'Speichert einen nicht auslesbaren Schlüssel in diesem Browser, damit du nicht erneut gefragt wirst. Nur für eigene Geräte.',
+    },
+    working: 'Einen Moment…',
+    unlock: 'Entsperren',
+    unlockTitle: 'Arbeitsbereiche entsperren',
+    unlockIntro:
+      'Deine gespeicherten Arbeitsbereiche sind auf diesem Gerät verschlüsselt. Gib deine Passphrase ein.',
+    unlockToSave: 'Entsperre deine Arbeitsbereiche, um diesen zu speichern.',
+    wrongPassphrase: 'Falsche Passphrase',
+    forgot: 'Passphrase vergessen?',
+    forgotText:
+      'Die Passphrase lässt sich nicht wiederherstellen. Du kannst die Arbeitsbereiche auf diesem Gerät zurücksetzen und dich mit deinen Tokens neu anmelden. Auf GitHub ändert sich nichts.',
+    reset: 'Arbeitsbereiche zurücksetzen',
+    resetConfirm:
+      'Alle gespeicherten Arbeitsbereiche, Tokens und zwischengespeicherten Daten auf diesem Gerät löschen? Du musst deine Tokens neu eingeben. Auf GitHub ändert sich nichts.',
+    forgetAll: 'Alle Arbeitsbereiche auf diesem Gerät vergessen',
+    forgetHint:
+      'Entfernt alle gespeicherten Arbeitsbereiche und Tokens, den gespeicherten Schlüssel und alle zwischengespeicherten Daten aus diesem Browser.',
+    forgetConfirm:
+      'Alle Arbeitsbereiche auf diesem Gerät vergessen? Alle offenen Tabs werden abgemeldet und du musst deine Tokens neu eingeben. Auf GitHub ändert sich nichts.',
+    changePassphrase: 'Passphrase ändern',
+    changePassphraseExports: 'Früher exportierte Dateien brauchen weiterhin die alte Passphrase.',
+    passphraseChanged: 'Passphrase geändert.',
+    export: 'Arbeitsbereiche exportieren',
+    exportTitle: 'Arbeitsbereiche exportieren',
+    exportWarning:
+      'Die Datei enthält deine Tokens, verschlüsselt mit deiner Passphrase. Wer Datei und Passphrase hat, bekommt deinen Zugriff. Ohne Passphrase ist die Datei nutzlos, auch für dich.',
+    import: 'Arbeitsbereiche importieren',
+    importTitle: 'Arbeitsbereiche importieren',
+    importPrompt: 'Arbeitsbereiche von einem anderen Gerät exportiert?',
+    importIntro: 'Wähle eine aus Workaddict exportierte Datei (workaddict-workspaces-….json).',
+    importFile: 'Datei',
+    importReplacesLocked:
+      'Die importierte Datei ersetzt die gesperrten Arbeitsbereiche auf diesem Gerät, und ihre Passphrase wird deine.',
+    filePassphrase: 'Passphrase der Datei',
+    continue: 'Weiter',
+    importPassphraseKept: 'Die Passphrase der Datei wird die Passphrase auf diesem Gerät.',
+    importMergeIntro:
+      'Die Datei enthält {{count}} Arbeitsbereiche. Neue werden hinzugefügt; deine Passphrase bleibt gleich.',
+    importConflict: '{{repo}} hat in der Datei ein anderes Token',
+    keepLocal: 'Token dieses Geräts behalten',
+    useImported: 'Importiertes Token verwenden',
+    importErrors: {
+      format: 'Das ist keine Workaddict-Arbeitsbereichsdatei.',
+      version:
+        'Diese Datei stammt von einer neueren Version von Workaddict. Aktualisiere zuerst die App.',
+      passphrase: 'Falsche Passphrase für diese Datei. Es wurde nichts importiert.',
+    },
+    migrationNotice:
+      'Dein Token ist unverschlüsselt auf diesem Gerät gespeichert. Schütze es mit einer Passphrase und füge weitere Arbeitsbereiche hinzu.',
+    protect: 'Mit Passphrase schützen und Arbeitsbereiche aktivieren',
+    protectTitle: 'Token schützen',
+    protected: 'Dein Token ist jetzt auf diesem Gerät verschlüsselt.',
+    tabOnlyHint:
+      'Diese Sitzung gilt nur für diesen Tab. Speichere sie als Arbeitsbereich, um später zurückzuwechseln.',
+    saveCurrent: 'Als Arbeitsbereich speichern',
   },
   landing: {
     headline: 'Kostenlose Zeiterfassung. Deine Daten bleiben bei dir.',

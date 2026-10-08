@@ -4,15 +4,23 @@
 TBD - created by archiving change build-time-tracker-mvp. Update Purpose after archive.
 ## Requirements
 ### Requirement: Date range filter
-The stats page SHALL provide preset ranges (today, this week, last week, last 2 weeks, this month, last month, this year, all time) and a custom from/to range, defaulting to this week, with weeks starting on Monday. "Last 2 weeks" SHALL cover Monday of last week through Sunday of this week. "All time" SHALL cover the start of the earliest entry through the end of today, or only today when there are no entries.
+The stats page SHALL provide preset ranges (today, this week, last week, last 14 days, this month, last month, this year, all time) and a custom from/to range, defaulting to this week, with weeks starting on Monday. "Last 14 days" SHALL cover the start of the day 13 days before today through the end of today in the effective time zone, so that it always contains exactly 14 calendar days ending today. All other presets SHALL remain calendar-aligned. "All time" SHALL cover the start of the earliest entry through the end of today, or only today when there are no entries.
 
 #### Scenario: Preset range
 - **WHEN** the user selects "Last month" on 2026-09-21
 - **THEN** stats cover 2026-08-01 through 2026-08-31 in local time
 
-#### Scenario: Last 2 weeks
-- **WHEN** the user selects "Last 2 weeks" on Monday 2026-10-05
-- **THEN** stats cover 2026-09-28 through 2026-10-11 in local time
+#### Scenario: Last 14 days
+- **WHEN** the user selects "Last 14 days" on Monday 2026-10-05
+- **THEN** stats cover 2026-09-22 through 2026-10-05 in local time and include no future days
+
+#### Scenario: Last 14 days follows the date
+- **WHEN** the user left "Last 14 days" selected on 2026-10-05 and returns in the same browser tab on 2026-10-06
+- **THEN** stats cover 2026-09-23 through 2026-10-06
+
+#### Scenario: Last week stays a calendar week
+- **WHEN** the user selects "Last week" on Monday 2026-10-05
+- **THEN** stats cover 2026-09-28 through 2026-10-04
 
 #### Scenario: All time
 - **WHEN** the user selects "All time" and the earliest entry started on 2024-03-14 09:00

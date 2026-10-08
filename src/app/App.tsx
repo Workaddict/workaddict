@@ -7,6 +7,7 @@ import { TokenHelpPage } from '../features/auth/TokenHelpPage'
 import { ApprovePage } from '../features/onboarding/ApprovePage'
 import { JoinPage } from '../features/onboarding/JoinPage'
 import { SetupPage } from '../features/onboarding/SetupPage'
+import { AddProjectPage, ReplaceTokenPage } from '../features/profiles/ProfilePages'
 import { TrackerPage } from '../features/tracker/TrackerPage'
 import { useI18n } from '../i18n'
 import { Layout } from './Layout'
@@ -33,12 +34,18 @@ export function App() {
           <Route path="token-help" element={<TokenHelpPage />} />
           <Route path="fix" element={<FixPage />} />
           <Route path="approve" element={<ApprovePage />} />
+          <Route path="add-project" element={<AddProjectPage />} />
+          <Route path="replace-token" element={<ReplaceTokenPage />} />
           <Route path="*" element={<LoginPage />} />
         </Routes>
       ) : (
         <Routes>
           {/* Owners open the link from a member while signed in; the page has no app chrome. */}
           <Route path="approve" element={<ApprovePage />} />
+          {/* Adding a project or replacing a token keeps the current profile signed in. */}
+          <Route path="add-project" element={<AddProjectPage />} />
+          <Route path="replace-token" element={<ReplaceTokenPage />} />
+          <Route path="fix" element={<FixPage />} />
           <Route
             element={
               <ZoneScope>

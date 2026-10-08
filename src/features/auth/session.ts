@@ -21,7 +21,13 @@ export function tokenKind(token: string): TokenKind {
   return 'other'
 }
 
+/**
+ * Tab-only sessions live in `sessionStorage`. Sessions remembered by earlier versions sit in
+ * `localStorage` in plaintext; they are only read (and deleted after migration), never written.
+ * Saved profiles live in the encrypted vault (`features/profiles`).
+ */
 const KEY = 'workaddict.session'
+const ACTIVE_PROFILE_KEY = 'workaddict.activeProfile'
 
 function parse(raw: string | null): Session | null {
   if (!raw) return null
@@ -43,26 +49,38 @@ function safe<T>(fn: () => T, fallback: T): T {
   }
 }
 
-/** Remembered sessions live in localStorage, others only for this tab in sessionStorage. */
-export function loadSession(): Session | null {
-  return (
-    parse(safe(() => sessionStorage.getItem(KEY), null)) ??
-    parse(safe(() => localStorage.getItem(KEY), null))
-  )
+export function loadTabSession(): Session | null {
+  return parse(safe(() => sessionStorage.getItem(KEY), null))
 }
 
-/** Whether a "Remember me" session is stored in this browser. */
-export function hasRememberedSession(): boolean {
-  return parse(safe(() => localStorage.getItem(KEY), null)) !== null
+export function saveTabSession(session: Session) {
+  safe(() => sessionStorage.setItem(KEY, JSON.stringify(session)), undefined)
 }
 
-export function saveSession(session: Session, remember: boolean) {
-  clearSession()
-  const raw = JSON.stringify(session)
-  safe(() => (remember ? localStorage : sessionStorage).setItem(KEY, raw), undefined)
-}
-
-export function clearSession() {
-  safe(() => localStorage.removeItem(KEY), undefined)
+export function clearTabSession() {
   safe(() => sessionStorage.removeItem(KEY), undefined)
+}
+
+/** A plaintext "Remember me" session from an earlier version (design D10). */
+export function loadLegacySession(): Session | null {
+  return parse(safe(() => localStorage.getItem(KEY), null))
+}
+
+export function clearLegacySession() {
+  safe(() => localStorage.removeItem(KEY), undefined)
+}
+
+/** The profile this tab shows; survives a reload of the tab, not a new tab. */
+export function getActiveProfile(): string | null {
+  return safe(() => sessionStorage.getItem(ACTIVE_PROFILE_KEY), null)
+}
+
+export function setActiveProfile(id: string | null) {
+  safe(
+    () =>
+      id === null
+        ? sessionStorage.removeItem(ACTIVE_PROFILE_KEY)
+        : sessionStorage.setItem(ACTIVE_PROFILE_KEY, id),
+    undefined,
+  )
 }

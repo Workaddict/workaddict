@@ -5,7 +5,7 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom'
 import '../../i18n'
 import { CopyText } from '../../components/CopyText'
 import { FakeGitHub } from '../../storage/github/fakeGitHub'
-import { AuthContext } from '../auth/AuthContext'
+import { AuthContext, type AuthContextValue } from '../auth/AuthContext'
 import { FixPage } from '../auth/FixPage'
 import { LoginPage } from '../auth/LoginPage'
 import { signInAttempt } from '../auth/signInAttempt'
@@ -14,10 +14,11 @@ import { ApprovePage } from './ApprovePage'
 import { JoinPage } from './JoinPage'
 import { forgetLookups } from './publicGitHub'
 import { SetupPage } from './SetupPage'
+import { fakeAuth } from '../../test/fakeAuth'
 
 function renderAt(path: string) {
-  const login = vi.fn(async () => {})
-  const auth = { state: { status: 'loggedOut' as const }, login, logout: async () => {} }
+  const login = vi.fn<AuthContextValue['login']>(async () => {})
+  const auth = fakeAuth({ status: 'loggedOut' }, { login })
   render(
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider value={auth}>
@@ -112,9 +113,11 @@ describe('sign-in failure', () => {
     vi.stubGlobal('fetch', gh.fetch)
   })
 
-  function signIn(repo: string, token = 'github_pat_anna') {
+  /** Signs in for this tab only unless `save` keeps "Save as a workspace on this device" checked. */
+  function signIn(repo: string, token = 'github_pat_anna', save = false) {
     fireEvent.change(screen.getByLabelText('Data repository'), { target: { value: repo } })
     fireEvent.change(screen.getByLabelText('GitHub token'), { target: { value: token } })
+    if (!save) fireEvent.click(screen.getByLabelText('Save as a workspace on this device'))
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
   }
 
@@ -196,7 +199,7 @@ describe('sign-in failure', () => {
     await waitFor(() => expect(login).toHaveBeenCalled())
     expect(login).toHaveBeenCalledWith(
       expect.objectContaining({ token: 'github_pat_anna', repo: 'my-team/time-data' }),
-      true,
+      false,
     )
   })
 
@@ -261,14 +264,43 @@ describe('sign-in failure', () => {
         repo: 'my-team/time-data',
         ownerType: 'Organization',
       }),
-      true,
+      false,
     ])
+  })
+
+  it('asks for a passphrase before saving the first profile', async () => {
+    const { login } = renderAt('/')
+    signIn('my-team/time-data', 'github_pat_anna', true)
+    expect(await screen.findByText('Protect your workspaces with a passphrase')).toBeInTheDocument()
+    expect(screen.getByText(/cannot be recovered/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('New passphrase'), { target: { value: 'too short' } })
+    fireEvent.change(screen.getByLabelText('Repeat the passphrase'), {
+      target: { value: 'too short' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('at least 10 characters')
+    expect(login).not.toHaveBeenCalled()
+
+    fireEvent.change(screen.getByLabelText('New passphrase'), {
+      target: { value: 'correct horse battery' },
+    })
+    fireEvent.change(screen.getByLabelText('Repeat the passphrase'), {
+      target: { value: 'correct horse battery' },
+    })
+    fireEvent.click(screen.getByLabelText(/Stay unlocked on this device/))
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(() => expect(login).toHaveBeenCalled())
+    expect(login.mock.calls[0]![1]).toEqual({
+      login: 'anna',
+      newVault: { passphrase: 'correct horse battery', mode: 'stay' },
+    })
   })
 
   it('moves to the fix page from the join flow and returns to its sign-in step', async () => {
     renderAt('/join?repo=my-team/time-data')
     fireEvent.click(screen.getByRole('button', { name: 'I can see it' }))
     fireEvent.change(screen.getByLabelText('GitHub token'), { target: { value: 'github_pat_x' } })
+    fireEvent.click(screen.getByLabelText('Save as a workspace on this device'))
     fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
     await fixHeading(/GitHub rejected this token/)
     fireEvent.click(screen.getByRole('link', { name: 'Change token or repository' }))

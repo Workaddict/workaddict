@@ -2151,3 +2151,146 @@ a.btn {
 .static-fallback a {
   color: var(--accent);
 }
+
+/* ---------- Profiles ---------- */
+.profile-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.profile-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+.profile-item:hover {
+  background: var(--surface-2);
+}
+.profile-name {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.menu-section {
+  padding: 4px 10px 2px;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.menu-item[aria-current='true'] {
+  font-weight: 600;
+}
+.menu-item .profile-name {
+  font-weight: inherit;
+}
+.menu-divider {
+  height: 1px;
+  margin: 4px 0;
+  background: var(--border);
+}
+.timer-dot {
+  width: 8px;
+  height: 8px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.user-menu .menu {
+  min-width: 240px;
+  max-width: min(320px, calc(100vw - 32px));
+}
+
+/* ---------- Current workspace in the top bar ---------- */
+.header .user-menu {
+  flex: 0 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.project-chip-btn {
+  min-width: 0;
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+  border-radius: 999px;
+}
+.project-chip-btn:hover .project-chip {
+  border-color: var(--accent);
+}
+.project-chip {
+  min-width: 0;
+  max-width: 240px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.project-chip svg {
+  flex: none;
+  color: var(--text-muted);
+}
+.project-chip-btn[aria-expanded='true'] .project-chip svg:last-child {
+  transform: rotate(180deg);
+}
+.project-chip-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.project-chip.is-switched {
+  animation: project-switch 900ms ease-out;
+}
+@keyframes project-switch {
+  0% {
+    transform: scale(0.9);
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  55% {
+    transform: scale(1.06);
+    background: var(--accent-soft);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes project-switch-fade {
+  0% {
+    background: var(--accent-soft);
+    border-color: var(--accent);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-chip.is-switched {
+    animation-name: project-switch-fade;
+  }
+}
+@media (max-width: 560px) {
+  .project-chip {
+    max-width: 38vw;
+  }
+}

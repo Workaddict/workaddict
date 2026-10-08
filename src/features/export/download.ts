@@ -13,3 +13,7 @@ export function downloadBlob(blob: Blob, filename: string) {
 export function safeFileName(s: string): string {
   return s.replace(/[^\w.-]+/g, '-').replace(/^-+|-+$/g, '')
 }
+
+export function downloadJson(value: unknown, filename: string) {
+  downloadBlob(new Blob([JSON.stringify(value, null, 2)], { type: 'application/json' }), filename)
+}

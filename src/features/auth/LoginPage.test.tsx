@@ -5,10 +5,11 @@ import { describe, expect, it, vi } from 'vitest'
 import { setLanguage } from '../../i18n'
 import { AuthContext } from './AuthContext'
 import { LoginPage } from './LoginPage'
+import { fakeAuth } from '../../test/fakeAuth'
 
 function renderLanding() {
   const login = vi.fn(async () => {})
-  const auth = { state: { status: 'loggedOut' as const }, login, logout: async () => {} }
+  const auth = fakeAuth({ status: 'loggedOut' }, { login })
   render(
     <QueryClientProvider client={new QueryClient()}>
       <AuthContext.Provider value={auth}>

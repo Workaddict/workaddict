@@ -1,8 +1,13 @@
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { REPO_URL } from '../../app/about'
 import { Icon } from '../../components/Icon'
 import { SiteFooter } from '../../components/SiteFooter'
 import { useI18n } from '../../i18n'
+import { ImportDialog } from '../profiles/ImportExport'
+import { useOpenRecentProfile } from '../profiles/profileNav'
+import { ProfilePicker, UnlockScreen } from '../profiles/StartScreens'
+import { useVault } from '../profiles/vaultStore'
 import { useAuth } from './AuthContext'
 import { Highlights, HowItWorks } from './Landing'
 import { PublicHeader } from './PublicHeader'
@@ -15,6 +20,18 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
   const { state, login } = useAuth()
 
   const reason = state.status === 'loggedOut' ? state.reason : undefined
+  const { status: vaultStatus } = useVault()
+  // "Sign in without saving" from the unlock screen or the profile picker.
+  const [plain, setPlain] = useState(false)
+  const [importing, setImporting] = useState(false)
+  const openRecent = useOpenRecentProfile()
+
+  // Unlocked here or in another tab while the unlock screen was shown: open the last profile.
+  const prevStatus = useRef(vaultStatus)
+  useEffect(() => {
+    if (prevStatus.current === 'locked' && vaultStatus === 'unlocked' && !plain) void openRecent()
+    prevStatus.current = vaultStatus
+  }, [vaultStatus, plain, openRecent])
 
   const startDemo = () => void login({ mode: 'demo' }, false)
 
@@ -23,6 +40,27 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
     const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
     form?.scrollIntoView?.({ behavior: reduce ? 'auto' : 'smooth', block: 'start' })
     form?.querySelector<HTMLInputElement>('input:not([readonly])')?.focus({ preventScroll: true })
+  }
+
+  if (!plain && (vaultStatus === 'locked' || vaultStatus === 'unlocked')) {
+    return (
+      <div className="landing">
+        <PublicHeader />
+        <main className="ob-main">
+          {notice === 'invalidInvite' && (
+            <div className="banner banner-warning" role="note">
+              {t('onboarding.join.invalid')}
+            </div>
+          )}
+          {vaultStatus === 'locked' ? (
+            <UnlockScreen onPlainSignIn={() => setPlain(true)} />
+          ) : (
+            <ProfilePicker reason={reason} onPlainSignIn={() => setPlain(true)} />
+          )}
+        </main>
+        <SiteFooter />
+      </div>
+    )
   }
 
   return (
@@ -67,6 +105,7 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
         <SignInForm
           id={SIGN_IN_ID}
           className="card login-card"
+          defaultSave={plain ? false : undefined}
           header={
             <>
               <div className="stack" style={{ gap: 4 }}>
@@ -105,11 +144,22 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
               <p className="small">
                 {t('login.setupPrompt')} <Link to="/setup">{t('login.setupLink')}</Link>
               </p>
+              {vaultStatus === 'none' && (
+                <p className="small">
+                  {t('profiles.importPrompt')}{' '}
+                  <button type="button" className="link-btn" onClick={() => setImporting(true)}>
+                    {t('profiles.import')}
+                  </button>
+                </p>
+              )}
             </>
           )}
         />
       </div>
 
+      {importing && (
+        <ImportDialog onClose={() => setImporting(false)} onImported={() => void openRecent()} />
+      )}
       <Highlights />
       <HowItWorks onSignIn={showSignIn} />
       <SiteFooter />

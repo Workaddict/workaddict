@@ -198,11 +198,15 @@ While the signed-in user's own timer is running, the system SHALL show its elaps
 - **THEN** the document title is the page's normal title
 
 ### Requirement: Stop on page close
-The system SHALL offer a per-device setting "Stop timer when I close the page", enabled by default. While the setting is on, the device on which the user started a timer SHALL remember the last time any Workaddict page was open on that device. When the app is loaded on that device, the user's running timer was started there, and no other Workaddict page is open on the device, the system SHALL ask when the page was opened anew (new tab, typed address, bookmark), however short the gap, or when it was reloaded or reached by back/forward after no Workaddict page was open for more than 2 minutes. It SHALL ask the user what to do with the timer, offering "Stop at <last open time>" (the default action), "Keep running", and "Stop now". A tab that is only hidden, or a device that was asleep while the page stayed open, SHALL NOT count as closed. The system SHALL NOT ask about a timer that was started on another device, in demo mode, or for a read-only session, and SHALL ask at most once per timer after the user chose "Keep running". The stop SHALL use the same idempotent stop behavior as a normal stop; if the timer was already stopped or replaced meanwhile, the system SHALL create no entry and close the question.
+The system SHALL offer a per-device setting "Stop timer when I close the page", enabled by default. While the setting is on, the device on which the user started a timer SHALL remember, per data repository, that the timer was started there, and SHALL remember the last time any Workaddict page was open on that device. When the app is loaded on that device, the user's running timer in the opened repository was started there, and no other Workaddict page is open on the device, the system SHALL ask when the page was opened anew (new tab, typed address, bookmark), however short the gap, or when it was reloaded or reached by back/forward after no Workaddict page was open for more than 2 minutes. A Workaddict page open on another workspace SHALL count as open. It SHALL ask the user what to do with the timer, offering "Stop at <last open time>" (the default action), "Keep running", and "Stop now". A tab that is only hidden, or a device that was asleep while the page stayed open, SHALL NOT count as closed. The system SHALL NOT ask about a timer that was started on another device, in demo mode, or for a read-only session, and SHALL ask at most once per timer after the user chose "Keep running". The stop SHALL use the same idempotent stop behavior as a normal stop; if the timer was already stopped or replaced meanwhile, the system SHALL create no entry and close the question.
 
 #### Scenario: Page closed and reopened later
 - **WHEN** the user starts a timer at 09:00 on a laptop, closes the last Workaddict tab at 17:32, reopens the app the next morning, and chooses "Stop at 17:32"
 - **THEN** an entry from 09:00 to 17:32 is created and the timer is cleared
+
+#### Scenario: Timers in two workspaces
+- **WHEN** the user starts a timer in `acme/time-data`, then one in `globex/hours` on the same laptop, closes all tabs and reopens `acme/time-data` later
+- **THEN** the question appears for the `acme/time-data` timer
 
 #### Scenario: Keep running
 - **WHEN** the question appears and the user chooses "Keep running"
@@ -284,4 +288,80 @@ The system SHALL remember in this browser, for the current viewer, the last chos
 #### Scenario: Storage blocked
 - **WHEN** browser storage throws on access
 - **THEN** the tracker opens in timer mode with end time input and the "Me" filter, and switching still works
+
+### Requirement: Manual entries for other members
+The manual entry form SHALL show editors and team leaders a "For" member picker that defaults to the current user and lists all current members of the workspace. Workers SHALL NOT see it. When another member is selected, saving SHALL create the entry with that member as its owner in that member's entry file, the commit message SHALL name both the member and the acting user, and the success message SHALL name the member. The picker SHALL keep the chosen member after saving until the page is reloaded or the tracker leaves manual mode.
+
+#### Scenario: Editor adds a missing entry
+- **WHEN** editor `bene` selects "For: simon", enters date 2026-09-22, 09:00 to 11:30, description "Client call" and project "Alpha", and saves
+- **THEN** an entry of 2 h 30 min owned by `simon` is saved in `simon`'s entry file for 2026-09, the commit message contains "simon" and "bene", and the message "Added for simon" is shown
+
+#### Scenario: Worker has no picker
+- **WHEN** a worker opens the manual entry form
+- **THEN** no member picker is shown and entries are always created for the worker
+
+#### Scenario: Picker kept for the next entry
+- **WHEN** an editor has just added an entry for `simon`
+- **THEN** the picker still shows `simon` and the description, project, and tags are cleared
+
+#### Scenario: Own timer running
+- **WHEN** an editor's own timer is running, the editor is in manual mode, and selects "For: simon"
+- **THEN** the form is emptied, the save button reads "Add entry for simon", saving creates an entry for `simon`, and the editor's timer keeps running unchanged
+
+#### Scenario: Validation as for own entries
+- **WHEN** an editor enters a duration of 25:00 for another member
+- **THEN** the system refuses to save and shows the validation error
+
+### Requirement: Entries added by another member
+The system SHALL record on an entry the login of the member who created it on behalf of its owner. The storage layer SHALL set it when an entry is created for another member and keep it unchanged when the entry is later edited. The entry list SHALL show "added by <login>" on such entries to every viewer.
+
+#### Scenario: Marker in the list
+- **WHEN** `simon` views his entries and one was added for him by `bene`
+- **THEN** that entry shows "added by bene"
+
+#### Scenario: Own entries unmarked
+- **WHEN** a user adds an entry for themselves
+- **THEN** the entry records no adder and shows no marker
+
+#### Scenario: Marker survives edits
+- **WHEN** `simon` edits the description of an entry `bene` added for him
+- **THEN** the entry still shows "added by bene"
+
+### Requirement: Draft kept across entry modes
+The system SHALL keep the description, project and tags the user entered when switching the tracker between timer mode and manual mode, in either direction, for the current page view. Switching modes SHALL NOT start, stop, discard or otherwise change the running timer by itself. Times entered in manual mode SHALL NOT carry over to timer mode when no timer is running.
+
+#### Scenario: Timer to manual without a running timer
+- **WHEN** no timer is running, the user types "Review" and selects project "Alpha" in timer mode, then switches to manual mode
+- **THEN** the manual form shows description "Review" and project "Alpha"
+
+#### Scenario: Manual to timer without a running timer
+- **WHEN** no timer is running, the user types "Review", selects project "Alpha" and enters start 13:00 in manual mode, then switches to timer mode
+- **THEN** the timer form shows description "Review" and project "Alpha", and starting the timer starts it now
+
+#### Scenario: Draft cleared after use
+- **WHEN** the user starts a timer or adds a manual entry from the draft
+- **THEN** the draft is empty in both modes
+
+### Requirement: Finish a running timer from the manual form
+When a timer is running, the manual form SHALL show that timer as an editable entry: description, project and tags from the timer, date and start from the timer's start, and end set to the time the user switched to manual mode, entered as end time or duration according to the remembered choice. The save button SHALL read "Stop & save". Saving SHALL validate the times as for manual entries, apply the description, project, tags and start to the running timer, and stop it at the chosen end, creating exactly one entry. Leaving manual mode without saving SHALL keep the timer running with the description, project and tag edits applied and SHALL drop the time edits. If the timer was stopped elsewhere before saving, the system SHALL save nothing and tell the user the timer was already stopped.
+
+#### Scenario: Correct and stop a running timer
+- **WHEN** a timer "Review" started at 09:00 is running, the user switches to manual mode at 10:40, changes the start to 08:50 and the end to 10:30, and clicks "Stop & save"
+- **THEN** one entry "Review" from 08:50 to 10:30 is created and no timer is running
+
+#### Scenario: End frozen at switch
+- **WHEN** a timer is running and the user switches to manual mode at 10:40 and clicks "Stop & save" at 10:45 without changing the times
+- **THEN** the entry ends at 10:40
+
+#### Scenario: Leave manual without saving
+- **WHEN** a timer is running, the user switches to manual mode, changes the description to "Planning" and the start time, then switches back to timer mode
+- **THEN** the timer is still running with description "Planning" and its original start time
+
+#### Scenario: Invalid times
+- **WHEN** a timer is running and the user enters a duration of 25:00 in manual mode and clicks "Stop & save"
+- **THEN** the system shows the validation error and the timer keeps running unchanged
+
+#### Scenario: Timer stopped elsewhere
+- **WHEN** the user has the running timer open in manual mode and the timer is stopped on another device before the user clicks "Stop & save"
+- **THEN** no new entry is created and the user is told the timer was already stopped
 

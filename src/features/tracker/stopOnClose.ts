@@ -59,24 +59,67 @@ interface TimerDevice {
   keep: boolean
 }
 
-export function readTimerDevice(): TimerDevice | null {
+/** The key for a session's timer record: its data repository, or `demo`. */
+export function timerDeviceKey(
+  session: { mode: 'demo' } | { mode: 'github'; repo: string },
+): string {
+  return session.mode === 'github' ? session.repo : 'demo'
+}
+
+/** Per data repository (lowercase), so timers in two profiles don't overwrite each other. */
+type TimerDevices = Record<string, TimerDevice>
+
+function parseDevice(v: unknown): TimerDevice | null {
+  const d = v as Partial<TimerDevice> | null
+  return d && typeof d.timerId === 'string' ? { timerId: d.timerId, keep: d.keep === true } : null
+}
+
+function readDevices(): TimerDevices | null {
   const raw = read(DEVICE_KEY)
-  if (!raw) return null
+  if (!raw) return {}
   try {
-    const v = JSON.parse(raw) as Partial<TimerDevice>
-    return typeof v.timerId === 'string' ? { timerId: v.timerId, keep: v.keep === true } : null
+    const v = JSON.parse(raw) as unknown
+    if (!v || typeof v !== 'object') return {}
+    // The single-object form of earlier versions; it belongs to the first repository asking.
+    if (typeof (v as Partial<TimerDevice>).timerId === 'string') return null
+    const out: TimerDevices = {}
+    for (const [repo, d] of Object.entries(v as Record<string, unknown>)) {
+      const device = parseDevice(d)
+      if (device) out[repo] = device
+    }
+    return out
   } catch {
-    return null
+    return {}
   }
 }
 
-/** Remembers that this device started the timer, so only this device asks about it. */
-export function recordTimerStart(timerId: string) {
-  write(DEVICE_KEY, JSON.stringify({ timerId, keep: false } satisfies TimerDevice))
+function writeDevice(repo: string, device: TimerDevice) {
+  const devices = readDevices() ?? {}
+  write(DEVICE_KEY, JSON.stringify({ ...devices, [repo.toLowerCase()]: device }))
 }
 
-export function keepTimerRunning(timerId: string) {
-  write(DEVICE_KEY, JSON.stringify({ timerId, keep: true } satisfies TimerDevice))
+export function readTimerDevice(repo: string): TimerDevice | null {
+  const key = repo.toLowerCase()
+  const devices = readDevices()
+  if (devices) return devices[key] ?? null
+  // Migrate the legacy record to this repository.
+  let legacy: TimerDevice | null = null
+  try {
+    legacy = parseDevice(JSON.parse(read(DEVICE_KEY) ?? 'null'))
+  } catch {
+    // unreadable
+  }
+  write(DEVICE_KEY, legacy ? JSON.stringify({ [key]: legacy }) : null)
+  return legacy
+}
+
+/** Remembers that this device started the timer, so only this device asks about it. */
+export function recordTimerStart(repo: string, timerId: string) {
+  writeDevice(repo, { timerId, keep: false })
+}
+
+export function keepTimerRunning(repo: string, timerId: string) {
+  writeDevice(repo, { timerId, keep: true })
 }
 
 // ---- decision ----------------------------------------------------------------

@@ -36,7 +36,7 @@ The system SHALL grant permissions by effective role as follows, and SHALL hide 
 | --- | --- | --- | --- |
 | Track time, run own timer, create/edit/delete own entries | yes | yes | yes |
 | View all members' entries and statistics, export | yes | yes | yes |
-| Edit and delete other members' entries | no | yes | yes |
+| Create, edit, and delete other members' entries | no | yes | yes |
 | View team live activity (other members' running timers) | no | yes | yes |
 | Stop or discard other members' running timers | no | yes | yes |
 | Create, rename, recolor, archive, and delete projects and tags | no | yes | yes |
@@ -52,6 +52,10 @@ The system SHALL grant permissions by effective role as follows, and SHALL hide 
 #### Scenario: Editor edits another member's entry
 - **WHEN** an editor changes the description of `bob`'s entry
 - **THEN** the entry is saved in `bob`'s entry file and still belongs to `bob`
+
+#### Scenario: Editor creates another member's entry
+- **WHEN** an editor adds a manual entry for `bob`
+- **THEN** the entry is saved in `bob`'s entry file and belongs to `bob`
 
 #### Scenario: Team leader who is not owner
 - **WHEN** a team leader who is not an owner opens the role management
@@ -127,4 +131,15 @@ The storage adapter SHALL refuse to stop or discard another member's timer with 
 #### Scenario: Editor adapter stops another timer
 - **WHEN** an editor's adapter is asked to stop `bob`'s timer
 - **THEN** the stop succeeds
+
+### Requirement: Creating other members' entries enforced in the storage layer
+The storage adapter SHALL refuse to create an entry whose owner is not the acting user unless the acting user is an editor or team leader. In that case it SHALL write nothing and throw `forbiddenRole`.
+
+#### Scenario: Worker creates entry for another member
+- **WHEN** a worker's adapter is asked to save a new entry whose login is `bob`
+- **THEN** it writes nothing and throws `forbiddenRole`
+
+#### Scenario: Editor creates entry for another member
+- **WHEN** editor `alice`'s adapter saves a new entry whose login is `bob`
+- **THEN** the entry is written to `bob`'s entry file with `alice` recorded as the adder
 

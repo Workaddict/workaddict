@@ -202,8 +202,10 @@ The build uses a relative base path and hash routing (`#/stats`), so it works un
 1. Open the Pages URL.
 2. **Token:** paste your token.
 3. **Repository:** enter the data repo as `owner/name`, exactly as it appears in the browser's address bar when you open the repo, e.g. `my-team/time-data`. The owner is the **organization name**, not your username.
-4. Optionally tick **"Remember me on this device"** (not on shared computers).
+4. Keep **"Save as a workspace on this device"** ticked to save the token, encrypted with a passphrase you choose, or untick it to sign in for this tab only (on shared computers). The first time you save a workspace, the app asks for the passphrase and whether to ask for it on every visit or stay unlocked on this device. The passphrase cannot be recovered; if you forget it, you reset the workspaces and enter your tokens again.
 5. Click **Sign in**. The first sign-in initializes the empty data repo.
+
+**Several workspaces.** Each data repository is a workspace; its name defaults to `owner/name` and can be changed under **Settings → Workspaces → Rename**. Open the avatar menu → **+ Add workspace** to add another one: when you already have a token for the same owner (or a classic token), the app offers to reuse it, otherwise you paste a new token (a fine-grained token covers only one organization or account). Switch workspaces with one click in the avatar menu; a dot marks workspaces where your timer is running. Each browser tab can show a different workspace. **Settings → Workspaces** has the unlock mode, **Change passphrase**, **Export workspaces** and **Import workspaces** (to move your workspaces to another device as an encrypted file), and **Forget all workspaces on this device**.
 
 If sign-in fails, see [Troubleshooting sign-in](#troubleshooting-sign-in).
 
@@ -281,10 +283,12 @@ If this returns JSON with `"full_name": "my-team/time-data"` and `"push": true`,
 Read this before you use the app with real data. To report a vulnerability, see [SECURITY.md](SECURITY.md).
 
 - **Roles are not a security boundary.** Anyone with write access to the data repo can read and change _all_ data through the GitHub API or the GitHub website, including other members' entries, projects, and `roles.json` itself. The app checks roles before every change it makes, but it cannot stop direct edits to the repository. Only add people you trust. Every change is a commit that names the acting user (for example `entry: delete "Standup" for bob (carol)`, `role: set bob to editor (alice)`), so you can find and revert unwanted changes in the git history.
-- **Your token is stored in your browser.** With "Remember me" it is kept in `localStorage`; without it, in `sessionStorage`, which is cleared when the tab closes. Anyone with access to your browser profile, or any script that runs on the page, could read it. To limit the risk:
+- **Your tokens are stored in your browser.** Saved workspaces live in an encrypted vault in `localStorage` (AES-GCM with a key derived from your passphrase by PBKDF2-SHA256, 600,000 iterations); no token or repository name is stored in plaintext, and nothing is sent anywhere. Without "Save as a workspace", the token stays in `sessionStorage` and is cleared when the tab closes. While the app is unlocked, the tokens are in memory, so any script that ran on the page could read them; the vault protects them at rest and in export files, not against such script. To limit the risk:
   - use a **fine-grained token** limited to the data repo, with an expiration date (the app warns when you sign in with a classic token);
-  - don't use "Remember me" on shared computers. Without it, repository data is cached in memory only and nothing stays on disk after the tab closes;
-  - **log out** (Settings → Log out) to remove the token and cached data;
+  - choose a long passphrase (a few words); anyone with your browser profile or an export file can try to guess it;
+  - on shared computers, sign in without saving. Repository data is then cached in memory only and nothing stays on disk after the tab closes. "Stay unlocked on this device" keeps cached data and the key on disk, so use it only on your own device;
+  - **Lock** (avatar menu) when you step away; **Settings → Workspaces → Forget all workspaces on this device** removes every token and all cached data;
+  - if you used "Remember me" in an earlier version, accept **Protect with a passphrase** so the plaintext token is deleted;
   - if a token leaks, revoke it on GitHub right away.
 - **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com` and, for the one-time Clockify import, `https://*.clockify.me`. Trusted Types are enforced and inline styles are not allowed. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
 - **No framing.** The app refuses to run inside another page (clickjacking protection) and offers a link to open it in its own tab.

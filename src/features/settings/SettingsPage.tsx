@@ -18,12 +18,13 @@ import { LANGUAGES, setLanguage, useI18n, type Language } from '../../i18n'
 import type { TimeFormat } from '../../domain/time'
 import { setTheme, useThemePref, type ThemePref } from '../../theme'
 import { setTimeFormat, useTimeFormat } from '../../timeFormat'
-import { useAuth, useSessionData } from '../auth/AuthContext'
+import { useSessionData } from '../auth/AuthContext'
 import { tokenKind } from '../auth/session'
 import { useAccess } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { TeamHelper } from '../onboarding/TeamHelper'
 import { downloadBackup } from '../export/backup'
+import { ProfilesSection } from '../profiles/ProfilesSection'
 import { setStopOnClose, useStopOnClose } from '../tracker/stopOnClose'
 import { ReassignEntriesModal } from './ReassignEntries'
 import { ShiftEntriesModal } from './ShiftEntries'
@@ -34,7 +35,6 @@ const ImportWizard = lazyWithReload(() => import('../import/ImportWizard'))
 
 export default function SettingsPage() {
   const { t, lang } = useI18n()
-  const { logout } = useAuth()
   const { user, session, adapter } = useSessionData()
   const theme = useThemePref()
   const timeFormat = useTimeFormat()
@@ -227,17 +227,10 @@ export default function SettingsPage() {
               </button>
             </div>
           )}
-          <div className="settings-row">
-            <span className="muted small" style={{ flex: '1 1 260px' }}>
-              {t('settings.logoutHint')}
-            </span>
-            <button className="btn" onClick={() => void logout()}>
-              <Icon name="logout" size={16} />
-              {t('nav.logout')}
-            </button>
-          </div>
         </div>
       </section>
+
+      <ProfilesSection />
 
       <section className="section">
         <h2>{t('settings.about')}</h2>
