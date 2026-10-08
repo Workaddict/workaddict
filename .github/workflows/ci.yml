@@ -1,0 +1,54 @@
+name: CI
+
+# Checks every pull request (including Dependabot's) before it can reach main.
+# Plain `pull_request` (not `pull_request_target`): PR code runs with a read-only token and no secrets.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# A new push to the same PR cancels the outdated run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # Same pinned SHAs as deploy.yml; Dependabot keeps them current.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  # Merges Dependabot's grouped minor/patch PRs once `check` is green. Major bumps get their own
+  # branches (no group), so they never match here and stay manual.
+  # A merge made with GITHUB_TOKEN doesn't trigger deploy.yml; the site picks it up on the next push to main.
+  automerge:
+    needs: check
+    if: >-
+      github.event.pull_request.user.login == 'dependabot[bot]' &&
+      (startsWith(github.head_ref, 'dependabot/npm_and_yarn/minor-and-patch-') ||
+       startsWith(github.head_ref, 'dependabot/github_actions/actions-'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - run: gh pr merge --squash --delete-branch "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ github.token }}
