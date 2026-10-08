@@ -3,3 +3,13 @@ node_modules
 dist
 coverage
 *.local
+
+# macOS metadata
+.DS_Store
+._*
+.AppleDouble
+.LSOverride
+.Spotlight-V100
+.Trashes
+.fseventsd
+__MACOSX/
