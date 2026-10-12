@@ -212,7 +212,7 @@ function MemberPicker({ value, onChange }: { value: string; onChange: (login: st
     .filter((l) => l !== user.login)
     .sort((a, b) => a.localeCompare(b))
   return (
-    <label className="row small" style={{ marginRight: 'auto' }}>
+    <label className="row small member-picker">
       <span>{t('manual.for')}</span>
       <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
         <option value={user.login}>{t('manual.me', { login: user.login })}</option>
@@ -355,7 +355,7 @@ function ManualEntryView({
         showErrors={showErrors}
         resolved={resolved}
       />
-      <div className="row" style={{ justifyContent: 'flex-end' }}>
+      <div className="manual-actions">
         {!adapter.readOnly && access.can('editOthersEntries') && (
           <MemberPicker value={forLogin} onChange={setForLogin} />
         )}

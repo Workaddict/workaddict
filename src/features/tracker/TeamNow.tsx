@@ -272,7 +272,7 @@ function StopOthersTimerDialog({
           </div>
         )}
         <div className="manual-grid">
-          <label className="field">
+          <label className="field field-date">
             <span>{t('manual.date')}</span>
             <input
               className="input"

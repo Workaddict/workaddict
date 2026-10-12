@@ -197,6 +197,22 @@ textarea {
 .input::placeholder {
   color: var(--text-faint);
 }
+/* Native date/time fields: iOS Safari otherwise draws them wider than their cell, taller than
+   text fields and with centered text. */
+.input[type='date'],
+.input[type='time'] {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  min-width: 0;
+  line-height: normal;
+  text-align: left;
+}
+.input::-webkit-date-and-time-value {
+  margin: 0;
+  min-height: 1.2em; /* keeps the height while empty */
+  text-align: left;
+}
 .input:focus,
 .select:focus {
   outline: none;
@@ -571,11 +587,51 @@ textarea {
   justify-content: space-between;
   flex-wrap: wrap;
 }
+/* Date, start and end/duration in one row; on phones the date gets its own row above the times. */
 .manual-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
   gap: 10px;
-  align-items: end;
+  align-items: start;
+}
+@media (max-width: 560px) {
+  .manual-grid {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .manual-grid > .field-date {
+    grid-column: 1 / -1;
+  }
+}
+/* Form footer: picker and submit button right-aligned; stacked full width on phones. */
+.manual-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+}
+.manual-actions .member-picker {
+  margin-right: auto;
+  min-width: 0;
+}
+.manual-actions .member-picker .select {
+  width: auto;
+  max-width: 100%;
+  text-overflow: ellipsis;
+}
+@media (max-width: 560px) {
+  .manual-actions > * {
+    flex: 1 1 100%;
+  }
+  .manual-actions .member-picker .select {
+    flex: 1;
+    width: 100%;
+  }
+  .manual-actions .btn {
+    justify-content: center;
+  }
 }
 
 /* Pickers */
