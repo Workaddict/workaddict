@@ -2,11 +2,13 @@ import type { TimeEntry, Workspace } from '../../domain/types'
 import { setDeviceZone } from '../../timeZone'
 import {
   allTimeRange,
+  axisLabelPlan,
   byMember,
   byProject,
   byTag,
   filterEntries,
   granularityFor,
+  isLabeledBar,
   NO_FILTERS,
   NO_PROJECT,
   NO_TAG,
@@ -189,5 +191,51 @@ describe('time buckets', () => {
     expect(b[0]!.start.getDay()).toBe(1)
     const week = b.find((x) => x.totalMs > 0)!
     expect(week.totalMs).toBe(10 * H) // Sep 1-3 2026 fall in the same week
+  })
+})
+
+describe('axis labels', () => {
+  const labeled = (count: number, step: number) =>
+    Array.from({ length: count }, (_, i) => i).filter((i) => isLabeledBar(i, count, step))
+
+  it('labels all 14 days on a phone, shortened', () => {
+    const plan = axisLabelPlan(300, 14, 'day', 6)
+    expect(plan).toEqual({ format: 'short', step: 1 })
+    expect(labeled(14, plan.step)).toHaveLength(14)
+  })
+
+  it('keeps every day labeled even on the narrowest chart', () => {
+    expect(axisLabelPlan(180, 14, 'day', 6)).toEqual({ format: 'short', step: 1 })
+  })
+
+  it('uses long labels when they fit', () => {
+    expect(axisLabelPlan(900, 7, 'day', 6)).toEqual({ format: 'long', step: 1 })
+    expect(axisLabelPlan(700, 14, 'day', 6)).toEqual({ format: 'long', step: 1 })
+    // 14 days on a desktop chart card: ~42 px per bar fits "Wed 30".
+    expect(axisLabelPlan(595, 14, 'day', 6)).toEqual({ format: 'long', step: 1 })
+  })
+
+  it('thins a month on a phone at a regular step, keeping the first and last day', () => {
+    const plan = axisLabelPlan(330, 31, 'day', 6)
+    expect(plan.format).toBe('long')
+    expect(plan.step).toBeGreaterThan(1)
+    const shown = labeled(31, plan.step)
+    expect(shown[0]).toBe(0)
+    expect(shown.at(-1)).toBe(30)
+    for (let i = 1; i < shown.length; i++) expect(shown[i]! - shown[i - 1]!).toBeGreaterThanOrEqual(plan.step)
+  })
+
+  it('drops the regular label that would crowd the last one', () => {
+    expect(labeled(30, 3)).toEqual([0, 3, 6, 9, 12, 15, 18, 21, 24, 29])
+  })
+
+  it('thins weeks instead of shortening them', () => {
+    expect(axisLabelPlan(250, 53, 'week', 7).format).toBe('long')
+    expect(axisLabelPlan(250, 53, 'week', 7).step).toBeGreaterThan(1)
+  })
+
+  it('labels everything while the width is unknown', () => {
+    expect(axisLabelPlan(null, 31, 'day', 6)).toEqual({ format: 'long', step: 1 })
+    expect(axisLabelPlan(0, 14, 'day', 6)).toEqual({ format: 'long', step: 1 })
   })
 })

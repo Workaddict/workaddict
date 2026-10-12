@@ -1,5 +1,5 @@
 import { format } from '../../domain/zoned'
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useMemo, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -10,15 +10,19 @@ import {
   Tooltip,
   XAxis,
   YAxis,
+  type XAxisTickContentProps,
 } from 'recharts'
 import { formatHM } from '../../domain/time'
 import { useI18n } from '../../i18n'
-import type { BreakdownRow, Bucket, Granularity } from './stats'
+import { axisLabelPlan, isLabeledBar, type BreakdownRow, type Bucket, type Granularity } from './stats'
 
 const HOUR = 3_600_000
 // Mid-gray axis colors stay readable on light, dark and the white PDF background.
 const AXIS = '#8b93a0'
 const GRID = 'rgba(139, 147, 160, 0.25)'
+const MARGIN = { top: 8, right: 8, left: 0, bottom: 0 }
+const Y_AXIS_WIDTH = 48
+
 
 export const HoursBarChart = forwardRef<
   HTMLDivElement,
@@ -42,26 +46,61 @@ export const HoursBarChart = forwardRef<
             : granularity === 'week'
               ? t('stats.week', { date: format(b.start, 'PP', { locale }) })
               : format(b.start, 'EEEE, PP', { locale }),
+        day: format(b.start, 'd', { locale }),
+        weekday: format(b.start, 'EEEEE', { locale }),
         ...Object.fromEntries(Object.entries(b.byProject).map(([k, ms]) => [k, ms / HOUR])),
       })),
     [buckets, granularity, locale, t],
   )
   const names = useMemo(() => new Map(projects.map((p) => [p.key, p.label])), [projects])
 
+  // Recharts would silently drop labels that don't fit, so we decide which bars get one.
+  const [width, setWidth] = useState<number | null>(null)
+  const plotWidth = width === null ? null : width - Y_AXIS_WIDTH - MARGIN.left - MARGIN.right
+  const labelChars = Math.max(0, ...data.map((d) => d.label.length))
+  const plan = axisLabelPlan(plotWidth, data.length, granularity, labelChars)
+  const short = plan.format === 'short'
+  const renderTick = ({ x, y, index, payload }: XAxisTickContentProps) => {
+    const d = data[index]
+    if (!d || !isLabeledBar(index, data.length, plan.step)) return <g />
+    // On a thinned axis the bars are narrower than the label: end the last one at the plot edge.
+    const atEnd = plan.step > 1 && index === data.length - 1 && plotWidth
+    const tx = atEnd ? Number(x) + plotWidth / data.length / 2 : x
+    return (
+      <text x={tx} y={y} textAnchor={atEnd ? 'end' : 'middle'} fill={AXIS} fontSize={short ? 11 : 12}>
+        {short ? (
+          <>
+            <tspan x={x} dy="0.71em">
+              {d.day}
+            </tspan>
+            <tspan x={x} dy="1.25em" opacity={0.75}>
+              {d.weekday}
+            </tspan>
+          </>
+        ) : (
+          <tspan x={tx} dy="0.71em">
+            {String(payload.value)}
+          </tspan>
+        )}
+      </text>
+    )
+  }
+
   return (
     <div className="chart-box" ref={ref}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height="100%" onResize={(w) => setWidth(w)}>
+        <BarChart data={data} margin={MARGIN}>
           <CartesianGrid vertical={false} stroke={GRID} />
           <XAxis
             dataKey="label"
-            tick={{ fill: AXIS, fontSize: 12 }}
+            tick={renderTick}
             tickLine={false}
             axisLine={{ stroke: GRID }}
-            interval="preserveStartEnd"
-            minTickGap={8}
+            interval={0}
+            height={short ? 38 : 30}
           />
           <YAxis
+            width={Y_AXIS_WIDTH}
             tick={{ fill: AXIS, fontSize: 12 }}
             tickLine={false}
             axisLine={false}

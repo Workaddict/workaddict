@@ -202,6 +202,47 @@ export function granularityFor(range: DateRange): Granularity {
   return days > 366 ? 'month' : days > 62 ? 'week' : 'day'
 }
 
+/**
+ * How the bar chart labels its x-axis: `long` is the regular label ("Mon 5", "5.10.", "5 Oct"),
+ * `short` the day of the month with the weekday initial below it. `step` labels every n-th bar.
+ */
+export interface AxisLabelPlan {
+  format: 'long' | 'short'
+  step: number
+}
+
+/** Approximate width of one label character at the 12 px axis font, and the gap between labels. */
+const LABEL_CHAR_PX = 6.2
+const LABEL_GAP_PX = 4
+
+/**
+ * Picks the axis labels for a plot area `plotWidth` px wide whose longest regular label has
+ * `labelChars` characters. Up to 14 daily bars every bar is labeled, shortened where long labels
+ * don't fit; longer ranges are thinned at a regular step instead. An unknown width (not measured
+ * yet) keeps every long label.
+ */
+export function axisLabelPlan(
+  plotWidth: number | null,
+  count: number,
+  granularity: Granularity,
+  labelChars: number,
+): AxisLabelPlan {
+  if (!plotWidth || plotWidth <= 0 || count <= 0) return { format: 'long', step: 1 }
+  const perBar = plotWidth / count
+  const needed = labelChars * LABEL_CHAR_PX + LABEL_GAP_PX
+  if (perBar >= needed) return { format: 'long', step: 1 }
+  if (granularity === 'day' && count <= 14) return { format: 'short', step: 1 }
+  return { format: 'long', step: Math.ceil(needed / perBar) }
+}
+
+/** Whether bar `index` of `count` gets a label: every `step`-th from the first, and the last. */
+export function isLabeledBar(index: number, count: number, step: number): boolean {
+  const last = count - 1
+  if (index === last) return true
+  // Skip a regular label that would crowd the last one.
+  return index % step === 0 && last - index >= step
+}
+
 export interface Bucket {
   start: Date
   totalMs: number
