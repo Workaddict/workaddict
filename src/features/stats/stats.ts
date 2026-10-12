@@ -54,9 +54,10 @@ export function presetRange(preset: DatePreset, now = new Date()): DateRange {
       const d = addWeeks(now, -1)
       return { from: startOfWeek(d), to: endOfWeek(d) }
     }
-    // Labeled "Last 14 days": the 14 days ending today. The key stays so remembered filters keep working.
+    // Labeled "Last 14 days": today and the full 14 days before it, so the same weekday two weeks
+    // ago is included. The key stays so remembered filters keep working.
     case 'lastTwoWeeks':
-      return { from: startOfDay(addDays(now, -13)), to: endOfDay(now) }
+      return { from: startOfDay(addDays(now, -14)), to: endOfDay(now) }
     case 'thisMonth':
       return { from: startOfMonth(now), to: endOfMonth(now) }
     case 'lastMonth': {
@@ -217,7 +218,7 @@ const LABEL_GAP_PX = 4
 
 /**
  * Picks the axis labels for a plot area `plotWidth` px wide whose longest regular label has
- * `labelChars` characters. Up to 14 daily bars every bar is labeled, shortened where long labels
+ * `labelChars` characters. Up to 15 daily bars ("Last 14 days") every bar is labeled, shortened where long labels
  * don't fit; longer ranges are thinned at a regular step instead. An unknown width (not measured
  * yet) keeps every long label.
  */
@@ -231,7 +232,7 @@ export function axisLabelPlan(
   const perBar = plotWidth / count
   const needed = labelChars * LABEL_CHAR_PX + LABEL_GAP_PX
   if (perBar >= needed) return { format: 'long', step: 1 }
-  if (granularity === 'day' && count <= 14) return { format: 'short', step: 1 }
+  if (granularity === 'day' && count <= 15) return { format: 'short', step: 1 }
   return { format: 'long', step: Math.ceil(needed / perBar) }
 }
 

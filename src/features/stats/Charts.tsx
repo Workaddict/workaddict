@@ -37,7 +37,7 @@ export const HoursBarChart = forwardRef<
             ? format(b.start, 'MMM yy', { locale })
             : granularity === 'week'
               ? format(b.start, 'd MMM', { locale })
-              : buckets.length <= 14
+              : buckets.length <= 15
                 ? format(b.start, 'EEE d', { locale })
                 : format(b.start, 'd.M.', { locale }),
         title:

@@ -65,10 +65,10 @@ describe('presetRange', () => {
     expect(r.from).toEqual(new Date(2026, 8, 21))
     expect(presetRange('lastWeek', now).from).toEqual(new Date(2026, 8, 14))
   })
-  it('last 14 days covers the 14 days ending today', () => {
+  it('last 14 days covers today and the 14 days before it', () => {
     const monday = new Date(2026, 9, 5, 10, 0) // Monday 2026-10-05
     const r = presetRange('lastTwoWeeks', monday)
-    expect(r.from).toEqual(new Date(2026, 8, 22))
+    expect(r.from).toEqual(new Date(2026, 8, 21)) // Monday two weeks ago
     expect(r.to).toEqual(new Date(2026, 9, 5, 23, 59, 59, 999))
     // "Last week" stays a calendar week.
     expect(presetRange('lastWeek', monday)).toEqual({
@@ -76,12 +76,12 @@ describe('presetRange', () => {
       to: new Date(2026, 9, 4, 23, 59, 59, 999),
     })
   })
-  it('last 14 days spans 14 calendar days across the DST change', () => {
+  it('last 14 days spans 15 calendar days across the DST change', () => {
     setDeviceZone('Europe/Vienna')
     try {
       // Monday 2 November 2026, 10:00 in Vienna; DST ended on 25 October.
       const r = presetRange('lastTwoWeeks', new Date('2026-11-02T09:00:00Z'))
-      expect(r.from).toEqual(new Date('2026-10-19T22:00:00Z')) // 20 October 00:00 CEST
+      expect(r.from).toEqual(new Date('2026-10-18T22:00:00Z')) // 19 October 00:00 CEST
       expect(r.to).toEqual(new Date('2026-11-02T22:59:59.999Z')) // 2 November 23:59:59.999 CET
     } finally {
       setDeviceZone(null)
@@ -198,14 +198,14 @@ describe('axis labels', () => {
   const labeled = (count: number, step: number) =>
     Array.from({ length: count }, (_, i) => i).filter((i) => isLabeledBar(i, count, step))
 
-  it('labels all 14 days on a phone, shortened', () => {
-    const plan = axisLabelPlan(300, 14, 'day', 6)
+  it('labels all 15 days of "Last 14 days" on a phone, shortened', () => {
+    const plan = axisLabelPlan(300, 15, 'day', 6)
     expect(plan).toEqual({ format: 'short', step: 1 })
-    expect(labeled(14, plan.step)).toHaveLength(14)
+    expect(labeled(15, plan.step)).toHaveLength(15)
   })
 
   it('keeps every day labeled even on the narrowest chart', () => {
-    expect(axisLabelPlan(180, 14, 'day', 6)).toEqual({ format: 'short', step: 1 })
+    expect(axisLabelPlan(180, 15, 'day', 6)).toEqual({ format: 'short', step: 1 })
   })
 
   it('uses long labels when they fit', () => {

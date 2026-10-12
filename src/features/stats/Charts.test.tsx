@@ -32,18 +32,18 @@ describe('HoursBarChart axis', () => {
     vi.unstubAllGlobals()
   })
 
-  it('labels every one of the last 14 days on a 320 px phone, including 5 Oct', async () => {
+  it('labels every day of "Last 14 days" on a 320 px phone, including 28 Sep and 5 Oct', async () => {
     stubResizeObserver(258) // 320 px screen minus page and card padding
     const range = presetRange('lastTwoWeeks')
     const buckets = timeBuckets([], range, EMPTY_WORKSPACE)
     const { container } = render(<HoursBarChart buckets={buckets} projects={[]} granularity="day" />)
 
-    await waitFor(() => expect(tickTexts(container)).toHaveLength(14))
+    await waitFor(() => expect(tickTexts(container)).toHaveLength(15))
     const texts = tickTexts(container)
-    // Day of the month with the weekday initial: 29 Sep (Tue) .. 12 Oct (Mon).
-    expect(texts[0]).toBe('29T')
+    // Day of the month with the weekday initial: 28 Sep (Mon) .. 12 Oct (Mon).
+    expect(texts[0]).toBe('28M')
     expect(texts).toContain('5M')
-    expect(texts[13]).toBe('12M')
+    expect(texts[14]).toBe('12M')
   })
 
   it('keeps long labels on desktop', async () => {
@@ -51,7 +51,7 @@ describe('HoursBarChart axis', () => {
     const buckets = timeBuckets([], presetRange('lastTwoWeeks'), EMPTY_WORKSPACE)
     const { container } = render(<HoursBarChart buckets={buckets} projects={[]} granularity="day" />)
 
-    await waitFor(() => expect(tickTexts(container)).toHaveLength(14))
-    expect(tickTexts(container)).toContain('Mon 5')
+    await waitFor(() => expect(tickTexts(container)).toHaveLength(15))
+    expect(tickTexts(container)).toContain('Mon 28')
   })
 })

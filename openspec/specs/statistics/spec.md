@@ -4,7 +4,7 @@
 TBD - created by archiving change build-time-tracker-mvp. Update Purpose after archive.
 ## Requirements
 ### Requirement: Date range filter
-The stats page SHALL provide preset ranges (today, this week, last week, last 14 days, this month, last month, this year, all time) and a custom from/to range, defaulting to this week, with weeks starting on Monday. "Last 14 days" SHALL cover the start of the day 13 days before today through the end of today in the effective time zone, so that it always contains exactly 14 calendar days ending today. All other presets SHALL remain calendar-aligned. "All time" SHALL cover the start of the earliest entry through the end of today, or only today when there are no entries.
+The stats page SHALL provide preset ranges (today, this week, last week, last 14 days, this month, last month, this year, all time) and a custom from/to range, defaulting to this week, with weeks starting on Monday. "Last 14 days" SHALL cover the start of the day 14 days before today through the end of today in the effective time zone, so that it always contains today and the 14 full days before it (15 calendar days), including the same weekday two weeks ago. All other presets SHALL remain calendar-aligned. "All time" SHALL cover the start of the earliest entry through the end of today, or only today when there are no entries.
 
 #### Scenario: Preset range
 - **WHEN** the user selects "Last month" on 2026-09-21
@@ -12,11 +12,11 @@ The stats page SHALL provide preset ranges (today, this week, last week, last 14
 
 #### Scenario: Last 14 days
 - **WHEN** the user selects "Last 14 days" on Monday 2026-10-05
-- **THEN** stats cover 2026-09-22 through 2026-10-05 in local time and include no future days
+- **THEN** stats cover 2026-09-21 through 2026-10-05 in local time and include no future days
 
 #### Scenario: Last 14 days follows the date
 - **WHEN** the user left "Last 14 days" selected on 2026-10-05 and returns in the same browser tab on 2026-10-06
-- **THEN** stats cover 2026-09-23 through 2026-10-06
+- **THEN** stats cover 2026-09-22 through 2026-10-06
 
 #### Scenario: Last week stays a calendar week
 - **WHEN** the user selects "Last week" on Monday 2026-10-05
@@ -56,7 +56,7 @@ The stats page SHALL show the total tracked time, number of entries, and average
 The stats page SHALL show a bar chart of tracked hours stacked by project, with one bar per day for ranges up to 62 days, one bar per week for ranges up to 366 days, and one bar per month for longer ranges, and a donut chart of the share per project.
 
 The bar chart's x-axis labels SHALL let the user tell which bar belongs to which period at every width from 320 px:
-- For daily bars in ranges of up to 14 days, every bar SHALL have a visible label at every supported width. On narrow charts the label SHALL shorten (e.g. to the day of the month) instead of being hidden.
+- For daily bars in ranges of up to 15 days (which includes "Last 14 days"), every bar SHALL have a visible label at every supported width. On narrow charts the label SHALL shorten (e.g. to the day of the month) instead of being hidden.
 - For longer ranges where not every label fits, labels SHALL be thinned at a regular step counted from the first bar (every n-th bar), and the first and last bars SHALL be labeled.
 - The tooltip SHALL show the full date or period of the bar it belongs to.
 
@@ -74,7 +74,7 @@ The bar chart's x-axis labels SHALL let the user tell which bar belongs to which
 
 #### Scenario: Every day labeled for last 14 days on a phone
 - **WHEN** on 2026-10-12 the user selects "Last 14 days" on a 320 px wide screen
-- **THEN** the bar chart shows 14 bars from 29 Sep to 12 Oct and each bar, including 5 Oct, has its own visible x-axis label
+- **THEN** the bar chart shows 15 bars from 28 Sep to 12 Oct and each bar, including 28 Sep and 5 Oct, has its own visible x-axis label
 
 #### Scenario: Every day labeled on desktop
 - **WHEN** the user selects "This week" on a desktop screen
