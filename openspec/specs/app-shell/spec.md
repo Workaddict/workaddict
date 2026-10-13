@@ -41,7 +41,7 @@ The system SHALL provide the full UI in English and German, select the language 
 - **THEN** the login page, including the token help, is shown in German immediately, and the app stays German after logging in and on the next visit
 
 ### Requirement: Responsive clean design
-The system SHALL be usable on screens from 320 px wide to desktop and SHALL NOT scroll horizontally at any width in that range, in every supported language and while a timer is running. Navigation labels SHALL stay on one line, and the header's running-timer elapsed time and stop button SHALL stay fully visible at every width. Controls SHALL be touch-friendly on mobile, form fields SHALL NOT cause the browser to zoom in when focused on phones, and fixed navigation SHALL clear the device's safe areas. The system SHALL support light and dark themes following the system setting with a manual override.
+The system SHALL be usable on screens from 320 px wide to desktop and SHALL NOT scroll horizontally at any width in that range, in every supported language and while a timer is running. Navigation labels SHALL stay on one line, and the header's running-timer elapsed time and stop button SHALL stay fully visible at every width. Controls SHALL be touch-friendly on mobile, form fields SHALL NOT cause the browser to zoom in when focused on phones, and fixed navigation SHALL clear the device's safe areas. Every form field, including native date and time fields, SHALL stay within its layout cell, SHALL have the same height and text alignment as text fields, and fields in the same row SHALL have their labels at the same height. On phones, rows of form actions SHALL wrap or stack instead of cutting off their content. The system SHALL support light and dark themes following the system setting with a manual override.
 
 #### Scenario: Phone layout
 - **WHEN** the app is opened on a 375 px wide screen
@@ -66,6 +66,22 @@ The system SHALL be usable on screens from 320 px wide to desktop and SHALL NOT 
 #### Scenario: Dark mode
 - **WHEN** the operating system uses a dark color scheme and the user has not chosen a theme
 - **THEN** the app renders in its dark theme
+
+#### Scenario: Native date field on iPhone
+- **WHEN** the manual entry form is opened in Safari on an iPhone at 375 px
+- **THEN** the date field ends inside its own cell without overlapping the next field, has the same height as the time fields, and its value is left-aligned like other fields
+
+#### Scenario: Manual entry form on a phone
+- **WHEN** an editor opens the manual entry form on a 320 px or 375 px wide screen
+- **THEN** the date field takes the full width on its own row, start and end (or duration) sit side by side on the row below with labels at the same height, and the member picker and the submit button each take the full width, one under the other, with the selected member's name fully readable or ellipsized inside the picker
+
+#### Scenario: Manual entry form on desktop
+- **WHEN** the manual entry form is opened at 1024 px or wider
+- **THEN** date, start, and end sit in one row, and the member picker and submit button sit in one row aligned to the right
+
+#### Scenario: Stop dialog on a phone
+- **WHEN** a team leader opens the dialog to stop another member's timer on a 320 px wide screen
+- **THEN** its date and time fields stay within the dialog and are laid out like the manual entry form
 
 ### Requirement: Content Security Policy
 The system SHALL ship a Content Security Policy that restricts scripts to the app's own origin and network connections to the GitHub API and Clockify's API hosts (`*.clockify.me`). The policy SHALL require Trusted Types for script sinks (`require-trusted-types-for 'script'`) and SHALL allow no Trusted Types policies except ones a bundled library is shown to need, each named explicitly. The policy SHALL NOT allow inline styles unless a bundled library is shown to need them, and the build configuration SHALL name that library.
