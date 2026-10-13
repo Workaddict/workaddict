@@ -45,6 +45,11 @@ export interface StorageAdapter {
    * its login. Pass the previously stored start when editing.
    */
   saveEntry(entry: TimeEntry, previousStart?: string): Promise<TimeEntry>
+  /**
+   * Creates several new entries in one commit, e.g. the same time for several members: either
+   * all are saved or none. Every entry is checked like `saveEntry` before anything is written.
+   */
+  saveEntries(entries: TimeEntry[]): Promise<TimeEntry[]>
   deleteEntry(entry: TimeEntry): Promise<void>
 
   getTimer(): Promise<RunningTimer | null>

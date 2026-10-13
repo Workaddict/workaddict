@@ -705,6 +705,12 @@ const en = {
     me: '{{login}} (me)',
     addFor: 'Add entry for {{login}}',
     addedFor: 'Entry added for {{login}}.',
+    addForMany: 'Add for {{count}} members',
+    addedForMany: 'Entry added for {{count}} members.',
+    selectAll: 'Select all',
+    allMembers: 'All members',
+    membersCount: '{{count}} members',
+    nobody: 'Nobody',
   },
   entries: {
     addedBy: 'added by {{login}}',

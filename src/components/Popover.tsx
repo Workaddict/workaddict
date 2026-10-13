@@ -3,8 +3,8 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 're
 /** Distance between the toggle button and its popover, in px. */
 const GAP = 6
 
-function usePopover() {
-  const [open, setOpen] = useState(false)
+function usePopover(initiallyOpen: boolean) {
+  const [open, setOpen] = useState(initiallyOpen)
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!open) return
@@ -33,6 +33,7 @@ export function Popover({
   hasPopup = 'listbox',
   restoreFocus,
   popClassName,
+  initiallyOpen = false,
   children,
 }: {
   label: string
@@ -49,9 +50,11 @@ export function Popover({
   /** Move focus back to the toggle button when the popover closes and focus would otherwise be lost. */
   restoreFocus?: boolean
   popClassName?: string
+  /** Open on mount, e.g. to keep a choice going when the surrounding form is rebuilt. */
+  initiallyOpen?: boolean
   children: (close: () => void) => ReactNode
 }) {
-  const { open, setOpen, ref } = usePopover()
+  const { open, setOpen, ref } = usePopover(initiallyOpen)
   const wasOpen = useRef(false)
   const onCloseRef = useRef(onClose)
   useEffect(() => {

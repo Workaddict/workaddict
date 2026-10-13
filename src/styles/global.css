@@ -616,18 +616,19 @@ textarea {
   margin-right: auto;
   min-width: 0;
 }
-.manual-actions .member-picker .select {
-  width: auto;
-  max-width: 100%;
-  text-overflow: ellipsis;
+.manual-actions .member-picker .picker {
+  min-width: 0;
 }
 @media (max-width: 560px) {
   .manual-actions > * {
     flex: 1 1 100%;
   }
-  .manual-actions .member-picker .select {
+  .manual-actions .member-picker .picker {
     flex: 1;
+  }
+  .manual-actions .member-picker .picker-btn {
     width: 100%;
+    max-width: none;
   }
   .manual-actions .btn {
     justify-content: center;

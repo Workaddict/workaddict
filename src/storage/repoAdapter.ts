@@ -328,6 +328,65 @@ export class RepoAdapter implements StorageAdapter {
     return saved
   }
 
+  async saveEntries(entries: TimeEntry[]): Promise<TimeEntry[]> {
+    if (entries.length === 0) return []
+    const me = await this.assertWritable()
+    // Check every entry before writing anything.
+    for (const e of entries) {
+      await this.entryActor(e.login)
+      if (durationMs(e.start, e.end) <= 0) {
+        throw new StorageError('invalid', 'Entry must end after it starts')
+      }
+    }
+    const now = new Date().toISOString()
+    const saved = entries.map((e) => {
+      const s: TimeEntry = {
+        ...e,
+        addedBy: e.login === me.login ? undefined : me.login,
+        updatedAt: now,
+      }
+      if (!s.addedBy) delete s.addedBy
+      return s
+    })
+    const byPath = new Map<string, TimeEntry[]>()
+    for (const e of saved) {
+      const path = PATHS.entries(e.login, monthKey(e.start))
+      byPath.set(path, [...(byPath.get(path) ?? []), e])
+    }
+    const first = saved[0]!
+    const members = new Set(saved.map((e) => e.login)).size
+    const message = `entry: add ${formatHM(durationMs(first.start, first.end))} ${quote(first.description)} for ${members} ${members === 1 ? 'member' : 'members'} (${me.login})`
+
+    for (let attempt = 0; ; attempt++) {
+      this.store.invalidate()
+      const snapshot = await this.store.listFiles()
+      const files = new Map<string, unknown>()
+      for (const [path, added] of byPath) {
+        const raw = await this.store.read<unknown>(path, snapshot)
+        const d = entriesCodec.decode(raw ?? [], path)
+        if (d.unreadable) throw new StorageError('corruptData', `${path} cannot be read`, { path })
+        const ids = new Set(added.map((e) => e.id))
+        files.set(
+          path,
+          entriesCodec.encode([...d.value.filter((e) => !ids.has(e.id)), ...added], d.rest),
+        )
+      }
+      try {
+        await this.store.writeMany(files, message, async () => {
+          // The file contents above were computed once: recompute if one of them changed.
+          this.store.invalidate()
+          const current = await this.store.listFiles()
+          if ([...byPath.keys()].some((p) => current.get(p) !== snapshot.get(p))) {
+            throw new StorageError('conflict', 'Entries changed while saving')
+          }
+        })
+        return saved
+      } catch (e) {
+        if (!isStorageError(e, 'conflict') || attempt >= 2) throw e
+      }
+    }
+  }
+
   async deleteEntry(entry: TimeEntry): Promise<void> {
     const actor = await this.entryActor(entry.login)
     await this.writeFile(

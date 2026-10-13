@@ -284,6 +284,61 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
         expect(await bob.listAllEntries()).toEqual([moved])
       })
 
+      it('lets a team leader add the same time for several members at once', async () => {
+        const saved = await alice.saveEntries(
+          ['alice', 'bob', 'carol'].map((l) =>
+            entry(l, '2026-09-22T08:00:00Z', '2026-09-22T09:00:00Z', { description: 'Team meeting' }),
+          ),
+        )
+        expect(saved.map((e) => [e.login, e.addedBy])).toEqual([
+          ['alice', undefined],
+          ['bob', 'alice'],
+          ['carol', 'alice'],
+        ])
+        const stored = await alice.listEntries(SEPT)
+        expect(stored).toHaveLength(3)
+        expect(stored.every((e) => e.description === 'Team meeting')).toBe(true)
+        expect(await bob.listAllEntries()).toContainEqual(saved[1])
+      })
+
+      it('adds several entries to existing files and across months', async () => {
+        const existing = await bob.saveEntry(
+          entry('bob', '2026-09-21T09:00:00Z', '2026-09-21T10:00:00Z'),
+        )
+        await alice.saveEntries([
+          entry('bob', '2026-09-30T09:00:00Z', '2026-09-30T10:00:00Z'),
+          entry('bob', '2026-10-01T09:00:00Z', '2026-10-01T10:00:00Z'),
+        ])
+        const all = await bob.listAllEntries()
+        expect(all).toHaveLength(3)
+        expect(all).toContainEqual(existing)
+        expect(all.map((e) => e.start.slice(0, 10)).sort()).toEqual([
+          '2026-09-21',
+          '2026-09-30',
+          '2026-10-01',
+        ])
+      })
+
+      it('refuses a worker adding entries that include another member and writes nothing', async () => {
+        await expect(
+          bob.saveEntries([
+            entry('bob', '2026-09-22T09:00:00Z', '2026-09-22T10:00:00Z'),
+            entry('alice', '2026-09-22T09:00:00Z', '2026-09-22T10:00:00Z'),
+          ]),
+        ).rejects.toSatisfy((x: unknown) => isStorageError(x, 'forbiddenRole'))
+        expect(await alice.listAllEntries()).toHaveLength(0)
+      })
+
+      it('writes none of several entries when one is invalid', async () => {
+        await expect(
+          alice.saveEntries([
+            entry('alice', '2026-09-22T09:00:00Z', '2026-09-22T10:00:00Z'),
+            entry('bob', '2026-09-22T10:00:00Z', '2026-09-22T10:00:00Z'),
+          ]),
+        ).rejects.toSatisfy((x: unknown) => isStorageError(x, 'invalid'))
+        expect(await alice.listAllEntries()).toHaveLength(0)
+      })
+
       it('records no adder on own entries, even when the client sends one', async () => {
         const saved = await bob.saveEntry(
           entry('bob', '2026-09-22T09:00:00Z', '2026-09-22T10:00:00Z', { addedBy: 'alice' }),

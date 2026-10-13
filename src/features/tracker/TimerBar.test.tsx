@@ -258,13 +258,14 @@ describe('manual entries for other members', () => {
   })
 
   const bob = { login: 'bob', avatarUrl: null }
+  const carol = { login: 'carol', avatarUrl: null }
   const desc = () => screen.getByLabelText('What are you working on?') as HTMLInputElement
-  const picker = () => screen.getByLabelText('For') as HTMLSelectElement
+  const picker = () => screen.getByRole('button', { name: 'For' })
 
   async function setupAs(user: typeof alice, timer?: RunningTimer) {
     const adapter = createMemoryAdapter(user, {
       store: new MemoryFileStore(timer ? { [`timers/${timer.login}.json`]: timer } : {}),
-      collaborators: [alice, bob],
+      collaborators: [alice, bob, carol],
       admins: ['alice'],
     })
     const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
@@ -274,31 +275,71 @@ describe('manual entries for other members', () => {
     return { adapter }
   }
 
-  async function addFor(login: string, start: string, end: string) {
+  /** Toggles the given options ("alice (me)", "bob", "Select all", ...) in the For picker. */
+  async function toggleFor(...options: string[]) {
+    fireEvent.click(await screen.findByRole('button', { name: 'For' }))
+    for (const o of options) fireEvent.click(screen.getByRole('checkbox', { name: o }))
+    fireEvent.click(picker()) // close
+  }
+
+  async function add(button: string, start: string, end: string) {
     fireEvent.change(screen.getByLabelText('Start'), { target: { value: start } })
     fireEvent.change(screen.getByLabelText('End'), { target: { value: end } })
     await act(async () => {
-      fireEvent.click(screen.getByRole('button', { name: `Add entry for ${login}` }))
+      fireEvent.click(screen.getByRole('button', { name: button }))
     })
   }
 
   it('shows no member picker to workers', async () => {
     await setupAs(bob)
-    expect(screen.queryByLabelText('For')).toBeNull()
+    expect(screen.queryByRole('button', { name: 'For' })).toBeNull()
     expect(screen.getByRole('button', { name: 'Add entry' })).toBeInTheDocument()
   })
 
   it('adds an entry for the chosen member and keeps the choice for the next one', async () => {
     const { adapter } = await setupAs(alice)
-    await waitFor(() => expect(picker()).toBeInTheDocument())
-    fireEvent.change(picker(), { target: { value: 'bob' } })
+    await toggleFor('alice (me)', 'bob')
+    expect(picker()).toHaveTextContent('bob')
     fireEvent.change(desc(), { target: { value: 'Client call' } })
-    await addFor('bob', '09:00', '11:30')
+    await add('Add entry for bob', '09:00', '11:30')
     expect(await screen.findByText('Entry added for bob.')).toBeInTheDocument()
     const [entry] = await adapter.listAllEntries()
     expect(entry).toMatchObject({ login: 'bob', addedBy: 'alice', description: 'Client call' })
-    expect(picker().value).toBe('bob')
+    expect(picker()).toHaveTextContent('bob')
     expect(desc().value).toBe('')
+  })
+
+  it('adds the same entry for the whole team at once', async () => {
+    const { adapter } = await setupAs(alice)
+    await toggleFor('Select all')
+    expect(picker()).toHaveTextContent('All members')
+    fireEvent.change(desc(), { target: { value: 'Team meeting' } })
+    await add('Add for 3 members', '08:00', '09:00')
+    expect(await screen.findByText('Entry added for 3 members.')).toBeInTheDocument()
+    const entries = await adapter.listAllEntries()
+    expect(entries.map((e) => [e.login, e.addedBy]).sort()).toEqual([
+      ['alice', undefined],
+      ['bob', 'alice'],
+      ['carol', 'alice'],
+    ])
+    expect(entries.every((e) => e.description === 'Team meeting')).toBe(true)
+    expect(picker()).toHaveTextContent('All members')
+  })
+
+  it('adds entries for a selection of members without the user', async () => {
+    const { adapter } = await setupAs(alice)
+    await toggleFor('alice (me)', 'bob', 'carol')
+    expect(picker()).toHaveTextContent('2 members')
+    await add('Add for 2 members', '08:00', '09:00')
+    await screen.findByText('Entry added for 2 members.')
+    expect((await adapter.listAllEntries()).map((e) => e.login).sort()).toEqual(['bob', 'carol'])
+  })
+
+  it('disables saving when nobody is selected', async () => {
+    await setupAs(alice)
+    await toggleFor('alice (me)')
+    expect(picker()).toHaveTextContent('Nobody')
+    expect(screen.getByRole('button', { name: 'Add entry' })).toBeDisabled()
   })
 
   it("leaves the user's own running timer alone", async () => {
@@ -313,17 +354,37 @@ describe('manual entries for other members', () => {
     }
     const { adapter } = await setupAs(alice, timer)
     await waitFor(() => expect(desc().value).toBe('Design review'))
-    fireEvent.change(picker(), { target: { value: 'bob' } })
+    await toggleFor('alice (me)', 'bob')
     expect(desc().value).toBe('')
     expect((screen.getByLabelText('Start') as HTMLInputElement).value).toBe('')
-    await addFor('bob', '08:00', '09:00')
+    await add('Add entry for bob', '08:00', '09:00')
     await screen.findByText('Entry added for bob.')
     expect((await adapter.listAllEntries())[0]).toMatchObject({ login: 'bob' })
     expect(await adapter.getTimer()).toEqual(timer)
 
-    fireEvent.change(picker(), { target: { value: 'alice' } })
+    await toggleFor('bob', 'alice (me)')
     await waitFor(() => expect(desc().value).toBe('Design review'))
     expect(screen.getByRole('button', { name: 'Stop & save' })).toBeInTheDocument()
+  })
+
+  it("leaves the user's own running timer alone when adding for several members including the user", async () => {
+    vi.useFakeTimers({ now: at(10, 40), toFake: ['Date'] })
+    const timer: RunningTimer = {
+      id: 't1',
+      login: 'alice',
+      start: at(9).toISOString(),
+      description: 'Design review',
+      projectId: null,
+      tagIds: [],
+    }
+    const { adapter } = await setupAs(alice, timer)
+    await waitFor(() => expect(desc().value).toBe('Design review'))
+    await toggleFor('bob')
+    expect(screen.queryByRole('button', { name: 'Stop & save' })).toBeNull()
+    await add('Add for 2 members', '08:00', '09:00')
+    await screen.findByText('Entry added for 2 members.')
+    expect((await adapter.listAllEntries()).map((e) => e.login).sort()).toEqual(['alice', 'bob'])
+    expect(await adapter.getTimer()).toEqual(timer)
   })
 })
 

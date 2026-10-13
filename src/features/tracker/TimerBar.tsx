@@ -2,13 +2,21 @@ import { format } from '../../domain/zoned'
 import { useState, type FormEvent } from 'react'
 import { Icon } from '../../components/Icon'
 import { useConfirm } from '../../components/Modal'
+import { Popover } from '../../components/Popover'
 import { useToast } from '../../components/Toasts'
 import { newId } from '../../domain/ids'
 import { formatClock, resolveTimerStart } from '../../domain/time'
-import type { RunningTimer } from '../../domain/types'
+import type { RunningTimer, TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
-import { useAccess, useDiscardTimer, useMembers, useSaveEntry, useUpdateTimer } from '../data/hooks'
+import {
+  useAccess,
+  useDiscardTimer,
+  useMembers,
+  useSaveEntries,
+  useSaveEntry,
+  useUpdateTimer,
+} from '../data/hooks'
 import { useErrorText, useErrorToast } from '../data/useErrorText'
 import {
   GroupPickers,
@@ -202,53 +210,118 @@ function defaultTimes(): TimeFields {
   }
 }
 
-/** "For" picker: whose entry the manual form creates. Only for users who may edit others' entries. */
-function MemberPicker({ value, onChange }: { value: string; onChange: (login: string) => void }) {
+/**
+ * "For" picker: whose entries the manual form creates, one or several members. Only for users who
+ * may edit others' entries.
+ */
+function MemberPicker({
+  value,
+  onChange,
+  initiallyOpen,
+  onClose,
+}: {
+  value: string[]
+  onChange: (logins: string[]) => void
+  initiallyOpen?: boolean
+  onClose?: () => void
+}) {
   const { t } = useI18n()
   const { user } = useSessionData()
   const members = useMembers().data ?? []
-  const others = members
-    .map((m) => m.login)
-    .filter((l) => l !== user.login)
-    .sort((a, b) => a.localeCompare(b))
+  const all = [
+    user.login,
+    ...members
+      .map((m) => m.login)
+      .filter((l) => l !== user.login)
+      .sort((a, b) => a.localeCompare(b)),
+  ]
+  const allSelected = all.every((l) => value.includes(l))
+  const nameOf = (login: string) => (login === user.login ? t('manual.me', { login }) : login)
+  const summary =
+    value.length === 0
+      ? t('manual.nobody')
+      : value.length === 1
+        ? nameOf(value[0]!)
+        : allSelected
+          ? t('manual.allMembers')
+          : t('manual.membersCount', { count: value.length })
+  // Keep the list order (the user first) whatever order members were checked in.
+  const toggle = (login: string) =>
+    onChange(
+      value.includes(login)
+        ? value.filter((l) => l !== login)
+        : all.filter((l) => l === login || value.includes(l)),
+    )
+
   return (
-    <label className="row small member-picker">
+    <div className="row small member-picker">
       <span>{t('manual.for')}</span>
-      <select className="select" value={value} onChange={(e) => onChange(e.target.value)}>
-        <option value={user.login}>{t('manual.me', { login: user.login })}</option>
-        {others.map((l) => (
-          <option key={l} value={l}>
-            {l}
-          </option>
-        ))}
-      </select>
-    </label>
+      <Popover
+        label={t('manual.for')}
+        hasValue
+        initiallyOpen={initiallyOpen}
+        onClose={onClose}
+        button={<span>{summary}</span>}
+      >
+        {() => (
+          <div
+            className="picker-list"
+            role="listbox"
+            aria-multiselectable="true"
+            style={{ marginTop: 0 }}
+          >
+            <label className="picker-option">
+              <input
+                type="checkbox"
+                checked={allSelected}
+                onChange={() => onChange(allSelected ? [] : all)}
+              />
+              <strong>{t('manual.selectAll')}</strong>
+            </label>
+            {all.map((l) => (
+              <label key={l} className="picker-option">
+                <input type="checkbox" checked={value.includes(l)} onChange={() => toggle(l)} />
+                <span>{nameOf(l)}</span>
+              </label>
+            ))}
+          </div>
+        )}
+      </Popover>
+    </div>
   )
 }
 
 /**
  * Manual entry form. With a running timer it shows that timer, ending when the form opened,
- * and saving stops the timer with the edited values. `timer` is null when the entry is for
- * another member, so their entry never touches the user's own timer.
+ * and saving stops the timer with the edited values. `timer` is null unless the entry is for the
+ * user alone, so entries for other or several members never touch the user's own timer.
  */
 function ManualEntryView({
   draft: fields,
   setDraft: setFields,
   timer,
-  forLogin,
-  setForLogin,
+  forLogins,
+  setForLogins,
+  pickerOpen,
+  onPickerClose,
 }: DraftProps & {
   timer: RunningTimer | null
-  forLogin: string
-  setForLogin: (login: string) => void
+  forLogins: string[]
+  setForLogins: (logins: string[]) => void
+  /** The member picker was in use when this form replaced the previous one. */
+  pickerOpen: boolean
+  onPickerClose: () => void
 }) {
   const { t, timeFormat } = useI18n()
   const toast = useToast()
   const onError = useErrorToast()
   const { adapter, user } = useSessionData()
   const access = useAccess()
-  const forOther = forLogin !== user.login
+  const single = forLogins.length === 1 ? forLogins[0]! : null
+  const forOther = single !== null && single !== user.login
+  const many = forLogins.length > 1
   const save = useSaveEntry()
+  const saveMany = useSaveEntries()
   const update = useUpdateTimer()
   const { stopTimerAt, busy } = useTimerActions()
   // The running timer's span as of opening the form; the end stays fixed while editing.
@@ -303,33 +376,35 @@ function ManualEntryView({
       void finishTimer(r.start, r.end)
       return
     }
+    if (single === null && !many) return
     const now = new Date().toISOString()
-    save.mutate(
-      {
-        entry: {
-          id: newId(),
-          login: forLogin,
-          start: r.start.toISOString(),
-          end: r.end.toISOString(),
-          ...fields,
-          description: fields.description.trim(),
-          createdAt: now,
-          updatedAt: now,
-        },
-      },
-      {
-        // Inputs are only cleared once the entry is safely stored.
-        onSuccess: () => {
-          toast.info(forOther ? t('manual.addedFor', { login: forLogin }) : t('manual.added'))
-          // Skip the no-op: React would keep it queued and could later replay it over the
-          // draft filled from the running timer when switching back to the user's own entry.
-          if (fields !== EMPTY) setFields(EMPTY)
-          setTimes((prev) => ({ ...defaultTimes(), date: prev.date }))
-          setShowErrors(false)
-        },
-        onError,
-      },
-    )
+    const entryFor = (login: string): TimeEntry => ({
+      id: newId(),
+      login,
+      start: r.start.toISOString(),
+      end: r.end.toISOString(),
+      ...fields,
+      description: fields.description.trim(),
+      createdAt: now,
+      updatedAt: now,
+    })
+    // Inputs are only cleared once the entries are safely stored.
+    const onSuccess = () => {
+      toast.info(
+        many
+          ? t('manual.addedForMany', { count: forLogins.length })
+          : forOther
+            ? t('manual.addedFor', { login: single })
+            : t('manual.added'),
+      )
+      // Skip the no-op: React would keep it queued and could later replay it over the
+      // draft filled from the running timer when switching back to the user's own entry.
+      if (fields !== EMPTY) setFields(EMPTY)
+      setTimes((prev) => ({ ...defaultTimes(), date: prev.date }))
+      setShowErrors(false)
+    }
+    if (many) saveMany.mutate(forLogins.map(entryFor), { onSuccess, onError })
+    else save.mutate({ entry: entryFor(single!) }, { onSuccess, onError })
   }
 
   return (
@@ -357,7 +432,12 @@ function ManualEntryView({
       />
       <div className="manual-actions">
         {!adapter.readOnly && access.can('editOthersEntries') && (
-          <MemberPicker value={forLogin} onChange={setForLogin} />
+          <MemberPicker
+            value={forLogins}
+            onChange={setForLogins}
+            initiallyOpen={pickerOpen}
+            onClose={onPickerClose}
+          />
         )}
         {timer ? (
           <>
@@ -371,9 +451,16 @@ function ManualEntryView({
             </button>
           </>
         ) : (
-          <button className="btn btn-primary" disabled={save.isPending}>
+          <button
+            className="btn btn-primary"
+            disabled={save.isPending || saveMany.isPending || forLogins.length === 0}
+          >
             <Icon name="plus" size={16} />
-            {forOther ? t('manual.addFor', { login: forLogin }) : t('manual.add')}
+            {many
+              ? t('manual.addForMany', { count: forLogins.length })
+              : forOther
+                ? t('manual.addFor', { login: single })
+                : t('manual.add')}
           </button>
         )}
       </div>
@@ -406,10 +493,18 @@ export function TimerBar() {
   const [draft, setDraft] = useState<WorkFields>(EMPTY)
   // The running timer the manual form was filled from, and its values at that point.
   const [seed, setSeed] = useState<{ id: string; fields: WorkFields } | null>(null)
-  // Whose entry the manual form creates; kept across saves, reset when leaving manual mode.
-  const [forLogin, setForLogin] = useState(user.login)
-  // An entry for another member ignores the user's own running timer.
-  const timer = mode === 'manual' && forLogin !== user.login ? null : ownTimer
+  // Whose entries the manual form creates; kept across saves, reset when leaving manual mode.
+  const [forLogins, setForLogins] = useState<string[]>([user.login])
+  // Entries for other or several members ignore the user's own running timer.
+  const forSelfOnly = forLogins.length === 1 && forLogins[0] === user.login
+  const timer = mode === 'manual' && !forSelfOnly ? null : ownTimer
+  // Choosing members can swap the form (own timer ↔ others' entry); keep the picker open then.
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const chooseFor = (logins: string[]) => {
+    const self = logins.length === 1 && logins[0] === user.login
+    setPickerOpen(ownTimer !== null && self !== forSelfOnly)
+    setForLogins(logins)
+  }
 
   if (mode === 'manual' && timer) {
     const remote = workFieldsOf(timer)
@@ -440,7 +535,8 @@ export function TimerBar() {
       setDraft(EMPTY)
     }
     setSeed(null)
-    setForLogin(user.login)
+    setForLogins([user.login])
+    setPickerOpen(false)
     setMode(next)
   }
 
@@ -466,8 +562,10 @@ export function TimerBar() {
           draft={draft}
           setDraft={setDraft}
           timer={timer}
-          forLogin={forLogin}
-          setForLogin={setForLogin}
+          forLogins={forLogins}
+          setForLogins={chooseFor}
+          pickerOpen={pickerOpen}
+          onPickerClose={() => setPickerOpen(false)}
         />
       ) : timer ? (
         <RunningTimerView key={timer.id} timer={timer} />

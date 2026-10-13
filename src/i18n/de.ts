@@ -733,6 +733,12 @@ const de: Resources = {
     me: '{{login}} (ich)',
     addFor: 'Eintrag für {{login}} hinzufügen',
     addedFor: 'Eintrag für {{login}} hinzugefügt.',
+    addForMany: 'Für {{count}} Mitglieder eintragen',
+    addedForMany: 'Eintrag für {{count}} Mitglieder hinzugefügt.',
+    selectAll: 'Alle auswählen',
+    allMembers: 'Alle Mitglieder',
+    membersCount: '{{count}} Mitglieder',
+    nobody: 'Niemand',
   },
   entries: {
     addedBy: 'hinzugefügt von {{login}}',

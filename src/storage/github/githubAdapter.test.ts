@@ -414,6 +414,34 @@ describe('GitHub multi-file write (import)', () => {
     expect(gh.json('entries/bob/2025-11.json')).toMatchObject([{ login: 'bob' }])
   })
 
+  it('adds the same entry for several members in one commit', async () => {
+    const { gh, a } = await setup()
+    const before = gh.commits
+    const saved = await a.saveEntries(
+      ['alice', 'bob', 'carol'].map((l) => ({ ...mk(l, '2025-10'), description: 'Team meeting' })),
+    )
+    expect(gh.commits - before).toBe(1)
+    expect(gh.messages.at(-1)).toBe('entry: add 1:00 "Team meeting" for 3 members (alice)')
+    expect(gh.json('entries/carol/2025-10.json')).toEqual([saved[2]])
+  })
+
+  it('keeps an entry written concurrently while adding entries for several members', async () => {
+    let concurrent: (() => void) | null = null
+    const { gh, a } = await setup((orig) => async (input, init) => {
+      if (concurrent && init?.method === 'POST' && String(input).endsWith('/git/trees')) {
+        const write = concurrent
+        concurrent = null
+        write()
+      }
+      return orig(input, init)
+    })
+    const other = { ...mk('bob', '2025-10'), description: 'Stopped elsewhere' }
+    concurrent = () => gh.putRaw('entries/bob/2025-10.json', JSON.stringify([other]))
+    await a.saveEntries(['alice', 'bob'].map((l) => mk(l, '2025-10')))
+    expect(gh.json('entries/bob/2025-10.json')).toHaveLength(2)
+    expect(gh.json('entries/bob/2025-10.json')).toContainEqual(other)
+  })
+
   it('shifts entries in one commit, moving them across months', async () => {
     const { gh, a } = await setup()
     await a.importData(data(), 'x')

@@ -186,6 +186,26 @@ export function useSaveEntry(feedback?: MutationFeedback<void>) {
   })
 }
 
+/** Creates several new entries in one commit (e.g. the same time for several members). */
+export function useSaveEntries(feedback?: MutationFeedback<void>) {
+  const { adapter } = useSessionData()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (entries: TimeEntry[]) => adapter.saveEntries(entries),
+    onMutate: async (entries) => {
+      const snap = await snapshot(qc, keys.entries)
+      patchEntries(qc, (list) => entries.reduce((l, e) => upsert(e)(l), list))
+      return snap
+    },
+    onSuccess: () => feedback?.onSuccess?.(undefined),
+    onError: (e, _v, snap) => {
+      restore(qc, snap)
+      feedback?.onError?.(e)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: keys.entries }),
+  })
+}
+
 export function useDeleteEntry(feedback?: MutationFeedback<void>) {
   const { adapter } = useSessionData()
   const qc = useQueryClient()
