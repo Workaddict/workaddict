@@ -2429,3 +2429,10 @@ a.btn {
   font-size: 0.7rem;
   font-weight: 600;
 }
+/* Start page for signed-in users: the hero without the sign-in card. */
+.landing-main-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+.landing-main-single .landing-hero {
+  position: static;
+}

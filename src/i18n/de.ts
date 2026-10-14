@@ -32,6 +32,8 @@ const de: Resources = {
       'Kopieren ist nicht verfügbar. Der Text ist markiert: Drücke Strg+C (⌘C auf dem Mac).',
   },
   nav: {
+    startPage: 'Startseite',
+    backToApp: 'Zur Zeiterfassung',
     tracker: 'Zeiterfassung',
     stats: 'Statistik',
     workGroups: 'Projekte & Labels',

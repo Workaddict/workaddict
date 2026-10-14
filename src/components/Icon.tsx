@@ -1,5 +1,6 @@
 const PATHS = {
   play: 'M7 4.5v15l12-7.5z',
+  home: 'M3 10.5L12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z',
   stop: 'M6 6h12v12H6z',
   plus: 'M12 5v14M5 12h14',
   edit: 'M4 20h4L19 9l-4-4L4 16v4zM13.5 6.5l4 4',

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
-import { REPO_URL } from '../../app/about'
 import { Icon } from '../../components/Icon'
 import { SiteFooter } from '../../components/SiteFooter'
 import { useI18n } from '../../i18n'
@@ -9,7 +8,7 @@ import { useOpenRecentProfile } from '../profiles/profileNav'
 import { ProfilePicker, UnlockScreen } from '../profiles/StartScreens'
 import { useVault } from '../profiles/vaultStore'
 import { useAuth } from './AuthContext'
-import { Highlights, HowItWorks } from './Landing'
+import { Highlights, HowItWorks, LandingHero } from './Landing'
 import { PublicHeader } from './PublicHeader'
 import { SignInForm } from './SignInForm'
 
@@ -68,39 +67,20 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
       <PublicHeader />
 
       <div className="landing-main">
-        <section className="landing-hero" aria-labelledby="landing-headline">
-          <h1 id="landing-headline">{t('landing.headline')}</h1>
-          <p className="landing-subline">{t('landing.subline')}</p>
-          <ul className="landing-facts">
-            <li>
-              <Icon name="check" size={18} />
-              {t('landing.factFree')}
-            </li>
-            <li>
-              <Icon name="check" size={18} />
-              <span>
-                {t('landing.factOpenSource')}{' '}
-                <a href={REPO_URL} target="_blank" rel="noreferrer">
-                  {t('landing.factOpenSourceLink')}
-                </a>
-              </span>
-            </li>
-            <li>
-              <Icon name="check" size={18} />
-              {t('landing.factData')}
-            </li>
-          </ul>
-          <div className="row landing-actions">
-            <button type="button" className="btn btn-primary btn-lg" onClick={startDemo}>
-              <Icon name="play" size={16} filled />
-              {t('landing.demo')}
-            </button>
-            <Link to="/setup" className="btn btn-lg">
-              <Icon name="settings" size={16} />
-              {t('landing.setup')}
-            </Link>
-          </div>
-        </section>
+        <LandingHero
+          actions={
+            <>
+              <button type="button" className="btn btn-primary btn-lg" onClick={startDemo}>
+                <Icon name="play" size={16} filled />
+                {t('landing.demo')}
+              </button>
+              <Link to="/setup" className="btn btn-lg">
+                <Icon name="settings" size={16} />
+                {t('landing.setup')}
+              </Link>
+            </>
+          }
+        />
 
         <SignInForm
           id={SIGN_IN_ID}

@@ -34,6 +34,8 @@ const en = {
     workGroups: 'Projects & Tags',
     settings: 'Settings',
     logout: 'Sign out',
+    startPage: 'Start page',
+    backToApp: 'Open the tracker',
   },
   login: {
     title: 'Already set up? Sign in',

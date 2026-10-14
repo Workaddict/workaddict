@@ -220,6 +220,10 @@ function UserMenu() {
             </Link>
           )}
           <div className="menu-divider" />
+          <Link className="menu-item" role="menuitem" to="/start" onClick={close}>
+            <Icon name="home" size={16} />
+            {t('nav.startPage')}
+          </Link>
           <Link className="menu-item" role="menuitem" to="/settings" onClick={close}>
             <Icon name="settings" size={16} />
             {t('nav.settings')}

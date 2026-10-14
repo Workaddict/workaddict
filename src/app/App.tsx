@@ -18,6 +18,7 @@ import { ZoneScope } from './ZoneScope'
 const StatsPage = lazyWithReload(() => import('../features/stats/StatsPage'))
 const WorkGroupsPage = lazyWithReload(() => import('../features/workgroups/WorkGroupsPage'))
 const SettingsPage = lazyWithReload(() => import('../features/settings/SettingsPage'))
+const StartPage = lazyWithReload(() => import('../features/auth/StartPage'))
 const ConnectAiPage = lazyWithReload(() => import('../features/settings/ConnectAiPage'))
 
 export function App() {
@@ -47,6 +48,8 @@ export function App() {
           <Route path="add-project" element={<AddProjectPage />} />
           <Route path="replace-token" element={<ReplaceTokenPage />} />
           <Route path="fix" element={<FixPage />} />
+          {/* The public start page, for signed-in users; it has no app chrome. */}
+          <Route path="start" element={<StartPage />} />
           <Route
             element={
               <ZoneScope>

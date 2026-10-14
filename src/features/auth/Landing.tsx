@@ -1,4 +1,6 @@
+import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
+import { REPO_URL } from '../../app/about'
 import { Icon, type IconName } from '../../components/Icon'
 import { seoPageUrl } from '../../app/seoPages'
 import { useI18n } from '../../i18n'
@@ -11,6 +13,37 @@ const HIGHLIGHTS: { key: string; icon: IconName }[] = [
   { key: 'reports', icon: 'chart' },
   { key: 'import', icon: 'import' },
 ]
+
+/** Headline, key facts and the start page's buttons (`actions`). */
+export function LandingHero({ actions }: { actions: ReactNode }) {
+  const { t } = useI18n()
+  return (
+    <section className="landing-hero" aria-labelledby="landing-headline">
+      <h1 id="landing-headline">{t('landing.headline')}</h1>
+      <p className="landing-subline">{t('landing.subline')}</p>
+      <ul className="landing-facts">
+        <li>
+          <Icon name="check" size={18} />
+          {t('landing.factFree')}
+        </li>
+        <li>
+          <Icon name="check" size={18} />
+          <span>
+            {t('landing.factOpenSource')}{' '}
+            <a href={REPO_URL} target="_blank" rel="noreferrer">
+              {t('landing.factOpenSourceLink')}
+            </a>
+          </span>
+        </li>
+        <li>
+          <Icon name="check" size={18} />
+          {t('landing.factData')}
+        </li>
+      </ul>
+      <div className="row landing-actions">{actions}</div>
+    </section>
+  )
+}
 
 export function Highlights() {
   const { t, lang } = useI18n()
