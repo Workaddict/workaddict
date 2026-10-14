@@ -1,0 +1,10 @@
+{
+  "name": "workaddict",
+  "version": "1.0.0-beta.1",
+  "description": "(Beta) Log what you did with Claude Code as Workaddict time entries, and set up projects from a description.",
+  "author": { "name": "Workaddict" },
+  "homepage": "https://github.com/Workaddict/workaddict",
+  "repository": "https://github.com/Workaddict/workaddict",
+  "license": "AGPL-3.0-only",
+  "keywords": ["time-tracking", "mcp", "workaddict"]
+}

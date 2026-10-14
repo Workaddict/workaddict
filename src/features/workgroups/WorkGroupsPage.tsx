@@ -3,6 +3,7 @@ import { EmptyState, Spinner } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { useConfirm } from '../../components/Modal'
 import { isNameTaken } from '../../domain/ids'
+import { MAX_PROJECT_REPOS, parseRepoInput } from '../../domain/issueRef'
 import { durationMs, formatHM } from '../../domain/time'
 import { PROJECT_COLORS, type Project, type Tag, type TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
@@ -169,6 +170,81 @@ function NameForm({
   )
 }
 
+/** A project's linked repositories; editors and team leaders can add and remove them. */
+function ProjectRepos({ project, canManage }: { project: Project; canManage: boolean }) {
+  const { t } = useI18n()
+  const onError = useErrorToast()
+  const { setProjectRepo } = useWorkspaceActions()
+  const [adding, setAdding] = useState(false)
+  const [text, setText] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const repos = project.repos ?? []
+  if (!repos.length && !canManage) return null
+
+  const add = (e: FormEvent) => {
+    e.preventDefault()
+    const repo = parseRepoInput(text)
+    if (!repo) return setError(t('workGroups.repoInvalid'))
+    if (repos.some((r) => r.toLowerCase() === repo.toLowerCase())) {
+      return setError(t('workGroups.repoTaken'))
+    }
+    if (repos.length >= MAX_PROJECT_REPOS) {
+      return setError(t('workGroups.repoLimit', { count: MAX_PROJECT_REPOS }))
+    }
+    setProjectRepo(project, repo, true).catch(onError)
+    setText('')
+    setError(null)
+    setAdding(false)
+  }
+
+  return (
+    <div className="wg-repos" aria-label={t('workGroups.repos', { name: project.name })}>
+      {repos.map((r) => (
+        <span key={r} className="chip">
+          <a href={`https://github.com/${r}`} target="_blank" rel="noopener noreferrer">
+            <Icon name="github" size={12} /> {r}
+          </a>
+          {canManage && (
+            <button
+              type="button"
+              className="chip-remove"
+              aria-label={t('workGroups.unlinkRepo', { repo: r })}
+              title={t('workGroups.unlinkRepo', { repo: r })}
+              onClick={() => setProjectRepo(project, r, false).catch(onError)}
+            >
+              <Icon name="x" size={12} />
+            </button>
+          )}
+        </span>
+      ))}
+      {canManage &&
+        (adding ? (
+          <form className="row" onSubmit={add}>
+            <input
+              className="input"
+              autoFocus
+              placeholder={t('workGroups.repoPlaceholder')}
+              aria-label={t('workGroups.linkRepo')}
+              aria-invalid={!!error}
+              value={text}
+              onChange={(e) => {
+                setText(e.target.value)
+                setError(null)
+              }}
+              onKeyDown={(e) => e.key === 'Escape' && setAdding(false)}
+            />
+            <button className="btn">{t('common.add')}</button>
+            {error && <span className="form-error">{error}</span>}
+          </form>
+        ) : (
+          <button type="button" className="link-btn small" onClick={() => setAdding(true)}>
+            + {t('workGroups.linkRepo')}
+          </button>
+        ))}
+    </div>
+  )
+}
+
 function ProjectRow({
   project,
   usage,
@@ -212,41 +288,44 @@ function ProjectRow({
   }
 
   return (
-    <div className={`wg-row${project.archived ? ' archived' : ''}`}>
-      <span className="dot" style={{ background: project.color, width: 12, height: 12 }} />
-      <span className="name">
-        {project.name}
-        {project.archived && <span className="faint small"> · {t('common.archived')}</span>}
-      </span>
-      <Hours usage={usage} totals={totals} />
-      {canManage && (
-        <RowActions
-          archived={project.archived}
-          deleting={counting}
-          onEdit={() => {
-            setColor(project.color)
-            setEditing(true)
-          }}
-          onArchive={() =>
-            updateProject(
-              project.id,
-              { archived: !project.archived },
-              `${project.archived ? 'restore' : 'archive'} project "${project.name}"`,
-            ).catch(onError)
-          }
-          onDelete={async () => {
-            const n = await count((e) => e.projectId === project.id)
-            const ok = await confirm({
-              message:
-                n === null
-                  ? t('workGroups.deleteProjectUnknown', { name: project.name })
-                  : t('workGroups.deleteProjectConfirm', { name: project.name, count: n }),
-            })
-            if (ok) deleteProject(project).catch(onError)
-          }}
-        />
-      )}
-    </div>
+    <>
+      <div className={`wg-row${project.archived ? ' archived' : ''}`}>
+        <span className="dot" style={{ background: project.color, width: 12, height: 12 }} />
+        <span className="name">
+          {project.name}
+          {project.archived && <span className="faint small"> · {t('common.archived')}</span>}
+        </span>
+        <Hours usage={usage} totals={totals} />
+        {canManage && (
+          <RowActions
+            archived={project.archived}
+            deleting={counting}
+            onEdit={() => {
+              setColor(project.color)
+              setEditing(true)
+            }}
+            onArchive={() =>
+              updateProject(
+                project.id,
+                { archived: !project.archived },
+                `${project.archived ? 'restore' : 'archive'} project "${project.name}"`,
+              ).catch(onError)
+            }
+            onDelete={async () => {
+              const n = await count((e) => e.projectId === project.id)
+              const ok = await confirm({
+                message:
+                  n === null
+                    ? t('workGroups.deleteProjectUnknown', { name: project.name })
+                    : t('workGroups.deleteProjectConfirm', { name: project.name, count: n }),
+              })
+              if (ok) deleteProject(project).catch(onError)
+            }}
+          />
+        )}
+      </div>
+      <ProjectRepos project={project} canManage={canManage} />
+    </>
   )
 }
 

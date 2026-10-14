@@ -1,0 +1,32 @@
+{
+  "name": "workaddict-mcp",
+  "version": "1.0.0-beta.1",
+  "description": "(Beta) MCP server for Workaddict: let your AI assistant read projects and log time entries in your Workaddict data repository.",
+  "license": "AGPL-3.0-only",
+  "type": "module",
+  "bin": {
+    "workaddict-mcp": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "node build.mjs",
+    "typecheck": "tsc -p tsconfig.json"
+  },
+  "keywords": [
+    "mcp",
+    "time-tracking",
+    "workaddict",
+    "claude"
+  ],
+  "devDependencies": {
+    "@modelcontextprotocol/sdk": "1.31.0",
+    "@types/node": "20.19.43",
+    "esbuild": "0.28.2",
+    "zod": "4.6.5"
+  }
+}

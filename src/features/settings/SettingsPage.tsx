@@ -30,6 +30,7 @@ import { ReassignEntriesModal } from './ReassignEntries'
 import { ShiftEntriesModal } from './ShiftEntries'
 import { RoleBadge, TeamRolesSection } from './TeamRoles'
 import { TimeZoneSection } from './TimeZoneSection'
+import { AiSection } from './AiSection'
 
 const ImportWizard = lazyWithReload(() => import('../import/ImportWizard'))
 
@@ -169,6 +170,7 @@ export default function SettingsPage() {
       </section>
 
       <TeamRolesSection />
+      <AiSection />
       <TeamHelper />
 
       <section className="section">

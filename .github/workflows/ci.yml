@@ -33,6 +33,9 @@ jobs:
       - run: npm run lint
       - run: npm test
       - run: npm run build
+      # MCP server (mcp/): its tests run with `npm test`; type-check and bundle it here.
+      - run: npm run typecheck -w mcp
+      - run: npm run build -w mcp
 
   # Merges Dependabot's grouped minor/patch PRs once `check` is green. Major bumps get their own
   # branches (no group), so they never match here and stay manual.

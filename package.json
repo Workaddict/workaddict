@@ -2,7 +2,7 @@
   "name": "workaddict",
   "private": true,
   "license": "AGPL-3.0-only",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -50,5 +50,8 @@
     "typescript-eslint": "^8.71.0",
     "vite": "^8.3.1",
     "vitest": "^5.0.3"
-  }
+  },
+  "workspaces": [
+    "mcp"
+  ]
 }

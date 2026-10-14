@@ -403,6 +403,17 @@ export function useSetTeamTimeZone(feedback?: MutationFeedback<void>) {
   })
 }
 
+export function useSetMarkAiEntries(feedback?: MutationFeedback<void>) {
+  const { adapter } = useSessionData()
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (on: boolean) => adapter.setMarkAiEntries(on),
+    onSuccess: () => feedback?.onSuccess?.(undefined),
+    onError: (e) => feedback?.onError?.(e),
+    onSettled: () => qc.invalidateQueries({ queryKey: keys.workspace }),
+  })
+}
+
 // ---- roles -----------------------------------------------------------------
 
 /**

@@ -67,10 +67,16 @@ export class StaticIdentity implements Identity {
 
 export function createMemoryAdapter(
   me: Member,
-  opts?: { store?: MemoryFileStore; collaborators?: Member[] | null; admins?: string[] },
+  opts?: {
+    store?: MemoryFileStore
+    collaborators?: Member[] | null
+    admins?: string[]
+    client?: string
+  },
 ): RepoAdapter {
   return new RepoAdapter(
     opts?.store ?? new MemoryFileStore(),
     new StaticIdentity(me, opts?.collaborators ?? null, new Set(opts?.admins ?? [])),
+    { client: opts?.client },
   )
 }

@@ -18,6 +18,8 @@ export interface WorkFields {
   description: string
   projectId: string | null
   tagIds: string[]
+  /** `owner/repo#42`, or the text typed so far until it is resolved on save. */
+  issueRef?: string
 }
 
 /** Inline tag creation for editors and team leaders; undefined for workers. */

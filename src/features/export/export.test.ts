@@ -68,7 +68,7 @@ describe('reportSheets', () => {
     ])
     const entries = sheets[1]!
     expect(entries.rows).toHaveLength(3)
-    const sum = entries.rows.reduce((acc, row) => acc + (cellValue(row[7]!) as number), 0)
+    const sum = entries.rows.reduce((acc, row) => acc + (cellValue(row[8]!) as number), 0)
     expect(sum).toBeCloseTo(r.summary.totalMs / H, 10)
   })
 
@@ -114,20 +114,28 @@ describe('CSV export', () => {
     const l = lines(csv)
     expect(l).toHaveLength(4) // header, 2 rows, trailing empty after final CRLF
     expect(l[0]).toBe(
-      'stats.date;exports.start;exports.end;stats.member;stats.project;stats.tagsCol;stats.description;exports.hours',
+      'stats.date;exports.start;exports.end;stats.member;stats.project;stats.tagsCol;stats.description;issue.label;exports.hours',
     )
-    expect(l[1]).toBe('2026-09-01;09:30;11:00;müller;Website;meeting;;1,50')
+    expect(l[1]).toBe('2026-09-01;09:30;11:00;müller;Website;meeting;;;1,50')
     expect(l[3]).toBe('')
   })
 
   it('writes English CSV with , and decimal point', () => {
     const l = lines(reportCsv(report([entry(1, 1.5)])))
-    expect(l[1]).toBe('2026-09-01,09:30,11:00,müller,Website,meeting,,1.50')
+    expect(l[1]).toBe('2026-09-01,09:30,11:00,müller,Website,meeting,,,1.50')
+  })
+
+  it('writes the issue link after the description, and nothing for a malformed one', () => {
+    const linked = { ...entry(1, 1, 'Bug'), issueRef: 'acme/web#42' }
+    const bad = { ...entry(2, 1, 'Bad'), issueRef: '=HYPERLINK("x")' }
+    const l = lines(reportCsv(report([linked, bad])))
+    expect(l[1]).toBe('2026-09-01,09:30,10:30,müller,Website,meeting,Bug,acme/web#42,1.00')
+    expect(l[2]).toBe('2026-09-02,09:30,10:30,müller,Website,meeting,Bad,,1.00')
   })
 
   it('quotes delimiters, quotes and line breaks', () => {
     const csv = reportCsv(report([entry(1, 1, 'a, "b"\nc')]))
-    expect(csv).toContain(',"a, ""b""\nc",1.00')
+    expect(csv).toContain(',"a, ""b""\nc",,1.00')
   })
 
   it('does not quote the other dialect’s delimiter', () => {
@@ -209,6 +217,14 @@ describe('ODS export', () => {
     )
   })
 
+  it('writes the issue link as a hyperlink', () => {
+    const xmlText = content(report([{ ...entry(1, 1), issueRef: 'acme/web#42' }]))
+    expect(xmlText).toContain(
+      '<text:a xlink:type="simple" xlink:href="https://github.com/acme/web/issues/42">acme/web#42</text:a>',
+    )
+    expect(xmlText).toContain('xmlns:xlink="http://www.w3.org/1999/xlink"')
+  })
+
   it('is well-formed XML with special characters escaped', () => {
     const xmlText = content(report([entry(1, 1, 'a < b & "c"\nline\u0007two')]))
     expect(xmlText).toContain(
@@ -245,6 +261,18 @@ describe('Excel export', () => {
     expect(entries.getCell('A1').value).toBe('stats.date')
     expect(entries.getCell('A2').numFmt).toBe('dd\\.mm\\.yyyy')
     expect(entries.getCell('B2').numFmt).toBe('hh:mm')
+  })
+
+  it('links the issue cell to the issue', async () => {
+    const wb = await xlsxWorkbook(report([{ ...entry(1, 1), issueRef: 'acme/web#42' }, entry(2, 1)]))
+    const entries = wb.getWorksheet('exports.entries')!
+    expect(entries.getCell('H1').value).toBe('issue.label')
+    expect(entries.getCell('H2').value).toEqual({
+      text: 'acme/web#42',
+      hyperlink: 'https://github.com/acme/web/issues/42',
+    })
+    expect(entries.getCell('H3').value).toBe('')
+    expect(entries.getCell('I2').value).toBe(1)
   })
 
   it('uses 12-hour times when the app does', async () => {

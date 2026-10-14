@@ -712,8 +712,71 @@ const en = {
     membersCount: '{{count}} members',
     nobody: 'Nobody',
   },
+  connectAi: {
+    back: 'Settings',
+    title: 'Connect AI',
+    intro:
+      'Let your AI assistant work with Workaddict: create projects from a description, and log what you did with Claude Code as entries. The assistant runs the Workaddict MCP server on your computer with your own token; Workaddict has no server and sees no AI key.',
+    betaNote:
+      'Beta: the AI integration is new. Tools and the plugin may still change, and the activity heuristic only sees time in which Claude Code was working, so check suggested entries before you confirm them.',
+    tokenTitle: '1. A token for the assistant',
+    tokenText:
+      'Create a separate fine-grained token for the assistant, so you can revoke it without signing out of the app. Like the app token, it needs only the data repository.',
+    tokenOpen: 'Create a token on GitHub',
+    claudeCodeTitle: '2. Claude Code',
+    system: 'Operating system',
+    windows: 'Windows',
+    unix: 'macOS / Linux',
+    envText:
+      'Store the repository and the token as environment variables (replace github_pat_… with your token), then open a new terminal:',
+    copyEnv: 'Copy commands',
+    pluginText: 'Install the Workaddict plugin in Claude Code:',
+    copyPlugin: 'Copy install command',
+    useText: 'Then use:',
+    logToday: 'suggests entries for what you did with Claude today, and saves them once you confirm',
+    newProject: 'sets up projects, linked repositories and tags from your description',
+    withoutPlugin: 'Without the plugin: add only the MCP server',
+    copyCommand: 'Copy command',
+    otherTitle: '3. Claude Desktop and other assistants',
+    otherText:
+      'Assistants that support MCP (Claude Desktop, Cursor and others) take this entry in their MCP configuration file. Replace github_pat_… with your token:',
+    copyJson: 'Copy configuration',
+    privacyTitle: 'What the assistant can see and do',
+    privacyLocal:
+      'Your Claude Code transcripts are read on your computer only. Nothing from them is sent anywhere by the server.',
+    privacySaved:
+      'Only what the assistant writes as the description is saved, and only after you confirm. The whole team can see it.',
+    privacyCommits:
+      'Every change it makes is a commit that names the assistant. Team leaders can also mark AI entries in the list (Settings → AI assistants).',
+    privacyNoDelete:
+      'It can read and add data, but cannot delete or archive anything, change roles or the team time zone.',
+    privacyToken:
+      'The token sits in your environment or configuration file in plain text. Keep it limited to the data repository, and revoke it on GitHub when you stop using the assistant.',
+  },
+  ai: {
+    title: 'AI assistants',
+    beta: 'Beta',
+    mark: 'Mark AI entries',
+    markHint:
+      'Entries that an AI assistant adds through the Workaddict MCP server show which assistant added them. Commit messages always name the assistant.',
+    leaderOnly: 'Only team leaders can change this.',
+    markOn: 'AI entries are marked from now on',
+    markOff: 'New AI entries are no longer marked',
+    connectHint: 'Let Claude Code or another AI assistant create projects and log your work.',
+    connect: 'Connect AI',
+  },
+  issue: {
+    label: 'Issue',
+    placeholder: 'Issue, e.g. #42',
+    edit: 'Edit issue',
+    errors: {
+      format: 'Not an issue reference',
+      ambiguousRepo: 'Repository unclear: enter owner/repo#number',
+    },
+  },
   entries: {
     addedBy: 'added by {{login}}',
+    addedVia: 'via {{client}}',
     editDescription: 'Edit description',
     editStart: 'Edit start time',
     editEnd: 'Edit end time',
@@ -741,6 +804,13 @@ const en = {
     projects: 'Projects',
     tags: 'Tags',
     newProject: 'New project name',
+    repos: 'Linked repositories of {{name}}',
+    linkRepo: 'Link repository',
+    unlinkRepo: 'Unlink {{repo}}',
+    repoPlaceholder: 'owner/repo or GitHub URL',
+    repoInvalid: 'Not a repository',
+    repoTaken: 'Repository already linked',
+    repoLimit: 'At most {{count}} repositories per project',
     newTag: 'New tag name',
     color: 'Color',
     showArchived: 'Show archived',

@@ -1,16 +1,10 @@
 import { useCallback } from 'react'
 import { isNameTaken, newId } from '../../domain/ids'
-import { PROJECT_COLORS, type Project, type Tag, type Workspace } from '../../domain/types'
+import { MAX_PROJECT_REPOS } from '../../domain/issueRef'
+import type { Project, Tag } from '../../domain/types'
 import { useUpdateWorkspace } from './hooks'
 
-/** Next palette color not yet used by an active project (cycles when all are used). */
-export function nextProjectColor(ws: Workspace | undefined): string {
-  const used = new Set((ws?.projects ?? []).filter((p) => !p.archived).map((p) => p.color))
-  return (
-    PROJECT_COLORS.find((c) => !used.has(c)) ??
-    PROJECT_COLORS[(ws?.projects.length ?? 0) % PROJECT_COLORS.length]!
-  )
-}
+export { nextProjectColor } from '../../domain/projectColor'
 
 /**
  * Workspace edits as pure functions. Ids are generated up front so callers can use a new
@@ -41,6 +35,24 @@ export function useWorkspaceActions() {
           projects: ws.projects.map((p) => (p.id === id ? { ...p, ...patch } : p)),
         }),
         summary,
+      }),
+    [mutate],
+  )
+
+  /** Adds or removes a linked repository, based on the latest workspace (no lost updates). */
+  const setProjectRepo = useCallback(
+    (project: Project, repo: string, linked: boolean) =>
+      mutate({
+        fn: (ws) => ({
+          ...ws,
+          projects: ws.projects.map((p) => {
+            if (p.id !== project.id) return p
+            const others = (p.repos ?? []).filter((r) => r.toLowerCase() !== repo.toLowerCase())
+            const repos = linked ? [...others, repo].slice(0, MAX_PROJECT_REPOS) : others
+            return { ...p, repos }
+          }),
+        }),
+        summary: `${linked ? 'link' : 'unlink'} ${repo} ${linked ? 'to' : 'from'} project "${project.name}"`,
       }),
     [mutate],
   )
@@ -87,6 +99,7 @@ export function useWorkspaceActions() {
   return {
     createProject,
     updateProject,
+    setProjectRepo,
     deleteProject,
     createTag,
     updateTag,

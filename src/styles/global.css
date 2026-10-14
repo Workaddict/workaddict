@@ -2351,3 +2351,81 @@ a.btn {
     max-width: 38vw;
   }
 }
+
+/* ---------- Issue links ---------- */
+.issue-field {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.issue-input {
+  width: 11rem;
+}
+.issue-link {
+  color: var(--text-muted);
+  text-decoration: none;
+}
+.issue-link:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+.entry-issue {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+.entry-issue.empty:not(:hover):not(:focus-visible) {
+  color: var(--text-faint);
+}
+.entry-issue .btn-icon {
+  padding: 2px;
+}
+.wg-repos {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0 16px 10px 38px;
+}
+.wg-repos a {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  color: inherit;
+  text-decoration: none;
+}
+.wg-repos a:hover {
+  color: var(--accent);
+}
+.wg-repos .input {
+  width: 16rem;
+}
+.chip-remove {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--text-faint);
+  cursor: pointer;
+}
+.chip-remove:hover {
+  color: var(--danger);
+}
+
+/* ---------- Connect AI ---------- */
+.code-block {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: 8px;
+  background: var(--surface-2);
+  font-size: 0.85rem;
+  white-space: pre;
+}
+.chip-beta {
+  vertical-align: middle;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 0.7rem;
+  font-weight: 600;
+}

@@ -18,6 +18,7 @@ import { ZoneScope } from './ZoneScope'
 const StatsPage = lazyWithReload(() => import('../features/stats/StatsPage'))
 const WorkGroupsPage = lazyWithReload(() => import('../features/workgroups/WorkGroupsPage'))
 const SettingsPage = lazyWithReload(() => import('../features/settings/SettingsPage'))
+const ConnectAiPage = lazyWithReload(() => import('../features/settings/ConnectAiPage'))
 
 export function App() {
   const { t } = useI18n()
@@ -57,6 +58,7 @@ export function App() {
             <Route path="stats" element={<StatsPage />} />
             <Route path="groups" element={<WorkGroupsPage />} />
             <Route path="settings" element={<SettingsPage />} />
+            <Route path="connect-ai" element={<ConnectAiPage />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

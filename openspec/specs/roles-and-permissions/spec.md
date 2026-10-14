@@ -42,6 +42,7 @@ The system SHALL grant permissions by effective role as follows, and SHALL hide 
 | Create, rename, recolor, archive, and delete projects and tags | no | yes | yes |
 | Run the Clockify import | no | no | yes |
 | Set the team time zone | no | no | yes |
+| Turn AI entry marking on or off | no | no | yes |
 | Shift entry times | no | no | yes |
 | Assign roles | owner only | owner only | owner only |
 
@@ -72,6 +73,10 @@ The system SHALL grant permissions by effective role as follows, and SHALL hide 
 #### Scenario: Editor cannot change the team time zone
 - **WHEN** an editor opens Settings
 - **THEN** the team time zone is shown read-only and no "Shift entry times" action is shown
+
+#### Scenario: Editor cannot change AI entry marking
+- **WHEN** an editor opens Settings
+- **THEN** the "Mark AI entries" setting is shown read-only
 
 ### Requirement: Role storage
 The system SHALL store role assignments in `roles.json` in the data repository as a map from GitHub login to role, and SHALL treat a missing or unreadable file as containing no assignments.

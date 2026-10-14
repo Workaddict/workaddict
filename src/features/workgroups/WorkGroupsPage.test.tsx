@@ -92,3 +92,53 @@ describe('WorkGroupsPage', () => {
     await waitFor(async () => expect((await adapter.getWorkspace()).projects).toHaveLength(0))
   })
 })
+
+describe('linked repositories', () => {
+  async function render(login = 'alice') {
+    const store = new MemoryFileStore()
+    const owner = createMemoryAdapter(alice, { store, admins: ['alice'] })
+    await owner.init()
+    await owner.updateWorkspace(
+      (ws) => ({
+        ...ws,
+        projects: [{ id: 'p', name: 'Acme', color: '#2563eb', archived: false, repos: ['acme/web'] }],
+      }),
+      'seed',
+    )
+    const me = { login, avatarUrl: null }
+    const adapter = createMemoryAdapter(me, { store, admins: ['alice'], collaborators: [alice, me] })
+    await renderWithSession(<WorkGroupsPage />, adapter)
+    return { adapter }
+  }
+
+  const repos = async () => (await screen.findByLabelText('Linked repositories of Acme')) as HTMLElement
+
+  it('links a repository given as URL and refuses a duplicate', async () => {
+    const { adapter } = await render()
+    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Link repository' }))
+    const input = screen.getByLabelText('Link repository')
+    fireEvent.change(input, { target: { value: 'https://github.com/acme/api.git' } })
+    fireEvent.submit(input)
+    await waitFor(async () =>
+      expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual(['acme/web', 'acme/api']),
+    )
+
+    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Link repository' }))
+    fireEvent.change(screen.getByLabelText('Link repository'), { target: { value: 'Acme/Web' } })
+    fireEvent.submit(screen.getByLabelText('Link repository'))
+    expect(await screen.findByText('Repository already linked')).toBeTruthy()
+  })
+
+  it('unlinks a repository', async () => {
+    const { adapter } = await render()
+    fireEvent.click(within(await repos()).getByRole('button', { name: 'Unlink acme/web' }))
+    await waitFor(async () => expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual([]))
+  })
+
+  it('shows linked repositories read-only to workers', async () => {
+    await render('bob')
+    const list = await repos()
+    expect(within(list).getByRole('link', { name: /acme\/web/ })).toBeTruthy()
+    expect(within(list).queryByRole('button')).toBeNull()
+  })
+})

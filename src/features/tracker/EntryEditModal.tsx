@@ -15,6 +15,9 @@ import {
   type TimeFields,
   type WorkFields,
 } from './EntryFields'
+import { IssueField } from './IssueInput'
+import { useResolveIssue } from './useResolveIssue'
+import { isIssueRef } from '../../domain/issueRef'
 
 /** What the user typed in the dialog, kept to reopen it after a failed save. */
 export interface EntryDraft {
@@ -44,8 +47,11 @@ export function EntryEditModal({
       description: entry.description,
       projectId: entry.projectId,
       tagIds: entry.tagIds,
+      // A malformed stored value is not offered for editing; saving replaces it.
+      issueRef: isIssueRef(entry.issueRef) ? entry.issueRef : undefined,
     },
   )
+  const resolveIssue = useResolveIssue(fields.projectId)
   const [times, setTimes] = useState<TimeFields>(
     () =>
       draft?.times ?? { ...initialTimes, useDuration: readPref('manualTimeInput') === 'duration' },
@@ -71,7 +77,8 @@ export function EntryEditModal({
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    if (!resolved.ok) {
+    const issue = resolveIssue(fields.issueRef?.trim() || undefined)
+    if (!resolved.ok || !issue.ok) {
       setShowErrors(true)
       return
     }
@@ -81,7 +88,14 @@ export function EntryEditModal({
     submitted.current = { fields, times }
     // The list shows the new values at once (optimistic update), so there is nothing to wait for.
     save.mutate({
-      entry: { ...entry, ...fields, description: fields.description.trim(), start, end },
+      entry: {
+        ...entry,
+        ...fields,
+        description: fields.description.trim(),
+        issueRef: issue.ref ?? undefined,
+        start,
+        end,
+      },
       previousStart: entry.start,
     })
     toast.info(t('entries.saved'))
@@ -100,6 +114,12 @@ export function EntryEditModal({
         />
         <div className="row wrap">
           <GroupPickers value={fields} onChange={(p) => setFields({ ...fields, ...p })} />
+          <IssueField
+            value={fields.issueRef}
+            projectId={fields.projectId}
+            onChange={(issueRef) => setFields({ ...fields, issueRef })}
+            showError={showErrors}
+          />
         </div>
         <TimeInputs
           value={times}

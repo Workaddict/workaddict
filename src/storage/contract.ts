@@ -86,6 +86,24 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       expect(all[0]).toMatchObject({ id: e.id, description: 'Moved', start: '2026-08-10T08:00:00Z' })
     })
 
+    it('keeps the issue link and unknown fields when an entry is saved, edited, and moved', async () => {
+      const e = await alice.saveEntry(
+        entry('alice', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z', { issueRef: 'acme/web#42' }),
+      )
+      const withFuture = { ...e, futureField: 'x' } as TimeEntry
+      await alice.saveEntry(withFuture, e.start)
+      const moved = { start: '2026-08-10T08:00:00Z', end: '2026-08-10T09:00:00Z' }
+      await alice.saveEntry({ ...withFuture, ...moved, description: 'Edited' }, e.start)
+      const [stored] = await alice.listAllEntries()
+      expect(stored).toMatchObject({ issueRef: 'acme/web#42', description: 'Edited', futureField: 'x' })
+
+      const [bulk] = await alice.saveEntries([
+        entry('bob', '2026-09-22T08:00:00Z', '2026-09-22T09:00:00Z', { issueRef: 'acme/web#7' }),
+      ])
+      expect(bulk!.issueRef).toBe('acme/web#7')
+      expect((await bob.listEntries(SEPT)).find((x) => x.id === bulk!.id)?.issueRef).toBe('acme/web#7')
+    })
+
     it('deletes own entries', async () => {
       const e = await alice.saveEntry(entry('alice', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z'))
       await alice.deleteEntry(e)
@@ -140,6 +158,20 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       })
       expect(await alice.getTimer()).toBeNull()
       expect(await alice.listEntries(SEPT)).toHaveLength(1)
+    })
+
+    it('carries the issue link from the timer to the stopped entry', async () => {
+      const { timer } = await alice.startTimer(
+        { description: 'Bug', projectId: null, tagIds: [], issueRef: 'acme/web#42' },
+        new Date('2026-09-21T09:00:00Z'),
+      )
+      expect(timer.issueRef).toBe('acme/web#42')
+      await alice.updateTimer({ issueRef: 'acme/web#43' })
+      const e = await alice.stopTimer(new Date('2026-09-21T10:00:00Z'))
+      expect(e?.issueRef).toBe('acme/web#43')
+
+      const { timer: plain } = await alice.startTimer({ description: 'x', projectId: null, tagIds: [] })
+      expect(plain).not.toHaveProperty('issueRef')
     })
 
     it('stopping when already stopped returns null and creates no duplicate', async () => {
@@ -373,6 +405,17 @@ export function runAdapterContract(name: string, setup: ContractSetup) {
       expect(backup.schemaVersion).toBe(SCHEMA_VERSION)
       expect(backup.entries.map((e) => e.login)).toEqual(['bob', 'alice'])
       expect(backup.workspace).toEqual({ projects: [], tags: [] })
+    })
+
+    it('keeps issue links and linked repositories in the backup', async () => {
+      const project = { id: 'p1', name: 'Web', color: '#4f46e5', archived: false, repos: ['acme/web'] }
+      await alice.updateWorkspace((ws) => ({ ...ws, projects: [project] }), 'add project')
+      await alice.saveEntry(
+        entry('alice', '2026-09-21T08:00:00Z', '2026-09-21T10:00:00Z', { issueRef: 'acme/web#42' }),
+      )
+      const backup = await alice.exportBackup()
+      expect(backup.workspace.projects).toEqual([project])
+      expect(backup.entries[0]?.issueRef).toBe('acme/web#42')
     })
 
     describe('roles', () => {

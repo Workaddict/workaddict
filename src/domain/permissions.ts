@@ -7,6 +7,7 @@ export type Action =
   | 'reassignEntries'
   | 'shiftEntries'
   | 'setTeamTimeZone'
+  | 'setAiMarking'
   | 'viewLiveActivity'
   | 'stopOthersTimer'
   | 'assignRoles'
@@ -20,6 +21,7 @@ const MIN_ROLE: Record<Exclude<Action, 'assignRoles'>, Role> = {
   reassignEntries: 'leader',
   shiftEntries: 'leader',
   setTeamTimeZone: 'leader',
+  setAiMarking: 'leader',
   viewLiveActivity: 'editor',
   stopOthersTimer: 'editor',
 }

@@ -50,6 +50,7 @@ export function sheetToCsv(sheet: Sheet, d: CsvDialect): string {
             return `${((v as number) * 100).toFixed(1).replace('.', d.decimal)}%`
           case 'number':
             return String(v).replace('.', d.decimal)
+          case 'issue':
           case 'text': {
             const s = String(v)
             return field(FORMULA_START.test(s) ? `'${s}` : s, d)

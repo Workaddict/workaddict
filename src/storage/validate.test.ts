@@ -54,6 +54,14 @@ describe('entriesCodec', () => {
     expect(entriesCodec.encode(d.value, d.rest)).toEqual(raw)
   })
 
+  it('keeps entries with a valid or malformed issue link, unchanged', () => {
+    const raw = [entry({ issueRef: 'acme/web#42' }), entry({ id: 'e2', issueRef: 'javascript:alert(1)' })]
+    const d = entriesCodec.decode(raw, PATH)
+    expect(d).toMatchObject({ issues: 0, unreadable: false })
+    expect(d.value).toHaveLength(2)
+    expect(entriesCodec.encode(d.value, d.rest)).toEqual(raw)
+  })
+
   it.each([
     ['missing start', { start: undefined }],
     ['unparseable end', { end: 'soon' }],
@@ -138,6 +146,23 @@ describe('workspaceCodec', () => {
       projects: [{ ...project, color: '#4f46e5' }, badProject],
       tags: [tag, null],
     })
+  })
+
+  it('round-trips linked repositories', () => {
+    const raw = { projects: [{ ...project, repos: ['acme/web', 'acme/api'] }], tags: [] }
+    const d = workspaceCodec.decode(raw, 'workspace.json')
+    expect(d.issues).toBe(0)
+    expect(workspaceCodec.encode(d.value, d.rest)).toEqual(raw)
+  })
+
+  it('drops invalid and duplicate linked repositories and counts the repair', () => {
+    const projects = [
+      { ...project, repos: ['acme/web', 'Acme/Web', 'nope', 7] },
+      { ...project, id: 'p2', name: 'X', repos: 'acme/web' },
+    ]
+    const d = workspaceCodec.decode({ projects, tags: [] }, 'workspace.json')
+    expect(d.value.projects.map((p) => p.repos)).toEqual([['acme/web'], []])
+    expect(d.issues).toBe(2)
   })
 
   it('reports a wrong root shape as unreadable', () => {

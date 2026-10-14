@@ -2,6 +2,7 @@ import type { TFunction } from 'i18next'
 import type { Locale } from 'date-fns'
 import { format } from '../../domain/zoned'
 import type { DateRange, TimeEntry, Workspace } from '../../domain/types'
+import { isIssueRef } from '../../domain/issueRef'
 import { durationMs, type TimeFormat } from '../../domain/time'
 import {
   byMember,
@@ -20,6 +21,8 @@ export interface ReportEntry {
   project: string
   tags: string
   description: string
+  /** `owner/repo#42`, or empty when the entry has no (valid) issue link. */
+  issue: string
   ms: number
 }
 
@@ -72,6 +75,7 @@ export function buildReport(args: {
           .filter(Boolean)
           .join(', '),
         description: e.description,
+        issue: isIssueRef(e.issueRef) ? e.issueRef : '',
         ms: durationMs(e.start, e.end),
       })),
     charts: args.charts,
@@ -118,7 +122,8 @@ export async function chartToPng(container: HTMLElement | null, scale = 2): Prom
 
 const HOUR = 3_600_000
 
-export type CellKind = 'text' | 'number' | 'hours' | 'percent' | 'date' | 'time' | 'datetime'
+/** `issue`: an `owner/repo#42` text that the spreadsheets turn into a link to the issue. */
+export type CellKind = 'text' | 'issue' | 'number' | 'hours' | 'percent' | 'date' | 'time' | 'datetime'
 /** A cell takes its column's kind unless it carries its own. */
 export type Cell = string | number | Date | { value: number | Date; kind: CellKind }
 
@@ -214,10 +219,11 @@ export function reportSheets(r: Report): Sheet[] {
         { header: t('stats.project'), kind: 'text', width: 22 },
         { header: t('stats.tagsCol'), kind: 'text', width: 22 },
         { header: t('stats.description'), kind: 'text', width: 48 },
+        { header: t('issue.label'), kind: 'issue', width: 20 },
         { header: t('exports.hours'), kind: 'hours', width: 9 },
       ],
       // Unrounded hours, so the column sums exactly to the total.
-      rows: r.entries.map((e) => [e.start, e.start, e.end, e.member, e.project, e.tags, e.description, e.ms / HOUR]),
+      rows: r.entries.map((e) => [e.start, e.start, e.end, e.member, e.project, e.tags, e.description, e.issue, e.ms / HOUR]),
     },
     breakdown(t('stats.byProject'), r.projects),
     breakdown(t('stats.byMember'), r.members),

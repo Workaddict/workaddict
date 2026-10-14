@@ -19,6 +19,9 @@ import { useErrorText, useErrorToast } from '../data/useErrorText'
 import { EntryEditModal, type EntryDraft } from './EntryEditModal'
 import { useCreateTag } from './EntryFields'
 import { InlineEdit, InlineProject, InlineTags } from './InlineFields'
+import { InlineIssue } from './IssueInput'
+import { aiClientLabel } from '../../domain/aiClient'
+import { isIssueRef } from '../../domain/issueRef'
 import { useTimerActions } from './useTimerActions'
 
 interface DayGroup {
@@ -41,7 +44,7 @@ export function groupByDay(entries: TimeEntry[]): DayGroup[] {
     .map((g) => ({ ...g, entries: g.entries.sort((a, b) => b.start.localeCompare(a.start)) }))
 }
 
-type InlineField = 'description' | 'date' | InlineTimeField
+type InlineField = 'description' | 'date' | 'issue' | InlineTimeField
 
 /** The one field being edited inline in the whole list. */
 interface Editing {
@@ -77,6 +80,7 @@ function EntryRow({
   const editable =
     !adapter.readOnly && (entry.login === user.login || access.can('editOthersEntries'))
   const tags = entry.tagIds.map(tag).filter((x) => x !== undefined)
+  const via = aiClientLabel(entry.addedVia)
 
   /** Saves a change; resolves to an error message for the field, or null on success. */
   const saveFields = async (patch: Partial<TimeEntry>): Promise<string | null> => {
@@ -168,6 +172,7 @@ function EntryRow({
                 description: entry.description,
                 projectId: entry.projectId,
                 tagIds: entry.tagIds,
+                issueRef: isIssueRef(entry.issueRef) ? entry.issueRef : undefined,
               })
             }
           >
@@ -224,10 +229,17 @@ function EntryRow({
             ))}
           </>
         )}
+        <InlineIssue
+          {...field('issue')}
+          value={entry.issueRef}
+          projectId={entry.projectId}
+          onSave={(issueRef) => saveFields({ issueRef })}
+        />
         {showMember && <MemberLabel member={member(entry.login)} />}
         {entry.addedBy && entry.addedBy !== entry.login && (
           <span className="small muted">{t('entries.addedBy', { login: entry.addedBy })}</span>
         )}
+        {via && <span className="small muted">{t('entries.addedVia', { client: via })}</span>}
       </div>
     </div>
   )

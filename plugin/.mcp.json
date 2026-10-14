@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "workaddict": {
+      "command": "npx",
+      "args": ["-y", "workaddict-mcp@1.0.0-beta.1"],
+      "env": {
+        "WORKADDICT_TOKEN": "${WORKADDICT_TOKEN}",
+        "WORKADDICT_REPO": "${WORKADDICT_REPO}",
+        "WORKADDICT_BRANCH": "${WORKADDICT_BRANCH:-}"
+      }
+    }
+  }
+}

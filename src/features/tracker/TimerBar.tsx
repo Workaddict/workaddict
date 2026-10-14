@@ -28,6 +28,8 @@ import {
   type WorkFields,
 } from './EntryFields'
 import { InlineEdit } from './InlineFields'
+import { IssueField } from './IssueInput'
+import { useResolveIssue } from './useResolveIssue'
 import { usePref } from '../../prefs'
 import { useNow } from './useNow'
 import { useTimerActions } from './useTimerActions'
@@ -85,15 +87,34 @@ function RunningTimerView({ timer }: { timer: RunningTimer }) {
   const pending = timer.id === 'pending'
   const [desc, setDesc] = useState(timer.description)
   const [remoteDesc, setRemoteDesc] = useState(timer.description)
+  const [issue, setIssue] = useState(timer.issueRef)
+  const [remoteIssue, setRemoteIssue] = useState(timer.issueRef)
+  const resolveIssue = useResolveIssue(timer.projectId)
 
-  // Follow remote changes (other device) to the description.
+  // Follow remote changes (other device) to the description and issue.
   if (timer.description !== remoteDesc) {
     setRemoteDesc(timer.description)
     setDesc(timer.description)
   }
+  if (timer.issueRef !== remoteIssue) {
+    setRemoteIssue(timer.issueRef)
+    setIssue(timer.issueRef)
+  }
+
+  /** The issue to save, if it was changed here and resolves. */
+  const issuePatch = (): { issueRef: string | undefined } | null => {
+    const r = resolveIssue(issue?.trim() || undefined)
+    const ref = r.ok ? (r.ref ?? undefined) : timer.issueRef
+    return ref !== timer.issueRef ? { issueRef: ref } : null
+  }
 
   const saveDesc = () => {
     if (desc !== timer.description && !pending) update.mutate({ description: desc }, { onError })
+  }
+
+  const saveIssue = () => {
+    const patch = issuePatch()
+    if (patch && !pending) update.mutate(patch, { onError })
   }
 
   return (
@@ -114,6 +135,14 @@ function RunningTimerView({ timer }: { timer: RunningTimer }) {
             disabled={pending}
             onChange={(patch) => update.mutate(patch, { onError })}
           />
+          <span onBlur={saveIssue}>
+            <IssueField
+              value={issue}
+              projectId={timer.projectId}
+              onChange={setIssue}
+              disabled={pending}
+            />
+          </span>
         </div>
       </div>
       <div className="timer-foot">
@@ -140,10 +169,14 @@ function RunningTimerView({ timer }: { timer: RunningTimer }) {
           <button
             className="btn btn-danger btn-lg"
             onClick={async () => {
-              // Persist a pending description edit before the stop reads the timer.
-              if (desc !== timer.description) {
+              // Persist pending description and issue edits before the stop reads the timer.
+              const patch = {
+                ...(desc !== timer.description ? { description: desc } : {}),
+                ...issuePatch(),
+              }
+              if (Object.keys(patch).length) {
                 try {
-                  await update.mutateAsync({ description: desc })
+                  await update.mutateAsync(patch)
                 } catch (e) {
                   onError(e)
                   return
@@ -171,11 +204,19 @@ interface DraftProps {
 function StartTimerView({ draft, setDraft }: DraftProps) {
   const { t } = useI18n()
   const { startTimer, busy } = useTimerActions()
+  const resolveIssue = useResolveIssue(draft.projectId)
+  const [showErrors, setShowErrors] = useState(false)
 
   const submit = (e: FormEvent) => {
     e.preventDefault()
-    startTimer(draft)
+    const issue = resolveIssue(draft.issueRef?.trim() || undefined)
+    if (!issue.ok) {
+      setShowErrors(true)
+      return
+    }
+    startTimer({ ...draft, issueRef: issue.ref ?? undefined })
     setDraft(EMPTY)
+    setShowErrors(false)
   }
 
   return (
@@ -189,6 +230,12 @@ function StartTimerView({ draft, setDraft }: DraftProps) {
       />
       <div className="timer-meta">
         <GroupPickers value={draft} onChange={(p) => setDraft({ ...draft, ...p })} />
+        <IssueField
+          value={draft.issueRef}
+          projectId={draft.projectId}
+          onChange={(issueRef) => setDraft({ ...draft, issueRef })}
+          showError={showErrors}
+        />
         <span className="timer-clock faint">0:00:00</span>
         <button className="btn btn-primary btn-lg" disabled={busy}>
           <Icon name="play" size={16} filled />
@@ -333,6 +380,7 @@ function ManualEntryView({
   const [timeInput, setTimeInput] = usePref('manualTimeInput')
   const [showErrors, setShowErrors] = useState(false)
   const [finishing, setFinishing] = useState(false)
+  const resolveIssue = useResolveIssue(fields.projectId)
   const shownTimes = { ...times, useDuration: timeInput === 'duration' }
   const resolved =
     span && initialTimes
@@ -344,12 +392,13 @@ function ManualEntryView({
         )
       : resolveTimeFields(shownTimes)
 
-  const finishTimer = async (start: Date, end: Date) => {
+  const finishTimer = async (start: Date, end: Date, issueRef: string | undefined) => {
     setFinishing(true)
     try {
       // Apply the edits first so the stop writes them; null means the timer is gone.
       const updated = await update.mutateAsync({
         ...fields,
+        issueRef,
         description: fields.description.trim(),
         start: start.toISOString(),
       })
@@ -368,12 +417,14 @@ function ManualEntryView({
   const submit = (e: FormEvent) => {
     e.preventDefault()
     const r = resolved
-    if (!r.ok) {
+    const issue = resolveIssue(fields.issueRef?.trim() || undefined)
+    if (!r.ok || !issue.ok) {
       setShowErrors(true)
       return
     }
+    const issueRef = issue.ref ?? undefined
     if (timer) {
-      void finishTimer(r.start, r.end)
+      void finishTimer(r.start, r.end, issueRef)
       return
     }
     if (single === null && !many) return
@@ -385,6 +436,7 @@ function ManualEntryView({
       end: r.end.toISOString(),
       ...fields,
       description: fields.description.trim(),
+      issueRef,
       createdAt: now,
       updatedAt: now,
     })
@@ -419,6 +471,12 @@ function ManualEntryView({
         />
         <div className="timer-meta">
           <GroupPickers value={fields} onChange={(p) => setFields({ ...fields, ...p })} />
+          <IssueField
+            value={fields.issueRef}
+            projectId={fields.projectId}
+            onChange={(issueRef) => setFields({ ...fields, issueRef })}
+            showError={showErrors}
+          />
         </div>
       </div>
       <TimeInputs
@@ -469,7 +527,12 @@ function ManualEntryView({
 }
 
 function workFieldsOf(timer: RunningTimer): WorkFields {
-  return { description: timer.description, projectId: timer.projectId, tagIds: timer.tagIds }
+  return {
+    description: timer.description,
+    projectId: timer.projectId,
+    tagIds: timer.tagIds,
+    issueRef: timer.issueRef,
+  }
 }
 
 const sameValue = (a: WorkFields[keyof WorkFields], b: WorkFields[keyof WorkFields]) =>
@@ -491,6 +554,7 @@ export function TimerBar() {
   const update = useUpdateTimer()
   const [mode, setMode] = usePref('entryMode')
   const [draft, setDraft] = useState<WorkFields>(EMPTY)
+  const resolveIssue = useResolveIssue(draft.projectId)
   // The running timer the manual form was filled from, and its values at that point.
   const [seed, setSeed] = useState<{ id: string; fields: WorkFields } | null>(null)
   // Whose entries the manual form creates; kept across saves, reset when leaving manual mode.
@@ -526,10 +590,13 @@ export function TimerBar() {
   const switchTo = (next: 'timer' | 'manual') => {
     if (next === mode) return
     if (next === 'timer' && timer && seed?.id === timer.id) {
-      // Keep the running timer, with the description, project and tags edited here.
+      // Keep the running timer, with the description, project, tags and issue edited here
+      // (an issue that does not resolve is left as it was).
+      const issue = resolveIssue(draft.issueRef?.trim() || undefined)
       const patch = changedFields(workFieldsOf(timer), {
         ...draft,
         description: draft.description.trim(),
+        issueRef: issue.ok ? (issue.ref ?? undefined) : timer.issueRef,
       })
       if (patch && timer.id !== 'pending') update.mutate(patch, { onError })
       setDraft(EMPTY)

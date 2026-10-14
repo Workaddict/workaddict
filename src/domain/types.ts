@@ -15,6 +15,10 @@ export interface TimeEntry {
   stoppedBy?: string
   /** Login of the member who added this entry for its owner, if not the owner. Set by the storage layer. */
   addedBy?: string
+  /** Linked GitHub issue or pull request as `owner/repo#number`. */
+  issueRef?: string
+  /** Client name of the AI assistant that created this entry, e.g. `claude-code`. Set by the storage layer. */
+  addedVia?: string
 }
 
 export interface RunningTimer {
@@ -24,6 +28,8 @@ export interface RunningTimer {
   description: string
   projectId: string | null
   tagIds: string[]
+  /** Linked GitHub issue or pull request as `owner/repo#number`. */
+  issueRef?: string
 }
 
 export interface Project {
@@ -31,6 +37,8 @@ export interface Project {
   name: string
   color: string
   archived: boolean
+  /** Linked GitHub repositories as `owner/repo`; resolve short issue references like `#42`. */
+  repos?: string[]
 }
 
 export interface Tag {
@@ -44,6 +52,8 @@ export interface Workspace {
   tags: Tag[]
   /** Team time zone (IANA name); absent: each browser's own zone is used. */
   timeZone?: string
+  /** Record which AI assistant created an entry (`TimeEntry.addedVia`); absent means off. */
+  markAiEntries?: boolean
 }
 
 export interface Member {

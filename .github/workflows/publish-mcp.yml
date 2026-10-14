@@ -1,0 +1,41 @@
+name: Publish MCP server
+
+# Manual release of mcp/ to npm as workaddict-mcp, with provenance.
+# Bump the version in mcp/package.json, src/features/settings/connectAi.ts and plugin/.mcp.json
+# first (a test keeps them equal), merge, then run this workflow on main.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write # npm provenance
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      # Same pinned SHAs as ci.yml; Dependabot keeps them current.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+          cache: npm
+          registry-url: https://registry.npmjs.org
+
+      - run: npm ci --ignore-scripts
+      - run: npm audit --omit=dev --audit-level=high
+      - run: npm run lint
+      - run: npm test
+      - run: npm run typecheck -w mcp
+      - run: npm run build -w mcp
+      - run: cp LICENSE mcp/LICENSE
+      # Prereleases (1.0.0-beta.1) go to the `beta` dist-tag, releases to `latest`.
+      - run: |
+          tag=$(node -p "require('./mcp/package.json').version.includes('-') ? 'beta' : 'latest'")
+          npm publish -w mcp --provenance --access public --tag "$tag"
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

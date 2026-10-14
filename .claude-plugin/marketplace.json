@@ -1,0 +1,14 @@
+{
+  "name": "workaddict",
+  "description": "Claude Code plugin for Workaddict, the free time tracker that keeps its data in your own GitHub repository.",
+  "owner": {
+    "name": "Workaddict"
+  },
+  "plugins": [
+    {
+      "name": "workaddict",
+      "source": "./plugin",
+      "description": "(Beta) Log what you did with Claude Code as Workaddict time entries, and set up projects from a description."
+    }
+  ]
+}

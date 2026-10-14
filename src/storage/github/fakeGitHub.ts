@@ -185,12 +185,17 @@ export class FakeGitHub {
     if (sub.startsWith('/contents/') && method === 'PUT') {
       const filePath = sub.slice('/contents/'.length)
       this.beforePut?.(filePath)
-      const body = JSON.parse(String(init?.body)) as { content: string; sha?: string }
+      const body = JSON.parse(String(init?.body)) as {
+        content: string
+        sha?: string
+        message?: string
+      }
       const existing = this.files.get(filePath)
       if (existing && !body.sha) return res(422, { message: '"sha" wasn\'t supplied.' })
       if (existing && body.sha !== existing.sha) return res(409, { message: 'does not match' })
       if (!existing && body.sha) return res(409, { message: 'does not match' })
       this.putRaw(filePath, decodeBase64(body.content))
+      if (body.message) this.messages.push(body.message)
       return res(existing ? 200 : 201, { content: { sha: this.files.get(filePath)!.sha } })
     }
     return res(404, { message: 'Not Found' })

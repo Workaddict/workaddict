@@ -19,7 +19,7 @@ A private, free and simple time tracker for small teams, as an alternative to Cl
 
 - **No server, no cost.** The app is a static website hosted on GitHub Pages.
 - **Your data stays in your own repository.** Every entry, project and tag is stored as a JSON file in a **private GitHub repository** (the "data repo") that you control. The app reads and writes it straight from your browser through the GitHub API.
-- **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF, Excel (.xlsx), OpenDocument (.ods) and CSV from one Export menu, plus a full JSON backup. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
+- **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF, Excel (.xlsx), OpenDocument (.ods) and CSV from one Export menu, plus a full JSON backup. Optional AI integration (beta): your own AI assistant (Claude Code and other MCP clients) can set up projects and log your day for you. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
 - **Full history.** Each change is a git commit with a readable message (`entry: add 2h "Fix login" (alice)`), so the data repo doubles as an audit log that you can revert.
 
 Try it without an account at **[workaddict.me](https://workaddict.me)** by clicking **"Try the demo"** on the start page. Demo data stays in memory and is never saved.
@@ -227,6 +227,7 @@ Every member has one of three roles:
 - Members without an assigned role are **workers**. **Upgrading from an earlier version:** after the update, everyone except the owners is a worker until an owner assigns roles. The app shows owners a reminder until the first role is assigned.
 - **Team now.** Editors and team leaders see, above their entries, what every other member is tracking right now (description, project, tags, elapsed time), each member's total for today, and when idle members were last active. A timer that has run for more than 10 hours, or since before today, is flagged. They can stop such a timer at a chosen end time or discard it. The member gets a notice, the entry records who stopped it, and the commit message names both. There is no opt-out. Workers don't see the block, but the running timers in `timers/` can be read by anyone with access to the data repo.
 - **Missing entries.** Editors and team leaders can add an entry for another member: in the manual form, pick the member under **For**. The entry belongs to that member, shows "added by" with your login, and the commit message names both.
+- **Issue links.** Every entry and the running timer can link to one GitHub issue or pull request. Type `owner/repo#42`, paste the issue URL, or just type `#42`: if the entry's project has exactly one linked repository (**Projects & Tags → Link repository**, editors and team leaders), the short form resolves through it. The entry list links to the issue, and the exports have an "Issue" column (a hyperlink in Excel and OpenDocument). The app never loads issues from GitHub, so your token still needs access to the data repo only, and a link to a private repository works only for people who can see that repository.
 - Roles are enforced by the app, **not by GitHub**. See [Security notes](#security-notes).
 
 ### 6. Optional: import your Clockify history
@@ -241,6 +242,41 @@ Switching from Clockify? A team leader opens **Settings → Data → Import from
 - **Not imported:** clients, tasks, billable flags, rates, custom fields, and running timers. The preview shows how many entries are affected and lists hours per member and project so you can compare them with Clockify's summary report.
 
 ---
+
+### 7. Optional (beta): connect your AI assistant
+
+> **Beta.** The AI integration is new: the tools and the plugin may still change, and the activity heuristic only sees time in which Claude Code was working. Check the suggested entries before you confirm them.
+
+Every member can let their own AI assistant work with Workaddict through the **Workaddict MCP server** ([`workaddict-mcp`](mcp/), runs on your computer via `npx`). Workaddict itself has no server and holds no AI key: whoever uses Claude Code, Claude Desktop, Cursor or another MCP client connects it with their own token, everyone else keeps using the app as before. **Settings → AI assistants → Connect AI** shows the commands below with your data repo filled in.
+
+1. **Create a separate fine-grained token** for the assistant, like the app token: only the data repo, _Contents: read and write_, _Metadata: read_. A separate token can be revoked without signing you out of the app.
+2. **Set two environment variables** and open a new terminal:
+   - Windows: `setx WORKADDICT_REPO "owner/repo"` and `setx WORKADDICT_TOKEN "github_pat_…"`
+   - macOS / Linux: add `export WORKADDICT_REPO="owner/repo"` and `export WORKADDICT_TOKEN="github_pat_…"` to your shell profile
+3. **Claude Code:** install the plugin, then use `/workaddict:log-today` and `/workaddict:new-project`:
+   ```
+   /plugin install workaddict --marketplace Workaddict/workaddict
+   ```
+   Without the plugin, add only the server: `claude mcp add workaddict --scope user -e WORKADDICT_REPO=owner/repo -e WORKADDICT_TOKEN=github_pat_… -- npx -y workaddict-mcp@1.0.0-beta.1` (on native Windows `-- cmd /c npx -y …`).
+4. **Other MCP clients** (Claude Desktop, Cursor, …) take this in their MCP configuration:
+   ```json
+   {
+     "mcpServers": {
+       "workaddict": {
+         "command": "npx",
+         "args": ["-y", "workaddict-mcp@1.0.0-beta.1"],
+         "env": { "WORKADDICT_REPO": "owner/repo", "WORKADDICT_TOKEN": "github_pat_…" }
+       }
+     }
+   }
+   ```
+
+What it does:
+
+- **Log your day.** `/workaddict:log-today` reads your Claude Code session transcripts (`~/.claude/projects`) **on your computer only**, turns them into activity blocks (a pause of 15 minutes starts a new block), matches each block to a project through its linked repositories and to an issue through the branch name (`fix/42-login` → `#42`), and shows you a table of suggested entries. Time you already tracked is left out. Nothing is saved until you confirm, and only the description the assistant writes is stored, never the transcript.
+- **Set up projects.** `/workaddict:new-project` turns a description ("new client Huber, shop is github.com/acme/huber-shop, we do support and development") into projects, linked repositories and tags, after you confirm. Needs the editor or team leader role.
+- **Same rules as the app.** The server uses the app's storage code, so roles, validation and conflict handling are identical. It can read and add data, but has no tools to delete or archive anything, change roles or the team time zone. Entries that overlap time you already tracked are refused unless you explicitly allow it.
+- **Visible in the history.** Every commit it makes ends with `(via claude-code)` (the client's name). Team leaders can also turn on **Settings → AI assistants → Mark AI entries** (off by default); new AI entries then show "via Claude Code" in the entry list.
 
 ## Troubleshooting sign-in
 
@@ -290,6 +326,7 @@ Read this before you use the app with real data. To report a vulnerability, see 
   - **Lock** (avatar menu) when you step away; **Settings → Workspaces → Forget all workspaces on this device** removes every token and all cached data;
   - if you used "Remember me" in an earlier version, accept **Protect with a passphrase** so the plaintext token is deleted;
   - if a token leaks, revoke it on GitHub right away.
+- **AI assistant token.** The MCP server (optional, see setup step 7) reads its token from an environment variable or the AI client's configuration file, where it is stored in plain text. Give the assistant its own fine-grained token limited to the data repo, and revoke it on GitHub when you stop using it. The server cannot delete data, and every commit it makes names the assistant.
 - **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com` and, for the one-time Clockify import, `https://*.clockify.me`. Trusted Types are enforced and inline styles are not allowed. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
 - **No framing.** The app refuses to run inside another page (clickjacking protection) and offers a link to open it in its own tab.
 - **Repository data is treated as untrusted.** Every file is validated before use. Broken or suspicious records (for example an entry in bob's file that claims to be alice's) are not shown, are listed in a notice, and are kept unchanged when the app writes the file. Files over 2 MB are not loaded.

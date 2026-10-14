@@ -740,8 +740,71 @@ const de: Resources = {
     membersCount: '{{count}} Mitglieder',
     nobody: 'Niemand',
   },
+  connectAi: {
+    back: 'Einstellungen',
+    title: 'KI verbinden',
+    intro:
+      'Lass deinen KI-Assistenten mit Workaddict arbeiten: Projekte aus einer Beschreibung anlegen und das, was du mit Claude Code gemacht hast, als Einträge buchen. Der Assistent startet den Workaddict-MCP-Server auf deinem Rechner mit deinem eigenen Token; Workaddict hat keinen Server und sieht keinen KI-Schlüssel.',
+    betaNote:
+      'Beta: Die KI-Anbindung ist neu. Tools und Plugin können sich noch ändern, und die Aktivitätserkennung sieht nur die Zeit, in der Claude Code gearbeitet hat. Prüfe vorgeschlagene Einträge, bevor du sie bestätigst.',
+    tokenTitle: '1. Ein Token für den Assistenten',
+    tokenText:
+      'Erstelle für den Assistenten ein eigenes Fine-grained-Token, damit du es widerrufen kannst, ohne dich aus der App abzumelden. Wie das App-Token braucht es nur das Daten-Repository.',
+    tokenOpen: 'Token auf GitHub erstellen',
+    claudeCodeTitle: '2. Claude Code',
+    system: 'Betriebssystem',
+    windows: 'Windows',
+    unix: 'macOS / Linux',
+    envText:
+      'Speichere Repository und Token als Umgebungsvariablen (ersetze github_pat_… durch dein Token) und öffne danach ein neues Terminal:',
+    copyEnv: 'Befehle kopieren',
+    pluginText: 'Installiere das Workaddict-Plugin in Claude Code:',
+    copyPlugin: 'Installationsbefehl kopieren',
+    useText: 'Danach kannst du verwenden:',
+    logToday: 'schlägt Einträge für das vor, was du heute mit Claude gemacht hast, und speichert sie nach deiner Bestätigung',
+    newProject: 'legt Projekte, verknüpfte Repositories und Labels aus deiner Beschreibung an',
+    withoutPlugin: 'Ohne Plugin: nur den MCP-Server hinzufügen',
+    copyCommand: 'Befehl kopieren',
+    otherTitle: '3. Claude Desktop und andere Assistenten',
+    otherText:
+      'Assistenten mit MCP-Unterstützung (Claude Desktop, Cursor und andere) bekommen diesen Eintrag in ihre MCP-Konfigurationsdatei. Ersetze github_pat_… durch dein Token:',
+    copyJson: 'Konfiguration kopieren',
+    privacyTitle: 'Was der Assistent sehen und tun kann',
+    privacyLocal:
+      'Deine Claude-Code-Transkripte werden nur auf deinem Rechner gelesen. Der Server schickt nichts davon irgendwohin.',
+    privacySaved:
+      'Gespeichert wird nur, was der Assistent als Beschreibung schreibt, und erst nach deiner Bestätigung. Das ganze Team kann es sehen.',
+    privacyCommits:
+      'Jede Änderung ist ein Commit, der den Assistenten nennt. Die Teamleitung kann KI-Einträge zusätzlich in der Liste kennzeichnen (Einstellungen → KI-Assistenten).',
+    privacyNoDelete:
+      'Er kann Daten lesen und hinzufügen, aber nichts löschen oder archivieren und weder Rollen noch die Team-Zeitzone ändern.',
+    privacyToken:
+      'Das Token steht im Klartext in deiner Umgebung oder Konfigurationsdatei. Beschränke es auf das Daten-Repository und widerrufe es auf GitHub, wenn du den Assistenten nicht mehr nutzt.',
+  },
+  ai: {
+    title: 'KI-Assistenten',
+    beta: 'Beta',
+    mark: 'KI-Einträge kennzeichnen',
+    markHint:
+      'Einträge, die ein KI-Assistent über den Workaddict-MCP-Server anlegt, zeigen, welcher Assistent sie angelegt hat. Commit-Nachrichten nennen den Assistenten immer.',
+    leaderOnly: 'Nur die Teamleitung kann das ändern.',
+    markOn: 'KI-Einträge werden ab jetzt gekennzeichnet',
+    markOff: 'Neue KI-Einträge werden nicht mehr gekennzeichnet',
+    connectHint: 'Lass Claude Code oder einen anderen KI-Assistenten Projekte anlegen und deine Arbeit eintragen.',
+    connect: 'KI verbinden',
+  },
+  issue: {
+    label: 'Issue',
+    placeholder: 'Issue, z. B. #42',
+    edit: 'Issue bearbeiten',
+    errors: {
+      format: 'Keine Issue-Angabe',
+      ambiguousRepo: 'Repository unklar: owner/repo#Nummer angeben',
+    },
+  },
   entries: {
     addedBy: 'hinzugefügt von {{login}}',
+    addedVia: 'über {{client}}',
     editDescription: 'Beschreibung bearbeiten',
     editStart: 'Startzeit bearbeiten',
     editEnd: 'Endzeit bearbeiten',
@@ -769,6 +832,13 @@ const de: Resources = {
     projects: 'Projekte',
     tags: 'Labels',
     newProject: 'Name des neuen Projekts',
+    repos: 'Verknüpfte Repositories von {{name}}',
+    linkRepo: 'Repository verknüpfen',
+    unlinkRepo: '{{repo}} entfernen',
+    repoPlaceholder: 'owner/repo oder GitHub-URL',
+    repoInvalid: 'Kein Repository',
+    repoTaken: 'Repository bereits verknüpft',
+    repoLimit: 'Höchstens {{count}} Repositories pro Projekt',
     newTag: 'Name des neuen Labels',
     color: 'Farbe',
     showArchived: 'Archivierte anzeigen',

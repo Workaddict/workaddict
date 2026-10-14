@@ -395,3 +395,41 @@ When a timer is running, the manual form SHALL show that timer as an editable en
 - **WHEN** the user has the running timer open in manual mode and the timer is stopped on another device before the user clicks "Stop & save"
 - **THEN** no new entry is created and the user is told the timer was already stopped
 
+### Requirement: Issue link on entries
+The system SHALL offer an optional "Issue" input in the timer bar, the manual entry form, inline entry editing and the edit dialog. The running timer SHALL keep the issue link and pass it to the entry it creates when stopped, and quick restart SHALL copy it. The entry list SHALL show the issue link next to the description. Every member who may edit an entry may change its issue link.
+
+#### Scenario: Timer with issue
+- **WHEN** a user starts the timer with description "Login bug" and issue `acme/web#42`, then stops it
+- **THEN** the saved entry has `issueRef` `acme/web#42`
+
+#### Scenario: Quick restart
+- **WHEN** a user restarts an entry that links to `acme/web#42`
+- **THEN** the new running timer links to `acme/web#42`
+
+#### Scenario: Remove link
+- **WHEN** a user clears the issue input of an entry and saves
+- **THEN** the entry no longer has an `issueRef`
+
+#### Scenario: Bulk manual entries
+- **WHEN** a team leader adds a manual entry for 3 members with issue `acme/web#42`
+- **THEN** all 3 entries link to `acme/web#42`
+
+### Requirement: Entries added through an AI assistant
+The system SHALL have a team setting "Mark AI entries", stored as `markAiEntries` in `workspace.json`, which is off when missing. When it is on, the storage layer SHALL record in the optional field `addedVia` the client name of the AI assistant that created the entry, and SHALL keep it unchanged when the entry is later edited. When it is off, `addedVia` SHALL NOT be set on new entries. The entry list SHALL show "via <client>" on entries that have `addedVia`, to every viewer, whatever the current setting.
+
+#### Scenario: Marking off (default)
+- **WHEN** the team has never changed the setting and Claude Code adds an entry through the MCP server
+- **THEN** the entry has no `addedVia` and shows no marker
+
+#### Scenario: Marking on
+- **WHEN** a team leader turned "Mark AI entries" on and Claude Code adds an entry
+- **THEN** the entry has `"addedVia": "claude-code"` and the entry list shows "via Claude Code"
+
+#### Scenario: Marker survives edits
+- **WHEN** a member edits the description of an entry with `addedVia` in the app
+- **THEN** the entry keeps `addedVia` and its marker
+
+#### Scenario: Turned off later
+- **WHEN** a team leader turns the setting off
+- **THEN** existing entries keep their marker, and new AI entries get none
+

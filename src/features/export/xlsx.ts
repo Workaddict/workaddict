@@ -1,4 +1,5 @@
 import { format, wallClock } from '../../domain/zoned'
+import { issueUrl } from '../../domain/issueRef'
 import type { Worksheet } from 'exceljs'
 import type { BreakdownRow } from '../stats/stats'
 import { downloadBlob } from './download'
@@ -87,6 +88,7 @@ export async function xlsxWorkbook(r: Report) {
     { header: t('stats.project'), key: 'project', width: 22 },
     { header: t('stats.tagsCol'), key: 'tags', width: 22 },
     { header: t('stats.description'), key: 'description', width: 48 },
+    { header: t('issue.label'), key: 'issue', width: 20 },
     { header: t('exports.hours'), key: 'hours', width: 9, style: { numFmt: '0.00' } },
   ]
   for (const e of r.entries) {
@@ -98,11 +100,12 @@ export async function xlsxWorkbook(r: Report) {
       project: e.project,
       tags: e.tags,
       description: e.description,
+      issue: e.issue ? { text: e.issue, hyperlink: issueUrl(e.issue) } : '',
       // Unrounded, so the column sums exactly to the total.
       hours: e.ms / HOUR,
     })
   }
-  entries.autoFilter = { from: 'A1', to: 'H1' }
+  entries.autoFilter = { from: 'A1', to: 'I1' }
   styleHeader(entries)
 
   const breakdownSheet = (name: string, rows: BreakdownRow[]) => {

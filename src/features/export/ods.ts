@@ -1,4 +1,5 @@
 import { format } from '../../domain/zoned'
+import { isIssueRef, issueUrl } from '../../domain/issueRef'
 import { downloadBlob } from './download'
 import {
   cellKind,
@@ -19,6 +20,7 @@ const NS = [
   'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"',
   'xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"',
   'xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"',
+  'xmlns:xlink="http://www.w3.org/1999/xlink"',
   'xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"',
   'xmlns:number="urn:oasis:names:tc:opendocument:xmlns:datastyle:1.0"',
   'xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"',
@@ -112,10 +114,16 @@ function textCell(s: string, style = ''): string {
 function cell(kind: CellKind, v: string | number | Date, alignStart = false): string {
   const name = alignStart ? `ce_${kind}_start` : `ce_${kind}`
   const style =
-    kind === 'text' || (kind === 'number' && !alignStart) ? '' : ` table:style-name="${name}"`
+    kind === 'text' || kind === 'issue' || (kind === 'number' && !alignStart)
+      ? ''
+      : ` table:style-name="${name}"`
   switch (kind) {
     case 'text':
       return textCell(String(v))
+    case 'issue':
+      return isIssueRef(v)
+        ? `<table:table-cell office:value-type="string"><text:p><text:a xlink:type="simple" xlink:href="${xml(issueUrl(v))}">${xml(v)}</text:a></text:p></table:table-cell>`
+        : textCell('')
     case 'number':
     case 'hours':
       return `<table:table-cell${style} office:value-type="float" office:value="${v as number}"/>`

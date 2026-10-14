@@ -158,6 +158,7 @@ export async function exportPdf(r: Report) {
         t('stats.project'),
         t('stats.tagsCol'),
         t('stats.description'),
+        t('issue.label'),
         t('stats.duration'),
       ],
     ],
@@ -168,11 +169,12 @@ export async function exportPdf(r: Report) {
       e.project,
       e.tags,
       e.description,
+      e.issue,
       formatHM(e.ms),
     ]),
     styles: { fontSize: 8, cellPadding: 1.5, overflow: 'linebreak' },
     headStyles: { fillColor: ACCENT },
-    columnStyles: { 6: { halign: 'right' }, 5: { cellWidth: 'auto' } },
+    columnStyles: { 7: { halign: 'right' }, 5: { cellWidth: 'auto' } },
   })
 
   // Page numbers

@@ -59,11 +59,45 @@ function isTimerPath(path: string): boolean {
   return TIMER_PATH.test(path) && isLogin(ownerOfPath(path))
 }
 
-/** A copy without the `timeZone` key. */
-function withoutZone<T extends { timeZone?: unknown }>(ws: T): Omit<T, 'timeZone'> {
+/** A copy without the team settings, which only their own methods change. */
+function withoutTeamSettings<T extends { timeZone?: unknown; markAiEntries?: unknown }>(
+  ws: T,
+): Omit<T, 'timeZone' | 'markAiEntries'> {
   const copy = { ...ws }
   delete copy.timeZone
+  delete copy.markAiEntries
   return copy
+}
+
+/** The stored team settings of `ws`, to put back after a projects-and-tags update. */
+function teamSettings(ws: Workspace | null): Pick<Workspace, 'timeZone' | 'markAiEntries'> {
+  return {
+    ...(ws?.timeZone ? { timeZone: ws.timeZone } : {}),
+    ...(ws?.markAiEntries ? { markAiEntries: true } : {}),
+  }
+}
+
+/**
+ * Passes every write through to `store` with the commit message ending in `(via <client>)`,
+ * so commits made by an AI assistant can be told apart in the history.
+ */
+function viaClient(store: FileStore, client: string): FileStore {
+  const via = (message: string) => `${message} (via ${client})`
+  return {
+    listFiles: () => store.listFiles(),
+    read: (path, snapshot) => store.read(path, snapshot),
+    write: (path, fn, message) => store.write(path, fn, via(message)),
+    writeMany: (files, message, prepare) => store.writeMany(files, via(message), prepare),
+    invalidate: () => store.invalidate(),
+  }
+}
+
+export interface RepoAdapterOptions {
+  /**
+   * Name of the AI assistant writing through this adapter (MCP `clientInfo.name`). Every commit
+   * names it, and new entries record it in `addedVia` while the team marks AI entries.
+   */
+  client?: string
 }
 
 function quote(s: string): string {
@@ -90,10 +124,17 @@ export class RepoAdapter implements StorageAdapter {
   private me: Member | null = null
   private readonly problems = new Map<string, DataProblem>()
 
+  private readonly store: FileStore
+  private readonly client: string | undefined
+
   constructor(
-    private readonly store: FileStore,
+    store: FileStore,
     private readonly identity: Identity,
-  ) {}
+    opts: RepoAdapterOptions = {},
+  ) {
+    this.client = opts.client
+    this.store = opts.client ? viaClient(store, opts.client) : store
+  }
 
   dataProblems(): DataProblem[] {
     return [...this.problems.values()].sort((a, b) => a.path.localeCompare(b.path))
@@ -305,9 +346,10 @@ export class RepoAdapter implements StorageAdapter {
       throw new StorageError('invalid', 'Entry must end after it starts')
     }
     const isUpdate = previousStart !== undefined
-    const addedBy = await this.entryAdder(entry, previousStart)
-    const saved: TimeEntry = { ...entry, addedBy, updatedAt: new Date().toISOString() }
+    const { addedBy, addedVia } = await this.entryMarks(entry, previousStart)
+    const saved: TimeEntry = { ...entry, addedBy, addedVia, updatedAt: new Date().toISOString() }
     if (!addedBy) delete saved.addedBy
+    if (!addedVia) delete saved.addedVia
     const path = PATHS.entries(saved.login, monthKey(saved.start))
     const verb = isUpdate ? 'update' : 'add'
     await this.writeFile(
@@ -339,13 +381,16 @@ export class RepoAdapter implements StorageAdapter {
       }
     }
     const now = new Date().toISOString()
+    const addedVia = await this.newEntryClient()
     const saved = entries.map((e) => {
       const s: TimeEntry = {
         ...e,
         addedBy: e.login === me.login ? undefined : me.login,
+        addedVia,
         updatedAt: now,
       }
       if (!s.addedBy) delete s.addedBy
+      if (!s.addedVia) delete s.addedVia
       return s
     })
     const byPath = new Map<string, TimeEntry[]>()
@@ -398,19 +443,31 @@ export class RepoAdapter implements StorageAdapter {
   }
 
   /**
-   * Who added the entry for its owner: the current user when creating another member's entry,
-   * otherwise whatever the stored copy says (clients cannot set or change it).
+   * Who added the entry for its owner (the current user when creating another member's entry)
+   * and through which AI assistant (while the team marks AI entries). On edits, whatever the
+   * stored copy says: clients cannot set or change either.
    */
-  private async entryAdder(entry: TimeEntry, previousStart?: string): Promise<string | undefined> {
+  private async entryMarks(
+    entry: TimeEntry,
+    previousStart?: string,
+  ): Promise<{ addedBy?: string; addedVia?: string }> {
     if (previousStart === undefined) {
       const me = await this.getCurrentUser()
-      return entry.login === me.login ? undefined : me.login
+      return {
+        addedBy: entry.login === me.login ? undefined : me.login,
+        addedVia: await this.newEntryClient(),
+      }
     }
-    const stored = await this.readFile(
-      PATHS.entries(entry.login, monthKey(previousStart)),
-      entriesCodec,
-    )
-    return stored?.find((e) => e.id === entry.id)?.addedBy
+    const stored = (
+      await this.readFile(PATHS.entries(entry.login, monthKey(previousStart)), entriesCodec)
+    )?.find((e) => e.id === entry.id)
+    return { addedBy: stored?.addedBy, addedVia: stored?.addedVia }
+  }
+
+  /** The client name new entries record, or undefined when there is none or marking is off. */
+  private async newEntryClient(): Promise<string | undefined> {
+    if (!this.client) return undefined
+    return (await this.getWorkspace()).markAiEntries ? this.client : undefined
   }
 
   /**
@@ -451,6 +508,7 @@ export class RepoAdapter implements StorageAdapter {
       description: fields.description,
       projectId: fields.projectId,
       tagIds: fields.tagIds,
+      ...(fields.issueRef ? { issueRef: fields.issueRef } : {}),
     }
     await this.writeFile(
       PATHS.timer(me.login),
@@ -494,6 +552,7 @@ export class RepoAdapter implements StorageAdapter {
       tagIds: timer.tagIds,
       createdAt: nowIso,
       updatedAt: nowIso,
+      ...(timer.issueRef ? { issueRef: timer.issueRef } : {}),
       ...(by ? { stoppedBy: by } : {}),
     }
     const suffix = by ? ` (${login}, by ${by})` : ` (${login})`
@@ -558,11 +617,8 @@ export class RepoAdapter implements StorageAdapter {
     return this.writeFile(
       PATHS.workspace,
       workspaceCodec,
-      (cur) => {
-        // Projects and tags only: team leaders change the zone with setTeamTimeZone.
-        const next = withoutZone(fn(cur ?? EMPTY_WORKSPACE))
-        return cur?.timeZone ? { ...next, timeZone: cur.timeZone } : next
-      },
+      // Projects and tags only: team leaders change the team settings with their own methods.
+      (cur) => ({ ...withoutTeamSettings(fn(cur ?? EMPTY_WORKSPACE)), ...teamSettings(cur) }),
       `workspace: ${summary} (${me.login})`,
     )
   }
@@ -582,10 +638,25 @@ export class RepoAdapter implements StorageAdapter {
             path: PATHS.workspace,
           })
         }
-        const rest = withoutZone(cur as Record<string, unknown>)
+        const rest = { ...(cur as Record<string, unknown>) }
+        delete rest.timeZone
         return zone ? { ...rest, timeZone: zone } : rest
       },
       `settings: team time zone ${zone ?? 'cleared'} (${me.login})`,
+    )
+  }
+
+  async setMarkAiEntries(on: boolean): Promise<void> {
+    const me = await this.assertCan('setAiMarking')
+    await this.writeFile(
+      PATHS.workspace,
+      workspaceCodec,
+      (cur) => {
+        const ws = { ...(cur ?? EMPTY_WORKSPACE) }
+        delete ws.markAiEntries
+        return on ? { ...ws, markAiEntries: true } : ws
+      },
+      `settings: mark AI entries ${on ? 'on' : 'off'} (${me.login})`,
     )
   }
 
@@ -627,12 +698,11 @@ export class RepoAdapter implements StorageAdapter {
     if (data.entries.some((e) => durationMs(e.start, e.end) <= 0)) {
       throw new StorageError('invalid', 'Entries must end after they start')
     }
-    // An import replaces projects and tags but keeps the team zone.
-    const imported = withoutZone(data.workspace)
-    const current = await this.getWorkspace()
-    const workspace: Workspace = current.timeZone
-      ? { ...imported, timeZone: current.timeZone }
-      : imported
+    // An import replaces projects and tags but keeps the team settings.
+    const workspace: Workspace = {
+      ...withoutTeamSettings(data.workspace),
+      ...teamSettings(await this.getWorkspace()),
+    }
     const files = new Map<string, unknown>([[PATHS.workspace, workspace]])
     const sorted = [...data.entries].sort((a, b) => a.start.localeCompare(b.start))
     for (const e of sorted) {

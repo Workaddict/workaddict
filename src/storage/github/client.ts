@@ -38,6 +38,8 @@ export class GitHubClient {
         body: body !== undefined ? JSON.stringify(body) : undefined,
       })
     } catch (e) {
+      // Guarded: Node has no `navigator.onLine` (and before v21 no `navigator`).
+      // eslint-disable-next-line no-restricted-globals
       const offline = typeof navigator !== 'undefined' && navigator.onLine === false
       throw new StorageError(offline ? 'offline' : 'network', String(e))
     }

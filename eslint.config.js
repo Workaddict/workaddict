@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh'
 import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'openspec'] },
+  { ignores: ['dist', 'mcp/dist', 'coverage', 'openspec'] },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ['**/*.{ts,tsx}'],
@@ -94,5 +94,29 @@ export default tseslint.config(
         },
       ],
     },
+  },
+  {
+    // Shared with the MCP server, which runs in Node: no browser APIs, except in the blob cache
+    // that the server replaces with its own.
+    files: ['src/storage/**/*.ts', 'src/domain/**/*.ts'],
+    ignores: ['**/*.test.ts', 'src/storage/github/blobCache.ts'],
+    rules: {
+      'no-restricted-globals': [
+        'error',
+        ...[
+          'window',
+          'document',
+          'localStorage',
+          'sessionStorage',
+          'indexedDB',
+          'navigator',
+          'location',
+        ].map((name) => ({ name, message: 'src/storage and src/domain also run in Node (mcp/).' })),
+      ],
+    },
+  },
+  {
+    files: ['mcp/**/*.{ts,mjs}'],
+    languageOptions: { globals: globals.node },
   },
 )

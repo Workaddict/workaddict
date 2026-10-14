@@ -9,7 +9,7 @@ import type {
   Workspace,
 } from '../domain/types'
 
-export type TimerFields = Pick<RunningTimer, 'description' | 'projectId' | 'tagIds'>
+export type TimerFields = Pick<RunningTimer, 'description' | 'projectId' | 'tagIds' | 'issueRef'>
 export type TimerPatch = Partial<TimerFields & Pick<RunningTimer, 'start'>>
 /** Another member's timer, identified by the id the caller saw so a newer timer stays untouched. */
 export interface TimerTarget {
@@ -72,11 +72,13 @@ export interface StorageAdapter {
   getWorkspace(): Promise<Workspace>
   /**
    * Applies a pure update function to projects and tags; it may be re-run on write conflicts.
-   * The team time zone is kept as stored.
+   * The team settings (time zone, AI entry marking) are kept as stored.
    */
   updateWorkspace(fn: (ws: Workspace) => Workspace, summary: string): Promise<Workspace>
   /** Sets or (with null) clears the team time zone in `workspace.json`. Team leaders only. */
   setTeamTimeZone(zone: string | null): Promise<void>
+  /** Turns recording of `TimeEntry.addedVia` for AI assistants on or off. Team leaders only. */
+  setMarkAiEntries(on: boolean): Promise<void>
 
   exportBackup(): Promise<BackupFile>
 

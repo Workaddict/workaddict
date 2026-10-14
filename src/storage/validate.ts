@@ -1,3 +1,4 @@
+import { cleanRepos } from '../domain/issueRef'
 import { isRole } from '../domain/permissions'
 import { isValidZone } from '../domain/zoneNames'
 import {
@@ -68,7 +69,11 @@ function isStringArray(value: unknown): value is string[] {
   return Array.isArray(value) && value.every(isString)
 }
 
-/** Fields shared by entries and timers. */
+/**
+ * Fields shared by entries and timers. Optional extras such as `issueRef` are not checked here:
+ * a malformed value must not hide tracked time, so it stays in the record (and is written back
+ * unchanged) while the UI ignores it (`isIssueRef` before showing or linking).
+ */
 function hasTrackedFields(v: Record<string, unknown>, login: string | null): boolean {
   return (
     isNonEmptyString(v.id) &&
@@ -141,7 +146,7 @@ export const timerCodec: Codec<RunningTimer | null, null> = {
 interface WorkspaceRest {
   projects: unknown[]
   tags: unknown[]
-  /** Unknown top-level keys and an invalid `timeZone`, kept as they are. */
+  /** Unknown top-level keys and an invalid `timeZone` or `markAiEntries`, kept as they are. */
   other: Record<string, unknown>
 }
 
@@ -157,20 +162,46 @@ export const workspaceCodec: Codec<Workspace, WorkspaceRest> = {
   decode(raw) {
     const empty = { value: EMPTY_WORKSPACE, rest: { projects: [], tags: [], other: {} } }
     if (!isObject(raw)) return { ...empty, issues: 0, unreadable: true }
-    const { projects = [], tags = [], timeZone, ...other } = raw
+    const { projects = [], tags = [], timeZone, markAiEntries, ...other } = raw
     if (!Array.isArray(projects) || !Array.isArray(tags)) return { ...empty, issues: 0, unreadable: true }
     const p = split(projects, isProjectShape)
     const t = split(tags, isTag)
-    // A bad color is harmless to replace (it is saved on the next workspace write).
-    const fixed = p.ok.map(
-      (x) => ({ ...x, color: isHexColor(x.color) ? x.color : PROJECT_COLORS[0] }) as Project,
-    )
-    const recolored = p.ok.filter((x) => !isHexColor(x.color)).length
+    // A bad color or repository list is harmless to repair (it is saved on the next workspace write).
+    let repaired = 0
+    const fixed = p.ok.map((x) => {
+      const project = { ...x, color: isHexColor(x.color) ? x.color : PROJECT_COLORS[0] } as Project
+      if (!isHexColor(x.color)) repaired++
+      if (x.repos !== undefined) {
+        const repos = cleanRepos(x.repos)
+        if (!Array.isArray(x.repos) || repos.length !== x.repos.length) repaired++
+        project.repos = repos
+      }
+      return project
+    })
     const zoneOk = isValidZone(timeZone)
+    const markOk = typeof markAiEntries === 'boolean'
     return {
-      value: { projects: fixed, tags: t.ok, ...(zoneOk ? { timeZone } : {}) },
-      rest: { projects: p.bad, tags: t.bad, other: zoneOk || timeZone === undefined ? other : { ...other, timeZone } },
-      issues: p.bad.length + t.bad.length + recolored + (zoneOk || timeZone === undefined ? 0 : 1),
+      value: {
+        projects: fixed,
+        tags: t.ok,
+        ...(zoneOk ? { timeZone } : {}),
+        ...(markAiEntries === true ? { markAiEntries } : {}),
+      },
+      rest: {
+        projects: p.bad,
+        tags: t.bad,
+        other: {
+          ...other,
+          ...(zoneOk || timeZone === undefined ? {} : { timeZone }),
+          ...(markOk || markAiEntries === undefined ? {} : { markAiEntries }),
+        },
+      },
+      issues:
+        p.bad.length +
+        t.bad.length +
+        repaired +
+        (zoneOk || timeZone === undefined ? 0 : 1) +
+        (markOk || markAiEntries === undefined ? 0 : 1),
       unreadable: false,
     }
   },
@@ -179,6 +210,7 @@ export const workspaceCodec: Codec<Workspace, WorkspaceRest> = {
     projects: [...value.projects, ...rest.projects],
     tags: [...value.tags, ...rest.tags],
     ...(value.timeZone ? { timeZone: value.timeZone } : {}),
+    ...(value.markAiEntries ? { markAiEntries: true } : {}),
   }),
 }
 

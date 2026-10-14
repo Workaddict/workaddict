@@ -9,6 +9,7 @@ const matrix: [Action, Record<Role, boolean>][] = [
   ['reassignEntries', { worker: false, editor: false, leader: true }],
   ['shiftEntries', { worker: false, editor: false, leader: true }],
   ['setTeamTimeZone', { worker: false, editor: false, leader: true }],
+  ['setAiMarking', { worker: false, editor: false, leader: true }],
   ['viewLiveActivity', { worker: false, editor: true, leader: true }],
   ['stopOthersTimer', { worker: false, editor: true, leader: true }],
   ['assignRoles', { worker: false, editor: false, leader: false }],
