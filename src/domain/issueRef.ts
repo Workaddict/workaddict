@@ -16,6 +16,13 @@ const REPO_URL = new RegExp(
   `^(?:https?://(?:www\\.)?github\\.com/|git@github\\.com:)(${OWNER})/(${REPO})(?:[/?#].*)?$`,
   'i',
 )
+/** A GitHub Projects board, `https://github.com/orgs/acme/projects/3` (or `/users/`), with any view or query. */
+const BOARD_URL = new RegExp(
+  `^https?://(?:www\\.)?github\\.com/(orgs|users)/(${OWNER})/projects/([1-9][0-9]{0,9})(?:[/?#].*)?$`,
+  'i',
+)
+/** Stored board reference: `orgs/acme/projects/3` or `users/alice/projects/1`. */
+const BOARD_REF = new RegExp(`^(?:orgs|users)/${OWNER}/projects/[1-9][0-9]{0,9}$`)
 const SHORT = new RegExp(`^#?(${NUMBER})$`)
 const NAMED = new RegExp(`^(${REPO})#(${NUMBER})$`)
 
@@ -45,18 +52,71 @@ export function issueUrl(ref: string): string {
   return `https://github.com/${ref.slice(0, hash)}/issues/${ref.slice(hash + 1)}`
 }
 
+export function isBoardRef(value: unknown): value is string {
+  return typeof value === 'string' && BOARD_REF.test(value)
+}
+
+/** Link target for a board reference. */
+export function boardUrl(ref: string): string {
+  return `https://github.com/${ref}`
+}
+
+/** Normalizes a board URL to `orgs/owner/projects/N` (or `users/…`); null if it is none. */
+export function parseBoardInput(text: string): string | null {
+  const url = BOARD_URL.exec(text.trim())
+  return url ? `${url[1]!.toLowerCase()}/${url[2]}/projects/${url[3]}` : null
+}
+
+/**
+ * The issue behind a board card link: opening a card adds `issue=owner|repo|number`
+ * to the board URL. Null for a board link without a card (or a draft card).
+ */
+function boardCardRef(input: string): string | null {
+  const query = input.indexOf('?')
+  if (query < 0) return null
+  const issue = new URLSearchParams(input.slice(query + 1).split('#')[0]).get('issue')
+  const parts = issue?.split('|') ?? []
+  if (parts.length !== 3) return null
+  const ref = `${parts[0]}/${parts[1]}#${parts[2]}`
+  return isIssueRef(ref) ? ref : null
+}
+
+/** Repositories in first-seen order without case-insensitive duplicates. */
+function uniqueRepos(repos: Iterable<string>): string[] {
+  const seen = new Set<string>()
+  const out: string[] = []
+  for (const repo of repos) {
+    if (seen.has(repo.toLowerCase())) continue
+    seen.add(repo.toLowerCase())
+    out.push(repo)
+  }
+  return out
+}
+
+/** Repositories of the valid issue references, in first-seen order. */
+export function reposOf(refs: Iterable<string | undefined>): string[] {
+  const repos: string[] = []
+  for (const ref of refs) if (isIssueRef(ref)) repos.push(ref.slice(0, ref.indexOf('#')))
+  return uniqueRepos(repos)
+}
+
 export type IssueParse =
   | { ok: true; ref: string | null }
-  | { ok: false; reason: 'format' | 'noRepo' | 'unknownRepo' | 'ambiguousRepo' }
+  | {
+      ok: false
+      reason: 'format' | 'noRepo' | 'boardNoRepo' | 'boardLink' | 'unknownRepo' | 'ambiguousRepo'
+    }
 
 /**
  * Normalizes user input to `owner/repo#number`. Empty input means "no link" (`ref: null`).
- * A short `#42` resolves to the project's first (default) linked repository; `api#42` to the
- * linked repository named `api`.
+ * A board card link carries its issue. A short `#42` resolves to the project's first (default)
+ * linked repository, or else to the repository of its most recent issue link (`usedRepos`,
+ * newest first); `api#42` to the linked or used repository named `api`.
  */
 export function parseIssueInput(
   text: string,
-  project: Pick<Project, 'repos'> | null | undefined,
+  project: Pick<Project, 'repos' | 'board'> | null | undefined,
+  usedRepos: readonly string[] = [],
 ): IssueParse {
   const input = text.trim()
   if (!input) return { ok: true, ref: null }
@@ -66,12 +126,17 @@ export function parseIssueInput(
     const ref = `${url[1]}/${url[2]!.replace(/\.git$/i, '')}#${url[3]}`
     return isIssueRef(ref) ? { ok: true, ref } : { ok: false, reason: 'format' }
   }
-  const repos = project?.repos ?? []
+  if (BOARD_URL.test(input)) {
+    const ref = boardCardRef(input)
+    return ref ? { ok: true, ref } : { ok: false, reason: 'boardLink' }
+  }
+  const repos = uniqueRepos([...(project?.repos ?? []), ...usedRepos])
+  const noRepo = project?.board ? 'boardNoRepo' : 'noRepo'
   const short = SHORT.exec(input)
   if (short) {
     return repos.length
       ? { ok: true, ref: `${repos[0]}#${short[1]}` }
-      : { ok: false, reason: 'noRepo' }
+      : { ok: false, reason: noRepo }
   }
   const named = NAMED.exec(input)
   if (named) {
@@ -80,7 +145,7 @@ export function parseIssueInput(
     if (matches.length > 1) return { ok: false, reason: 'ambiguousRepo' }
     return matches.length
       ? { ok: true, ref: `${matches[0]}#${named[2]}` }
-      : { ok: false, reason: repos.length ? 'unknownRepo' : 'noRepo' }
+      : { ok: false, reason: repos.length ? 'unknownRepo' : noRepo }
   }
   return { ok: false, reason: 'format' }
 }
@@ -89,6 +154,7 @@ export function parseIssueInput(
 export function parseRepoInput(text: string): string | null {
   const input = text.trim()
   if (isRepoRef(input)) return input
+  if (BOARD_URL.test(input)) return null
   const url = REPO_URL.exec(input)
   if (!url) return null
   const repo = `${url[1]}/${url[2]!.replace(/\.git$/i, '')}`

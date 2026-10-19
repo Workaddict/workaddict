@@ -3,7 +3,7 @@ import { EmptyState, Spinner } from '../../components/bits'
 import { Icon } from '../../components/Icon'
 import { useConfirm } from '../../components/Modal'
 import { isNameTaken } from '../../domain/ids'
-import { MAX_PROJECT_REPOS, parseRepoInput } from '../../domain/issueRef'
+import { boardUrl, MAX_PROJECT_REPOS, parseBoardInput, parseRepoInput } from '../../domain/issueRef'
 import { durationMs, formatHM } from '../../domain/time'
 import { PROJECT_COLORS, type Project, type Tag, type TimeEntry } from '../../domain/types'
 import { useI18n } from '../../i18n'
@@ -171,21 +171,33 @@ function NameForm({
 }
 
 /**
- * A project's linked repositories; editors and team leaders can add and remove them. The first is
- * the default: `#42` in an issue field resolves to it, `name#42` to the repository called `name`.
+ * A project's linked board and repositories; editors and team leaders can add and remove them.
+ * The first repository is the default: `#42` in an issue field resolves to it, `name#42` to the
+ * repository called `name`. A board needs no repository: card links carry their issue.
  */
 function ProjectRepos({ project, canManage }: { project: Project; canManage: boolean }) {
   const { t } = useI18n()
   const onError = useErrorToast()
-  const { setProjectRepo, setDefaultRepo } = useWorkspaceActions()
+  const { setProjectRepo, setProjectBoard, setDefaultRepo } = useWorkspaceActions()
   const [adding, setAdding] = useState(false)
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
   const repos = project.repos ?? []
-  if (!repos.length && !canManage) return null
+  const board = project.board
+  if (!repos.length && !board && !canManage) return null
 
   const add = (e: FormEvent) => {
     e.preventDefault()
+    const done = () => {
+      setText('')
+      setError(null)
+      setAdding(false)
+    }
+    const newBoard = parseBoardInput(text)
+    if (newBoard) {
+      setProjectBoard(project, newBoard).catch(onError)
+      return done()
+    }
     const repo = parseRepoInput(text)
     if (!repo) return setError(t('workGroups.repoInvalid'))
     if (repos.some((r) => r.toLowerCase() === repo.toLowerCase())) {
@@ -195,13 +207,33 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
       return setError(t('workGroups.repoLimit', { count: MAX_PROJECT_REPOS }))
     }
     setProjectRepo(project, repo, true).catch(onError)
-    setText('')
-    setError(null)
-    setAdding(false)
+    done()
   }
 
   return (
     <div className="wg-repos" aria-label={t('workGroups.repos', { name: project.name })}>
+      {board && (
+        <span className="chip">
+          <a href={boardUrl(board)} target="_blank" rel="noopener noreferrer">
+            <Icon name="github" size={12} />{' '}
+            {t('workGroups.board', {
+              owner: board.split('/')[1],
+              number: board.slice(board.lastIndexOf('/') + 1),
+            })}
+          </a>
+          {canManage && (
+            <button
+              type="button"
+              className="chip-remove"
+              aria-label={t('workGroups.unlinkBoard')}
+              title={t('workGroups.unlinkBoard')}
+              onClick={() => setProjectBoard(project, null).catch(onError)}
+            >
+              <Icon name="x" size={12} />
+            </button>
+          )}
+        </span>
+      )}
       {repos.map((r, i) => (
         <span key={r} className="chip">
           <a href={`https://github.com/${r}`} target="_blank" rel="noopener noreferrer">
@@ -254,14 +286,21 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
           </form>
         ) : (
           <button type="button" className="link-btn small" onClick={() => setAdding(true)}>
-            + {t(repos.length ? 'workGroups.addRepo' : 'workGroups.linkRepo')}
+            +{' '}
+            {t(
+              board
+                ? 'workGroups.addRepoToBoard'
+                : repos.length
+                  ? 'workGroups.addRepo'
+                  : 'workGroups.linkRepo',
+            )}
           </button>
         ))}
       {!adding && (
         <span className="wg-repos-hint small muted">
           {repos.length
             ? t('workGroups.repoHint', { repo: repos[0]!.slice(repos[0]!.indexOf('/') + 1) })
-            : t('workGroups.repoHintEmpty')}
+            : t(board ? 'workGroups.boardHint' : 'workGroups.repoHintEmpty')}
         </span>
       )}
     </div>

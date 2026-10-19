@@ -1,5 +1,10 @@
 import { isNameTaken, newId } from '../../src/domain/ids'
-import { parseIssueInput, parseRepoInput, MAX_PROJECT_REPOS } from '../../src/domain/issueRef'
+import {
+  boardUrl,
+  parseIssueInput,
+  parseRepoInput,
+  MAX_PROJECT_REPOS,
+} from '../../src/domain/issueRef'
 import { nextProjectColor } from '../../src/domain/projectColor'
 import { durationMs, localDateTime, MAX_ENTRY_MS } from '../../src/domain/time'
 import {
@@ -68,6 +73,7 @@ function projectView(p: Project) {
     color: p.color,
     archived: p.archived,
     repos: p.repos ?? [],
+    ...(p.board ? { board: boardUrl(p.board) } : {}),
   }
 }
 
@@ -313,6 +319,9 @@ export async function addEntries(
         const why = {
           format: 'is not an issue reference',
           noRepo: 'needs owner/repo#number (the project has no linked repository)',
+          boardNoRepo:
+            'needs owner/repo#number or a board card link (the project links a board, but no repository)',
+          boardLink: 'is a board link, not a card link; open the card and use its URL',
           unknownRepo: 'names no repository linked to the project; use owner/repo#number',
           ambiguousRepo: 'matches several linked repositories; use owner/repo#number',
         }[r.reason]

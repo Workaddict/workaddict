@@ -121,33 +121,39 @@ describe('linked repositories', () => {
   }
 
   const repos = async () =>
-    (await screen.findByLabelText('GitHub repositories of Acme')) as HTMLElement
+    (await screen.findByLabelText('GitHub board and repositories of Acme')) as HTMLElement
 
   it('links a repository given as URL and refuses a duplicate', async () => {
     const { adapter } = await render()
-    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Another repository' }))
-    const input = screen.getByLabelText('Link GitHub repository')
+    fireEvent.click(
+      within(await repos()).getByRole('button', { name: '+ Board or another repository' }),
+    )
+    const input = screen.getByLabelText('Link GitHub board or repository')
     fireEvent.change(input, { target: { value: 'https://github.com/acme/api.git' } })
     fireEvent.submit(input)
     await waitFor(async () =>
       expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual(['acme/web', 'acme/api']),
     )
 
-    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Another repository' }))
-    fireEvent.change(screen.getByLabelText('Link GitHub repository'), {
+    fireEvent.click(
+      within(await repos()).getByRole('button', { name: '+ Board or another repository' }),
+    )
+    fireEvent.change(screen.getByLabelText('Link GitHub board or repository'), {
       target: { value: 'Acme/Web' },
     })
-    fireEvent.submit(screen.getByLabelText('Link GitHub repository'))
+    fireEvent.submit(screen.getByLabelText('Link GitHub board or repository'))
     expect(await screen.findByText('Repository already linked')).toBeTruthy()
   })
 
   it('makes another repository the default for #42', async () => {
     const { adapter } = await render()
-    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Another repository' }))
-    fireEvent.change(screen.getByLabelText('Link GitHub repository'), {
+    fireEvent.click(
+      within(await repos()).getByRole('button', { name: '+ Board or another repository' }),
+    )
+    fireEvent.change(screen.getByLabelText('Link GitHub board or repository'), {
       target: { value: 'acme/api' },
     })
-    fireEvent.submit(screen.getByLabelText('Link GitHub repository'))
+    fireEvent.submit(screen.getByLabelText('Link GitHub board or repository'))
     fireEvent.click(await within(await repos()).findByRole('button', { name: 'Make default' }))
     await waitFor(async () =>
       expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual(['acme/api', 'acme/web']),
@@ -165,5 +171,47 @@ describe('linked repositories', () => {
     const list = await repos()
     expect(within(list).getByRole('link', { name: /acme\/web/ })).toBeTruthy()
     expect(within(list).queryByRole('button')).toBeNull()
+  })
+
+  it('links a board from its URL, then offers only another repository', async () => {
+    const { adapter } = await render()
+    fireEvent.click(
+      within(await repos()).getByRole('button', { name: '+ Board or another repository' }),
+    )
+    const input = screen.getByLabelText('Link GitHub board or repository')
+    fireEvent.change(input, {
+      target: { value: 'https://github.com/orgs/Team-Wels/projects/1/views/1?pane=issue&itemId=5' },
+    })
+    fireEvent.submit(input)
+    await waitFor(async () =>
+      expect((await adapter.getWorkspace()).projects[0]?.board).toBe('orgs/Team-Wels/projects/1'),
+    )
+    const list = await repos()
+    expect(
+      within(list)
+        .getByRole('link', { name: /Board 1 of Team-Wels/ })
+        .getAttribute('href'),
+    ).toBe('https://github.com/orgs/Team-Wels/projects/1')
+    expect(within(list).getByRole('button', { name: '+ Repository' })).toBeTruthy()
+
+    fireEvent.click(within(list).getByRole('button', { name: 'Unlink board' }))
+    await waitFor(async () =>
+      expect((await adapter.getWorkspace()).projects[0]).not.toHaveProperty('board'),
+    )
+  })
+
+  it('explains card links for a board without repositories', async () => {
+    const { adapter } = await render()
+    fireEvent.click(within(await repos()).getByRole('button', { name: 'Unlink acme/web' }))
+    fireEvent.click(
+      await within(await repos()).findByRole('button', {
+        name: '+ Link GitHub board or repository',
+      }),
+    )
+    const input = screen.getByLabelText('Link GitHub board or repository')
+    fireEvent.change(input, { target: { value: 'https://github.com/orgs/acme/projects/3' } })
+    fireEvent.submit(input)
+    expect(await screen.findByText(/Paste the link of a card on the board/)).toBeTruthy()
+    expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual([])
   })
 })

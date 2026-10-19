@@ -57,6 +57,26 @@ export function useWorkspaceActions() {
     [mutate],
   )
 
+  /** Links a board to a project (replacing its board), or removes it with `null`. */
+  const setProjectBoard = useCallback(
+    (project: Project, board: string | null) =>
+      mutate({
+        fn: (ws) => ({
+          ...ws,
+          projects: ws.projects.map((p) => {
+            if (p.id !== project.id) return p
+            const rest = { ...p }
+            delete rest.board
+            return board ? { ...rest, board } : rest
+          }),
+        }),
+        summary: board
+          ? `link board ${board} to project "${project.name}"`
+          : `unlink board ${project.board} from project "${project.name}"`,
+      }),
+    [mutate],
+  )
+
   /** Moves a linked repository to the front: a short `#42` resolves through it. */
   const setDefaultRepo = useCallback(
     (project: Project, repo: string) =>
@@ -118,6 +138,7 @@ export function useWorkspaceActions() {
     createProject,
     updateProject,
     setProjectRepo,
+    setProjectBoard,
     setDefaultRepo,
     deleteProject,
     createTag,

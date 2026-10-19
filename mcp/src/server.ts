@@ -83,7 +83,8 @@ export function createServer(
   server.registerTool(
     'list_projects',
     {
-      description: 'Projects with id, name, color, archived flag and linked GitHub repositories.',
+      description:
+        'Projects with id, name, color, archived flag, linked GitHub repositories and linked GitHub Projects board.',
       inputSchema: { includeArchived: z.boolean().optional() },
       annotations: read,
     },
@@ -174,7 +175,7 @@ export function createServer(
                 .string()
                 .optional()
                 .describe(
-                  "owner/repo#42, an issue URL, #42 (the project's first linked repository) or repo#42",
+                  "owner/repo#42, an issue URL, a board card URL (with ?issue=), #42 (the project's first linked repository) or repo#42",
                 ),
               login: z.string().optional().describe("Another member's login (editors only)"),
             }),

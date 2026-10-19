@@ -1,9 +1,11 @@
+import { QueryClient } from '@tanstack/react-query'
 import { act, fireEvent, screen, waitFor } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import type { RunningTimer, TimeEntry } from '../../domain/types'
 import '../../i18n'
 import { createMemoryAdapter, MemoryFileStore } from '../../storage'
 import { renderWithSession } from '../../test/renderWithSession'
+import { keys } from '../data/hooks'
 import { EntryList } from './EntryList'
 import { TimerBar } from './TimerBar'
 
@@ -86,9 +88,71 @@ describe('issue field in the timer bar', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Add entry' }))
     })
     expect(screen.getByRole('alert').textContent).toBe(
-      'This project has no GitHub repository. Link one under “Projects & Tags”, then #42 is enough.',
+      'The repository for #42 is unknown: paste the link of the issue or a board card once, then #42 is enough in this project.',
     )
     expect(await adapter.listAllEntries()).toHaveLength(0)
+  })
+})
+
+describe('issue field with a board', () => {
+  const scrum = {
+    id: 'p2',
+    name: 'Scrum',
+    color: '#16a34a',
+    archived: false,
+    board: 'orgs/Team-Wels/projects/1',
+  }
+  const card =
+    'https://github.com/orgs/Team-Wels/projects/1/views/1?pane=issue&itemId=5&issue=Team-Wels%7Capp%7C104'
+
+  async function boardSeeded(files: Record<string, unknown> = {}) {
+    const adapter = await seeded(files)
+    await adapter.updateWorkspace((ws) => ({ ...ws, projects: [web, scrum] }), 'seed board')
+    return adapter
+  }
+
+  it('takes the issue from a pasted card link', async () => {
+    const adapter = await boardSeeded({ 'timers/alice.json': timer({ projectId: 'p2' }) })
+    await renderWithSession(<TimerBar />, adapter)
+    await screen.findByRole('button', { name: 'Stop' })
+    fireEvent.change(issueInput(), { target: { value: card } })
+    await blur(issueInput())
+    await waitFor(async () =>
+      expect((await adapter.getTimer())?.issueRef).toBe('Team-Wels/app#104'),
+    )
+  })
+
+  it('asks for a card link before the first #42', async () => {
+    const adapter = await boardSeeded({ 'timers/alice.json': timer({ projectId: 'p2' }) })
+    await renderWithSession(<TimerBar />, adapter)
+    await screen.findByRole('button', { name: 'Stop' })
+    fireEvent.change(issueInput(), { target: { value: '#42' } })
+    await blur(issueInput())
+    expect(screen.getByRole('alert').textContent).toMatch(/paste the link of a card on the board/)
+  })
+
+  it('resolves #42 through the repository of an earlier issue link in the project', async () => {
+    const earlier: TimeEntry = {
+      id: 'e0',
+      login: 'alice',
+      start: new Date(Date.now() - 7200_000).toISOString(),
+      end: new Date(Date.now() - 5400_000).toISOString(),
+      description: 'Sprint planning',
+      projectId: 'p2',
+      tagIds: [],
+      issueRef: 'Team-Wels/app#101',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    }
+    const adapter = await boardSeeded({ 'timers/alice.json': timer({ projectId: 'p2' }) })
+    // As if the entry list had loaded the project's earlier entries.
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } })
+    queryClient.setQueryData(keys.entriesAll, [earlier])
+    await renderWithSession(<TimerBar />, adapter, queryClient)
+    await screen.findByRole('button', { name: 'Stop' })
+    fireEvent.change(issueInput(), { target: { value: '#42' } })
+    await blur(issueInput())
+    await waitFor(async () => expect((await adapter.getTimer())?.issueRef).toBe('Team-Wels/app#42'))
   })
 })
 

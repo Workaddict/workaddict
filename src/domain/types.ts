@@ -39,6 +39,8 @@ export interface Project {
   archived: boolean
   /** Linked GitHub repositories as `owner/repo`; resolve short issue references like `#42`. */
   repos?: string[]
+  /** Linked GitHub Projects board as `orgs/owner/projects/N` or `users/owner/projects/N`. */
+  board?: string
 }
 
 export interface Tag {

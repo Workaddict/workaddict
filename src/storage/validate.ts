@@ -1,4 +1,4 @@
-import { cleanRepos } from '../domain/issueRef'
+import { cleanRepos, isBoardRef } from '../domain/issueRef'
 import { isRole } from '../domain/permissions'
 import { isValidZone } from '../domain/zoneNames'
 import {
@@ -166,7 +166,7 @@ export const workspaceCodec: Codec<Workspace, WorkspaceRest> = {
     if (!Array.isArray(projects) || !Array.isArray(tags)) return { ...empty, issues: 0, unreadable: true }
     const p = split(projects, isProjectShape)
     const t = split(tags, isTag)
-    // A bad color or repository list is harmless to repair (it is saved on the next workspace write).
+    // A bad color, repository list or board is harmless to repair (it is saved on the next workspace write).
     let repaired = 0
     const fixed = p.ok.map((x) => {
       const project = { ...x, color: isHexColor(x.color) ? x.color : PROJECT_COLORS[0] } as Project
@@ -175,6 +175,10 @@ export const workspaceCodec: Codec<Workspace, WorkspaceRest> = {
         const repos = cleanRepos(x.repos)
         if (!Array.isArray(x.repos) || repos.length !== x.repos.length) repaired++
         project.repos = repos
+      }
+      if (x.board !== undefined && !isBoardRef(x.board)) {
+        delete project.board
+        repaired++
       }
       return project
     })

@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { Icon } from '../../components/Icon'
-import { isIssueRef, issueUrl, parseIssueInput, type IssueParse } from '../../domain/issueRef'
+import { isIssueRef, issueUrl, type IssueParse } from '../../domain/issueRef'
 import { useI18n } from '../../i18n'
 import { InlineEdit } from './InlineFields'
-import { useProject, useResolveIssue } from './useResolveIssue'
+import { useParseIssue, useResolveIssue } from './useResolveIssue'
 
 function useIssueErrorText() {
   const { t } = useI18n()
@@ -92,7 +92,7 @@ export function InlineIssue({
   onSave: (ref: string | undefined) => Promise<string | null>
 }) {
   const { t } = useI18n()
-  const project = useProject(projectId)
+  const parse = useParseIssue(projectId)
   const errorText = useIssueErrorText()
   const shown = isIssueRef(value) ? value : undefined
   if (!editable && !shown) return null
@@ -127,7 +127,7 @@ export function InlineIssue({
       label={t('issue.edit')}
       placeholder={t('issue.placeholder')}
       onCommit={async (text) => {
-        const r = parseIssueInput(text, project)
+        const r = parse(text)
         return r.ok ? onSave(r.ref ?? undefined) : errorText(r)
       }}
     />

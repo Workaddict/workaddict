@@ -165,6 +165,20 @@ describe('workspaceCodec', () => {
     expect(d.issues).toBe(2)
   })
 
+  it('round-trips a linked board and drops an invalid one', () => {
+    const raw = { projects: [{ ...project, board: 'orgs/acme/projects/3' }], tags: [] }
+    const ok = workspaceCodec.decode(raw, 'workspace.json')
+    expect(ok.issues).toBe(0)
+    expect(workspaceCodec.encode(ok.value, ok.rest)).toEqual(raw)
+
+    const bad = workspaceCodec.decode(
+      { projects: [{ ...project, board: 'javascript:alert(1)' }], tags: [] },
+      'workspace.json',
+    )
+    expect(bad.value.projects[0]).not.toHaveProperty('board')
+    expect(bad.issues).toBe(1)
+  })
+
   it('reports a wrong root shape as unreadable', () => {
     expect(workspaceCodec.decode([], 'workspace.json').unreadable).toBe(true)
     expect(workspaceCodec.decode({ projects: 'x' }, 'workspace.json').unreadable).toBe(true)
