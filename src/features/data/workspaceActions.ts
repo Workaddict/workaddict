@@ -57,6 +57,24 @@ export function useWorkspaceActions() {
     [mutate],
   )
 
+  /** Moves a linked repository to the front: a short `#42` resolves through it. */
+  const setDefaultRepo = useCallback(
+    (project: Project, repo: string) =>
+      mutate({
+        fn: (ws) => ({
+          ...ws,
+          projects: ws.projects.map((p) => {
+            if (p.id !== project.id) return p
+            const repos = p.repos ?? []
+            const found = repos.find((r) => r.toLowerCase() === repo.toLowerCase())
+            return found ? { ...p, repos: [found, ...repos.filter((r) => r !== found)] } : p
+          }),
+        }),
+        summary: `make ${repo} the default repository of project "${project.name}"`,
+      }),
+    [mutate],
+  )
+
   const deleteProject = useCallback(
     (p: Project) =>
       mutate({
@@ -100,6 +118,7 @@ export function useWorkspaceActions() {
     createProject,
     updateProject,
     setProjectRepo,
+    setDefaultRepo,
     deleteProject,
     createTag,
     updateTag,

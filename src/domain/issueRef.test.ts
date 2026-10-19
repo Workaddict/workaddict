@@ -20,15 +20,26 @@ describe('parseIssueInput', () => {
     expect(parseIssueInput('  ', one)).toEqual({ ok: true, ref: null })
   })
 
-  it('resolves the short form through one linked repository', () => {
+  it('resolves the short form through the first linked repository', () => {
     expect(parseIssueInput('#42', one)).toEqual({ ok: true, ref: 'acme/web#42' })
     expect(parseIssueInput('42', one)).toEqual({ ok: true, ref: 'acme/web#42' })
+    expect(parseIssueInput('#42', two)).toEqual({ ok: true, ref: 'acme/web#42' })
   })
 
-  it('refuses the short form without exactly one linked repository', () => {
-    expect(parseIssueInput('#42', two)).toEqual({ ok: false, reason: 'ambiguousRepo' })
-    expect(parseIssueInput('#42', { repos: [] })).toEqual({ ok: false, reason: 'ambiguousRepo' })
-    expect(parseIssueInput('#42', null)).toEqual({ ok: false, reason: 'ambiguousRepo' })
+  it('refuses the short form without a linked repository', () => {
+    expect(parseIssueInput('#42', { repos: [] })).toEqual({ ok: false, reason: 'noRepo' })
+    expect(parseIssueInput('#42', null)).toEqual({ ok: false, reason: 'noRepo' })
+  })
+
+  it('resolves repo#42 through the linked repository of that name', () => {
+    expect(parseIssueInput('api#7', two)).toEqual({ ok: true, ref: 'acme/api#7' })
+    expect(parseIssueInput('API#7', two)).toEqual({ ok: true, ref: 'acme/api#7' })
+    expect(parseIssueInput('docs#7', two)).toEqual({ ok: false, reason: 'unknownRepo' })
+    expect(parseIssueInput('api#7', null)).toEqual({ ok: false, reason: 'noRepo' })
+    expect(parseIssueInput('web#7', { repos: ['acme/web', 'other/web'] })).toEqual({
+      ok: false,
+      reason: 'ambiguousRepo',
+    })
   })
 
   it.each([

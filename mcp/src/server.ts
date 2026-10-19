@@ -149,7 +149,7 @@ export function createServer(
     'link_repos',
     {
       description:
-        'Links GitHub repositories to a project, so "#42" resolves to an issue there. Needs the editor or team leader role.',
+        'Links GitHub repositories to a project. "#42" resolves to the first linked repository, "api#42" to the linked repository named api. Needs the editor or team leader role.',
       inputSchema: { projectId: z.string(), repos: z.array(z.string()).min(1).max(20) },
       annotations: write,
     },
@@ -173,7 +173,9 @@ export function createServer(
               issueRef: z
                 .string()
                 .optional()
-                .describe('owner/repo#42, an issue URL, or #42 (resolved through the project)'),
+                .describe(
+                  "owner/repo#42, an issue URL, #42 (the project's first linked repository) or repo#42",
+                ),
               login: z.string().optional().describe("Another member's login (editors only)"),
             }),
           )

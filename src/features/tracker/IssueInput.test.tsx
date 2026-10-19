@@ -86,7 +86,7 @@ describe('issue field in the timer bar', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Add entry' }))
     })
     expect(screen.getByRole('alert').textContent).toBe(
-      'Repository unclear: enter owner/repo#number',
+      'This project has no GitHub repository. Link one under “Projects & Tags”, then #42 is enough.',
     )
     expect(await adapter.listAllEntries()).toHaveLength(0)
   })

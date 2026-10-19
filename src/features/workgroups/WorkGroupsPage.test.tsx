@@ -32,7 +32,10 @@ async function setup() {
   await adapter.init()
   await adapter.importData(
     {
-      workspace: { projects: [{ id: 'p', name: 'Acme', color: '#2563eb', archived: false }], tags: [] },
+      workspace: {
+        projects: [{ id: 'p', name: 'Acme', color: '#2563eb', archived: false }],
+        tags: [],
+      },
       entries: Array.from({ length: 12 }, (_, i) => entry(i, 'p')),
     },
     'test',
@@ -101,32 +104,54 @@ describe('linked repositories', () => {
     await owner.updateWorkspace(
       (ws) => ({
         ...ws,
-        projects: [{ id: 'p', name: 'Acme', color: '#2563eb', archived: false, repos: ['acme/web'] }],
+        projects: [
+          { id: 'p', name: 'Acme', color: '#2563eb', archived: false, repos: ['acme/web'] },
+        ],
       }),
       'seed',
     )
     const me = { login, avatarUrl: null }
-    const adapter = createMemoryAdapter(me, { store, admins: ['alice'], collaborators: [alice, me] })
+    const adapter = createMemoryAdapter(me, {
+      store,
+      admins: ['alice'],
+      collaborators: [alice, me],
+    })
     await renderWithSession(<WorkGroupsPage />, adapter)
     return { adapter }
   }
 
-  const repos = async () => (await screen.findByLabelText('Linked repositories of Acme')) as HTMLElement
+  const repos = async () =>
+    (await screen.findByLabelText('GitHub repositories of Acme')) as HTMLElement
 
   it('links a repository given as URL and refuses a duplicate', async () => {
     const { adapter } = await render()
-    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Link repository' }))
-    const input = screen.getByLabelText('Link repository')
+    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Another repository' }))
+    const input = screen.getByLabelText('Link GitHub repository')
     fireEvent.change(input, { target: { value: 'https://github.com/acme/api.git' } })
     fireEvent.submit(input)
     await waitFor(async () =>
       expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual(['acme/web', 'acme/api']),
     )
 
-    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Link repository' }))
-    fireEvent.change(screen.getByLabelText('Link repository'), { target: { value: 'Acme/Web' } })
-    fireEvent.submit(screen.getByLabelText('Link repository'))
+    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Another repository' }))
+    fireEvent.change(screen.getByLabelText('Link GitHub repository'), {
+      target: { value: 'Acme/Web' },
+    })
+    fireEvent.submit(screen.getByLabelText('Link GitHub repository'))
     expect(await screen.findByText('Repository already linked')).toBeTruthy()
+  })
+
+  it('makes another repository the default for #42', async () => {
+    const { adapter } = await render()
+    fireEvent.click(within(await repos()).getByRole('button', { name: '+ Another repository' }))
+    fireEvent.change(screen.getByLabelText('Link GitHub repository'), {
+      target: { value: 'acme/api' },
+    })
+    fireEvent.submit(screen.getByLabelText('Link GitHub repository'))
+    fireEvent.click(await within(await repos()).findByRole('button', { name: 'Make default' }))
+    await waitFor(async () =>
+      expect((await adapter.getWorkspace()).projects[0]?.repos).toEqual(['acme/api', 'acme/web']),
+    )
   })
 
   it('unlinks a repository', async () => {

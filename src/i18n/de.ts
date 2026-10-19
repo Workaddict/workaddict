@@ -801,7 +801,10 @@ const de: Resources = {
     edit: 'Issue bearbeiten',
     errors: {
       format: 'Keine Issue-Angabe',
-      ambiguousRepo: 'Repository unklar: owner/repo#Nummer angeben',
+      noRepo:
+        'Dieses Projekt hat kein GitHub-Repository. Unter „Projekte & Labels“ einmal verknüpfen, dann reicht #42.',
+      unknownRepo: 'Kein verknüpftes Repository mit diesem Namen: owner/repo#Nummer angeben',
+      ambiguousRepo: 'Mehrere verknüpfte Repositories heißen so: owner/repo#Nummer angeben',
     },
   },
   entries: {
@@ -834,8 +837,14 @@ const de: Resources = {
     projects: 'Projekte',
     tags: 'Labels',
     newProject: 'Name des neuen Projekts',
-    repos: 'Verknüpfte Repositories von {{name}}',
-    linkRepo: 'Repository verknüpfen',
+    repos: 'GitHub-Repositories von {{name}}',
+    linkRepo: 'GitHub-Repository verknüpfen',
+    addRepo: 'Weiteres Repository',
+    repoHintEmpty: 'Einmal verknüpfen, dann reicht im Issue-Feld die Nummer (#42).',
+    repoHint: 'Im Issue-Feld reicht #42 → {{repo}}',
+    repoDefault: 'Standard',
+    makeDefault: 'Als Standard',
+    makeDefaultHint: '#42 im Issue-Feld führt dann zu {{repo}}',
     unlinkRepo: '{{repo}} entfernen',
     repoPlaceholder: 'owner/repo oder GitHub-URL',
     repoInvalid: 'Kein Repository',

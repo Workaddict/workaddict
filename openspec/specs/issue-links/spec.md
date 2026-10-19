@@ -30,15 +30,23 @@ The system SHALL accept as issue input `owner/repo#number`, a GitHub issue URL `
 - **THEN** an inline error "Not an issue reference" is shown and the entry cannot be saved until the input is corrected or cleared
 
 ### Requirement: Short form resolved through the project
-The system SHALL resolve the short form `#number` against the entry's project: if the project has exactly one linked repository, that repository SHALL be used. If the entry has no project, or its project has no or several linked repositories, the system SHALL refuse the short form and ask for `owner/repo#number`. Changing the project later SHALL NOT change an issue link that is already stored.
+The system SHALL resolve the short form `#number` against the entry's project: the project's first linked repository (its default) SHALL be used. The form `name#number` SHALL resolve to the linked repository whose name (without owner) is `name`, case-insensitively. If the entry has no project or its project has no linked repository, the system SHALL refuse the short form and say that a repository has to be linked to the project. If `name` matches no or several linked repositories, the system SHALL refuse it and ask for `owner/repo#number`. Editors and team leaders SHALL be able to make another linked repository the default. Changing the project later SHALL NOT change an issue link that is already stored.
 
 #### Scenario: One linked repository
 - **WHEN** an entry's project "Website" is linked only to `acme/web` and the user enters `#42`
 - **THEN** the issue link becomes `acme/web#42`
 
 #### Scenario: Several linked repositories
-- **WHEN** an entry's project is linked to `acme/web` and `acme/api` and the user enters `#42`
-- **THEN** an inline error "Repository unclear: enter owner/repo#42" is shown
+- **WHEN** an entry's project is linked to `acme/web` (first) and `acme/api` and the user enters `#42`
+- **THEN** the issue link becomes `acme/web#42`
+
+#### Scenario: Repository by name
+- **WHEN** an entry's project is linked to `acme/web` and `acme/api` and the user enters `api#7`
+- **THEN** the issue link becomes `acme/api#7`
+
+#### Scenario: No linked repository
+- **WHEN** an entry's project has no linked repository and the user enters `#42`
+- **THEN** an inline error says to link a GitHub repository to the project once
 
 #### Scenario: Project changed afterwards
 - **WHEN** an entry has `acme/web#42` and the user changes its project to one linked to `acme/api`

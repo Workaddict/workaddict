@@ -773,7 +773,10 @@ const en = {
     edit: 'Edit issue',
     errors: {
       format: 'Not an issue reference',
-      ambiguousRepo: 'Repository unclear: enter owner/repo#number',
+      noRepo:
+        'This project has no GitHub repository. Link one under “Projects & Tags”, then #42 is enough.',
+      unknownRepo: 'No linked repository has this name: enter owner/repo#number',
+      ambiguousRepo: 'Several linked repositories have this name: enter owner/repo#number',
     },
   },
   entries: {
@@ -806,8 +809,14 @@ const en = {
     projects: 'Projects',
     tags: 'Tags',
     newProject: 'New project name',
-    repos: 'Linked repositories of {{name}}',
-    linkRepo: 'Link repository',
+    repos: 'GitHub repositories of {{name}}',
+    linkRepo: 'Link GitHub repository',
+    addRepo: 'Another repository',
+    repoHintEmpty: 'Link it once, then the number (#42) is enough in the issue field.',
+    repoHint: '#42 in the issue field is enough → {{repo}}',
+    repoDefault: 'Default',
+    makeDefault: 'Make default',
+    makeDefaultHint: '#42 in the issue field then goes to {{repo}}',
     unlinkRepo: 'Unlink {{repo}}',
     repoPlaceholder: 'owner/repo or GitHub URL',
     repoInvalid: 'Not a repository',

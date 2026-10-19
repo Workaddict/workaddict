@@ -5,8 +5,14 @@ import { createMemoryAdapter, MemoryFileStore, StorageError } from '../../storag
 
 const workspace: Workspace = {
   projects: [
-    { id: 'p-web', name: 'Website', color: '#4f46e5', archived: false },
-    { id: 'p-app', name: 'Mobile app', color: '#14b8a6', archived: false },
+    { id: 'p-web', name: 'Website', color: '#4f46e5', archived: false, repos: ['acme/website'] },
+    {
+      id: 'p-app',
+      name: 'Mobile app',
+      color: '#14b8a6',
+      archived: false,
+      repos: ['acme/mobile-app', 'acme/api'],
+    },
     { id: 'p-int', name: 'Internal', color: '#f97316', archived: false },
   ],
   tags: [
@@ -16,11 +22,11 @@ const workspace: Workspace = {
   ],
 }
 
-const templates: [string, string | null, string[]][] = [
-  ['Landing page redesign', 'p-web', ['t-dev']],
+const templates: [string, string | null, string[], string?][] = [
+  ['Landing page redesign', 'p-web', ['t-dev'], 'acme/website#12'],
   ['Weekly planning', 'p-int', ['t-meet']],
-  ['Fix login redirect', 'p-app', ['t-bug', 't-dev']],
-  ['Push notifications', 'p-app', ['t-dev']],
+  ['Fix login redirect', 'p-app', ['t-bug', 't-dev'], 'acme/api#87'],
+  ['Push notifications', 'p-app', ['t-dev'], 'acme/mobile-app#34'],
   ['Client call', 'p-web', ['t-meet']],
   ['Code review', null, []],
 ]
@@ -36,7 +42,7 @@ function sampleEntries(): TimeEntry[] {
     for (const login of ['you', 'sam']) {
       let hour = login === 'you' ? 8 : 9
       for (let k = 0; k < 3; k++) {
-        const [description, projectId, tagIds] = templates[(n + k) % templates.length]!
+        const [description, projectId, tagIds, issueRef] = templates[(n + k) % templates.length]!
         const minutes = 45 + ((n * 37 + k * 53) % 150)
         const start = setMinutes(setHours(day, hour), (n * 15) % 60)
         const end = new Date(start.getTime() + minutes * 60_000)
@@ -49,6 +55,7 @@ function sampleEntries(): TimeEntry[] {
           description,
           projectId,
           tagIds,
+          ...(issueRef ? { issueRef } : {}),
           createdAt: start.toISOString(),
           updatedAt: start.toISOString(),
         })

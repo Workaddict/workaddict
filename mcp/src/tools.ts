@@ -310,11 +310,13 @@ export async function addEntries(
     if (input.issueRef?.trim()) {
       const r = parseIssueInput(input.issueRef, project)
       if (!r.ok) {
-        throw new ToolError(
-          r.reason === 'ambiguousRepo'
-            ? `${at}: "${input.issueRef}" needs owner/repo#number (the project has no single linked repository)`
-            : `${at}: "${input.issueRef}" is not an issue reference`,
-        )
+        const why = {
+          format: 'is not an issue reference',
+          noRepo: 'needs owner/repo#number (the project has no linked repository)',
+          unknownRepo: 'names no repository linked to the project; use owner/repo#number',
+          ambiguousRepo: 'matches several linked repositories; use owner/repo#number',
+        }[r.reason]
+        throw new ToolError(`${at}: "${input.issueRef}" ${why}`)
       }
       issueRef = r.ref ?? undefined
     }

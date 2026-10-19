@@ -2397,8 +2397,25 @@ a.btn {
 .wg-repos a:hover {
   color: var(--accent);
 }
+.wg-repos-hint {
+  flex-basis: 100%;
+}
 .wg-repos .input {
   width: 16rem;
+}
+.repo-default,
+.repo-make-default {
+  color: var(--text-faint);
+  font-size: 0.85em;
+}
+.repo-make-default {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.repo-make-default:hover {
+  color: var(--accent);
 }
 .chip-remove {
   display: inline-flex;

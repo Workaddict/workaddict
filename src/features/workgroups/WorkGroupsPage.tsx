@@ -170,11 +170,14 @@ function NameForm({
   )
 }
 
-/** A project's linked repositories; editors and team leaders can add and remove them. */
+/**
+ * A project's linked repositories; editors and team leaders can add and remove them. The first is
+ * the default: `#42` in an issue field resolves to it, `name#42` to the repository called `name`.
+ */
 function ProjectRepos({ project, canManage }: { project: Project; canManage: boolean }) {
   const { t } = useI18n()
   const onError = useErrorToast()
-  const { setProjectRepo } = useWorkspaceActions()
+  const { setProjectRepo, setDefaultRepo } = useWorkspaceActions()
   const [adding, setAdding] = useState(false)
   const [text, setText] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -199,11 +202,24 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
 
   return (
     <div className="wg-repos" aria-label={t('workGroups.repos', { name: project.name })}>
-      {repos.map((r) => (
+      {repos.map((r, i) => (
         <span key={r} className="chip">
           <a href={`https://github.com/${r}`} target="_blank" rel="noopener noreferrer">
             <Icon name="github" size={12} /> {r}
           </a>
+          {i === 0 && repos.length > 1 && (
+            <span className="repo-default">{t('workGroups.repoDefault')}</span>
+          )}
+          {i > 0 && canManage && (
+            <button
+              type="button"
+              className="repo-make-default"
+              title={t('workGroups.makeDefaultHint', { repo: r })}
+              onClick={() => setDefaultRepo(project, r).catch(onError)}
+            >
+              {t('workGroups.makeDefault')}
+            </button>
+          )}
           {canManage && (
             <button
               type="button"
@@ -238,9 +254,16 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
           </form>
         ) : (
           <button type="button" className="link-btn small" onClick={() => setAdding(true)}>
-            + {t('workGroups.linkRepo')}
+            + {t(repos.length ? 'workGroups.addRepo' : 'workGroups.linkRepo')}
           </button>
         ))}
+      {!adding && (
+        <span className="wg-repos-hint small muted">
+          {repos.length
+            ? t('workGroups.repoHint', { repo: repos[0]!.slice(repos[0]!.indexOf('/') + 1) })
+            : t('workGroups.repoHintEmpty')}
+        </span>
+      )}
     </div>
   )
 }
