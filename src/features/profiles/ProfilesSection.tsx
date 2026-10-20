@@ -11,6 +11,7 @@ import { setLabel, tokenOf, type VaultProfile } from './vault'
 import { emptyNewPassphrase, newPassphraseError } from './passphrase'
 import { NewPassphraseFields, UnlockForm, UnlockModeField } from './VaultForms'
 import { useVault } from './vaultStore'
+import { HelpButton } from '../help/Term'
 
 function ChangePassphraseDialog({ onClose }: { onClose: () => void }) {
   const { t } = useI18n()
@@ -184,7 +185,10 @@ export function ProfilesSection() {
 
   return (
     <section className="section" aria-labelledby="profiles-title">
-      <h2 id="profiles-title">{t('profiles.title')}</h2>
+      <div className="head-with-help">
+        <h2 id="profiles-title">{t('profiles.title')}</h2>
+        <HelpButton topic="workspaces" />
+      </div>
       <div className="card settings-list">
         {legacy && (
           <div className="settings-row">

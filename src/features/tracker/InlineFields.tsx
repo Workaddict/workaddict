@@ -2,6 +2,7 @@ import { useRef, useState, type ReactNode } from 'react'
 import { ProjectPicker, TagPicker } from '../../components/Pickers'
 import type { Project, Tag } from '../../domain/types'
 import { timeInputAttrs, useTimeFormat } from '../../timeFormat'
+import { TipButton } from '../../components/InfoTip'
 
 interface InlineEditProps {
   /** Shown in display mode. */
@@ -39,11 +40,10 @@ export function InlineEdit(p: InlineEditProps) {
 
   if (!p.editing) {
     return (
-      <button
+      <TipButton
         type="button"
         className={`inline-edit ${p.className ?? ''}`}
-        aria-label={p.label}
-        title={p.label}
+        tip={p.label}
         onClick={() => {
           setValue(p.initial)
           setError(null)
@@ -52,7 +52,7 @@ export function InlineEdit(p: InlineEditProps) {
         }}
       >
         {p.display}
-      </button>
+      </TipButton>
     )
   }
 

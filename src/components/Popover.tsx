@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from 'react'
+import { useTip } from './InfoTip'
 
 /** Distance between the toggle button and its popover, in px. */
 const GAP = 6
@@ -62,6 +63,9 @@ export function Popover({
   })
 
   const btnRef = useRef<HTMLButtonElement>(null)
+  // The button shows the current value; the tip names what it chooses. Hidden while open.
+  const tip = useTip<HTMLButtonElement>(label, { touch: 'longPress' })
+  const tp = tip.props
   const popRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (wasOpen.current && !open) {
@@ -101,20 +105,35 @@ export function Popover({
   return (
     <div className="picker" ref={ref}>
       <button
-        ref={btnRef}
+        ref={(el) => {
+          btnRef.current = el
+          tip.setTrigger(el)
+        }}
         type="button"
         className={buttonClassName ?? `picker-btn${hasValue ? ' has-value' : ''}`}
         aria-haspopup={hasPopup}
         aria-expanded={open}
         aria-label={label}
-        title={label}
+        aria-describedby={tp['aria-describedby']}
         disabled={disabled}
         aria-disabled={busy || undefined}
         aria-busy={busy || undefined}
-        onClick={() => !busy && setOpen((o) => !o)}
+        onPointerEnter={(e) => !open && tp.onPointerEnter(e)}
+        onPointerLeave={tp.onPointerLeave}
+        onPointerDown={tp.onPointerDown}
+        onPointerUp={tp.onPointerUp}
+        onPointerCancel={tp.onPointerCancel}
+        onContextMenu={tp.onContextMenu}
+        onFocus={tp.onFocus}
+        onBlur={tp.onBlur}
+        onClick={() => {
+          if (!tip.onTriggerClick()) return
+          if (!busy) setOpen((o) => !o)
+        }}
       >
         {button}
       </button>
+      {!open && tip.tip}
       {open && (
         <div className={popClassName ? `picker-pop ${popClassName}` : 'picker-pop'} ref={popRef}>
           {children(() => setOpen(false))}

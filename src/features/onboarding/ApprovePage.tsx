@@ -76,7 +76,7 @@ export function ApprovePage() {
                     </GitHubLink>
                     <p className="muted small">{t('approve.emptyHint', { org })}</p>
                     <CopyText
-                      text={memberNote(t, { org, link: appLink('/token-help') })}
+                      text={memberNote(t, { org, link: appLink('/help/token') })}
                       label={
                         member ? t('approve.copyNote', { member }) : t('approve.copyNoteNeutral')
                       }

@@ -19,7 +19,7 @@ A private, free and simple time tracker for small teams, as an alternative to Cl
 
 - **No server, no cost.** The app is a static website hosted on GitHub Pages.
 - **Your data stays in your own repository.** Every entry, project and tag is stored as a JSON file in a **private GitHub repository** (the "data repo") that you control. The app reads and writes it straight from your browser through the GitHub API.
-- **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF, Excel (.xlsx), OpenDocument (.ods) and CSV from one Export menu, plus a full JSON backup. Optional AI integration (beta): your own AI assistant (Claude Code and other MCP clients) can set up projects and log your day for you. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
+- **Features:** a live timer that syncs across devices, manual entries (including overnight ones), projects and tags, statistics with charts, and exports to PDF, Excel (.xlsx), OpenDocument (.ods) and CSV from one Export menu, plus a full JSON backup. Optional AI integration (beta): your own AI assistant (Claude Code and other MCP clients) can set up projects and log your day for you. Team roles (worker, editor, team leader), a live "Team now" view for editors and team leaders, and entries you can edit by clicking a field. Built-in help pages, a guided tour and an Expert mode for fewer hints. English and German UI (switchable on the login page), light and dark themes with a one-click toggle, works on mobile.
 - **Full history.** Each change is a git commit with a readable message (`entry: add 2h "Fix login" (alice)`), so the data repo doubles as an audit log that you can revert.
 
 Try it without an account at **[workaddict.me](https://workaddict.me)** by clicking **"Try the demo"** on the start page. Demo data stays in memory and is never saved.
@@ -277,6 +277,18 @@ What it does:
 - **Set up projects.** `/workaddict:new-project` turns a description ("new client Huber, shop is github.com/acme/huber-shop, we do support and development") into projects, linked repositories and tags, after you confirm. Needs the editor or team leader role.
 - **Same rules as the app.** The server uses the app's storage code, so roles, validation and conflict handling are identical. It can read and add data, but has no tools to delete or archive anything, change roles or the team time zone. Entries that overlap time you already tracked are refused unless you explicitly allow it.
 - **Visible in the history.** Every commit it makes ends with `(via claude-code)` (the client's name). Team leaders can also turn on **Settings → AI assistants → Mark AI entries** (off by default); new AI entries then show "via Claude Code" in the entry list.
+
+## Help, guided tour and Expert mode
+
+The app explains itself; nothing of this is tracked or sent anywhere.
+
+- **Tips.** Hover, focus or long-press an icon button to see what it does. Words with a dotted underline (data repository, workspace, passphrase, …) explain themselves in one sentence, with a **Learn more** link.
+- **Help pages** at `#/help`, signed in or not, in English and German: token & data repository, workspaces & passphrase, roles, projects & tags, Team now, issue links & project boards, connecting an AI assistant, export & backup, Clockify import, time zone, keyboard shortcuts and a glossary. Complex features have a **?** button next to their heading that opens their topic. Each page ends with "Was this helpful?"; 👎 offers a prefilled question in GitHub Discussions, which you open yourself. The old `#/token-help` address redirects to `#/help/token`.
+- **Help overlay.** Press <kbd>?</kbd> (outside text fields) or choose **Help** in the avatar menu to search the topics and glossary and see the keyboard shortcuts.
+- **Guided tour.** After the first sign-in on a device, a welcome dialog offers a short tour that points out the timer, the entry list, projects & tags, statistics & export, the workspace chip and the avatar menu. Editors and team leaders also see Team now and the member filter, team leaders also Team & roles. The tour only shows where things are; it never changes data. Members who already have entries older than a week see no dialog, only a one-time notice. On the start page, **Demo with tour** opens the demo with the tour.
+- **First steps.** A card on the Tracker ticks itself off as you track your first time, create a project and a tag, and (owners) invite your team. Hide it any time.
+- **"New" dots** mark features added since your first visit and disappear once you open them.
+- **Expert mode.** **Settings → Help & guide → Expert mode** hides the underlined terms, the first steps card, the "New" dots and the welcome dialog, and shortens the empty-page explanations. Tips on icon buttons, **?** buttons, help pages and the overlay stay. The same section has **Restart tour**, **Show tips again** and a link to the help pages. These settings are stored per device.
 
 ## Troubleshooting sign-in
 

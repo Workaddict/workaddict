@@ -9,6 +9,7 @@ import { TeamNow } from './TeamNow'
 import { TimerBar } from './TimerBar'
 import { usePref } from '../../prefs'
 import { UtcZoneNotice } from './UtcZoneNotice'
+import { FirstSteps } from '../help/FirstSteps'
 
 /** Consecutive months without new entries after which "load older" gives up. */
 const MAX_EMPTY_MONTHS = 12
@@ -80,12 +81,15 @@ export function TrackerPage() {
   return (
     <>
       <UtcZoneNotice />
+      {!query.isPending && (
+        <FirstSteps hasOwnEntry={(all ?? []).some((e) => e.login === user.login)} />
+      )}
       <TimerBar />
       {access.can('viewLiveActivity') && <TeamNow />}
 
       <div className="page-head">
         <h1>{t('nav.tracker')}</h1>
-        <div className="segmented" role="group">
+        <div className="segmented" role="group" data-tour="filter">
           <button aria-pressed={who === 'me'} onClick={() => showWho('me')}>
             {t('entries.me')}
           </button>
@@ -100,8 +104,15 @@ export function TrackerPage() {
       ) : (
         <>
           {entries.length === 0 && !query.isFetching ? (
-            <div className="card">
-              <EmptyState title={t('entries.empty')} hint={t('entries.emptyHint')} />
+            <div className="card" data-tour="entries">
+              <EmptyState
+                title={t('entries.empty')}
+                hint={t('entries.emptyHint')}
+                action={{
+                  label: t('entries.emptyAction'),
+                  onClick: () => document.querySelector<HTMLInputElement>('.desc-input')?.focus(),
+                }}
+              />
             </div>
           ) : (
             <EntryList entries={entries} showMember={who === 'everyone'} />

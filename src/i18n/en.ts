@@ -1,4 +1,7 @@
+import help from './help.en'
+
 const en = {
+  help,
   common: {
     appName: 'Workaddict',
     save: 'Save',
@@ -798,6 +801,7 @@ const en = {
     loadingOlder: 'Loading older entries…',
     empty: 'No time entries yet',
     emptyHint: 'Start the timer or add an entry manually.',
+    emptyAction: 'Start your first timer',
     continue: 'Continue',
     editTitle: 'Edit time entry',
     deleteConfirm: 'Delete this time entry?',
@@ -852,6 +856,7 @@ const en = {
     nameRequired: 'Enter a name.',
     emptyProjects: 'No projects yet. Projects group entries, e.g. by client or product.',
     emptyTags: 'No tags yet. Tags describe the kind of work, e.g. “meeting” or “bugfix”.',
+    emptyWorker: 'Editors and team leaders create them.',
   },
   stats: {
     title: 'Statistics',
@@ -884,6 +889,8 @@ const en = {
     chartHours: 'Tracked time',
     chartShare: 'Share by project',
     empty: 'No entries match the selected filters.',
+    emptyHint: 'Statistics show the time tracked in the selected period, for the chosen members, projects and tags.',
+    emptyAction: 'Pick another period',
     details: 'Entries',
     date: 'Date',
     member: 'Member',

@@ -5,6 +5,7 @@ import { useToast } from '../../components/Toasts'
 import { useI18n } from '../../i18n'
 import { useAuth, useSessionData } from '../auth/AuthContext'
 import { CreateVaultForm } from './VaultForms'
+import { TipButton } from '../../components/InfoTip'
 
 const DISMISSED_KEY = 'workaddict.migrationDismissed'
 
@@ -66,14 +67,9 @@ export function MigrationNotice() {
           <button className="btn btn-sm" onClick={() => setProtecting(true)}>
             {t('profiles.protect')}
           </button>
-          <button
-            className="btn btn-icon btn-sm"
-            onClick={dismiss}
-            aria-label={t('common.close')}
-            title={t('common.close')}
-          >
+          <TipButton className="btn btn-icon btn-sm" onClick={dismiss} tip={t('common.close')}>
             <Icon name="x" size={14} />
-          </button>
+          </TipButton>
         </div>
       )}
       {protecting && <ProtectDialog onClose={() => setProtecting(false)} />}

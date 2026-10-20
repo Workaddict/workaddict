@@ -90,7 +90,7 @@ export function HowItWorks({ onSignIn }: { onSignIn: () => void }) {
                 </Link>
               )}
               {n === 2 && (
-                <Link to="/token-help" target="_blank" rel="noreferrer" className="step-link">
+                <Link to="/help/token" target="_blank" rel="noreferrer" className="step-link">
                   {t('landing.step2Link')} <span aria-hidden="true">↗</span>
                 </Link>
               )}

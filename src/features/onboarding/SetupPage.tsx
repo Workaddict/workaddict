@@ -27,6 +27,9 @@ import {
   type SetupMode,
   type SetupStep,
 } from './setupState'
+import { HelpShot } from '../help/HelpShot'
+import type { ShotId } from '../help/shots'
+import { WhatIs } from '../help/Term'
 
 /** One page of the wizard: who it is for, the account name, each setup step, then sign-in. */
 type ScreenId = 'who' | 'account' | SetupStep | 'signIn'
@@ -44,6 +47,17 @@ function isScreenId(value: string | null): value is ScreenId {
     value === 'signIn' ||
     (SETUP_STEPS as readonly string[]).includes(value ?? '')
   )
+}
+
+/** The GitHub screen each step sends the user to. */
+const STEP_SHOTS: Partial<Record<SetupStep, ShotId[]>> = {
+  org: ['org-new'],
+  repo: ['repo-new'],
+  base: ['base-permission'],
+  approval: ['token-policy'],
+  invite: ['org-invite'],
+  collaborators: ['repo-access'],
+  token: ['token-form', 'token-permissions'],
 }
 
 function isStep(screen: ScreenId): screen is SetupStep {
@@ -237,6 +251,9 @@ export function SetupPage() {
       }}
     >
       {children}
+      {STEP_SHOTS[s]?.map((id) => (
+        <HelpShot key={id} id={id} />
+      ))}
       <StepCheck
         doneWhen={t(`onboarding.setup.${s}DoneWhen`, names)}
         help={t(`onboarding.setup.${s}Help`, names)}
@@ -652,6 +669,8 @@ export function SetupPage() {
           <h2 id="ob-screen-title" className="ob-screen-title" tabIndex={-1}>
             {title}
           </h2>
+          {screen === 'repo' && <WhatIs term="data-repo" topic="token" />}
+          {screen === 'token' && <WhatIs term="token" topic="token" />}
           {content[screen]()}
           <div className="ob-nav">
             {index > 0 ? (

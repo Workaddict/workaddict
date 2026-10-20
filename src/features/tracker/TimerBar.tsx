@@ -33,6 +33,7 @@ import { useResolveIssue } from './useResolveIssue'
 import { usePref } from '../../prefs'
 import { useNow } from './useNow'
 import { useTimerActions } from './useTimerActions'
+import { TipButton } from '../../components/InfoTip'
 
 const EMPTY: WorkFields = { description: '', projectId: null, tagIds: [] }
 
@@ -148,10 +149,9 @@ function RunningTimerView({ timer }: { timer: RunningTimer }) {
       <div className="timer-foot">
         <TimerStart timer={timer} />
         <div className="row">
-          <button
+          <TipButton
             className="btn btn-icon"
-            title={t('timer.discard')}
-            aria-label={t('timer.discard')}
+            tip={t('timer.discard')}
             disabled={pending}
             onClick={async () => {
               if (
@@ -164,7 +164,7 @@ function RunningTimerView({ timer }: { timer: RunningTimer }) {
             }}
           >
             <Icon name="trash" />
-          </button>
+          </TipButton>
           <span className="timer-clock">{formatClock(now - new Date(timer.start).getTime())}</span>
           <button
             className="btn btn-danger btn-lg"
@@ -608,17 +608,13 @@ export function TimerBar() {
   }
 
   return (
-    <section className="card timer-bar">
+    <section className="card timer-bar" data-tour="timer">
       <div className="row">
         <div className="segmented" role="group">
           <button type="button" aria-pressed={mode === 'timer'} onClick={() => switchTo('timer')}>
             {t('timer.modeTimer')}
           </button>
-          <button
-            type="button"
-            aria-pressed={mode === 'manual'}
-            onClick={() => switchTo('manual')}
-          >
+          <button type="button" aria-pressed={mode === 'manual'} onClick={() => switchTo('manual')}>
             {t('timer.modeManual')}
           </button>
         </div>

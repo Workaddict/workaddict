@@ -1,0 +1,426 @@
+/* ---------- Help: tips, help pages, overlay, tour, checklist ---------- */
+
+/* Tips: positioned in JS (CSSOM), so no inline style attributes are needed. */
+.infotip {
+  position: fixed;
+  z-index: 70;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 7px 10px;
+  border-radius: var(--radius-sm);
+  background: var(--text);
+  color: var(--bg);
+  box-shadow: var(--shadow-lg);
+  font-size: 0.82rem;
+  line-height: 1.4;
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+.infotip-interactive {
+  pointer-events: auto;
+}
+.infotip-link {
+  color: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+
+/* Glossary term: looks like text with a dotted underline. */
+.term {
+  display: inline;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-decoration: underline dotted;
+  text-decoration-color: var(--text-faint);
+  text-underline-offset: 3px;
+  cursor: help;
+}
+.term:hover,
+.term[aria-expanded='true'] {
+  text-decoration-color: var(--accent);
+}
+
+/* "?" next to a complex feature. */
+.help-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  margin-left: 4px;
+  vertical-align: middle;
+  border-radius: 50%;
+  color: var(--text-faint);
+  text-decoration: none;
+}
+.help-btn:hover,
+.help-btn:focus-visible {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+@media (pointer: coarse) {
+  .help-btn {
+    width: 32px;
+    height: 32px;
+  }
+}
+.head-with-help {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px;
+}
+.page-head .head-with-help {
+  display: inline-flex;
+}
+.team-now .card-head .help-btn {
+  margin-right: auto;
+}
+.team-now .card-head h2 {
+  margin-right: 0;
+}
+
+/* "New" marker. */
+.new-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  margin-left: 6px;
+  vertical-align: middle;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* Empty state action. */
+.empty-action {
+  margin-top: 6px;
+}
+
+/* ---------- Help pages ---------- */
+.help-page {
+  display: grid;
+  gap: 16px;
+  max-width: 760px;
+}
+.help-page h1 {
+  margin: 0;
+}
+.help-summary {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 1.02rem;
+}
+.help-topic-section {
+  display: grid;
+  gap: 10px;
+  padding: 16px 18px;
+}
+.help-topic-section h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+.help-topic-section p,
+.help-topic-section ul,
+.help-topic-section ol {
+  margin: 0;
+}
+.help-topic-section ul,
+.help-topic-section ol {
+  display: grid;
+  gap: 4px;
+  padding-left: 22px;
+}
+.help-note {
+  padding: 8px 12px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  background: var(--accent-soft);
+  font-size: 0.92rem;
+}
+.help-image {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.help-shot {
+  margin: 8px 0;
+}
+/* Screenshots keep their own (small) size and only shrink on narrow screens. */
+.help-shot .help-image {
+  max-width: 100%;
+  height: auto;
+}
+.help-related {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.help-feedback {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.help-topics {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.help-topic-card {
+  display: grid;
+  gap: 4px;
+  height: 100%;
+  padding: 14px 16px;
+  color: inherit;
+  text-decoration: none;
+}
+.help-topic-card:hover {
+  border-color: var(--accent);
+}
+.help-topic-card strong {
+  color: var(--accent);
+}
+.help-glossary {
+  display: grid;
+  gap: 0;
+  margin: 0;
+}
+.help-glossary > div {
+  display: grid;
+  gap: 2px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  scroll-margin-top: calc(var(--header-h) + 16px);
+}
+.help-glossary > div:last-child {
+  border-bottom: 0;
+}
+.help-glossary dt {
+  font-weight: 600;
+}
+.help-glossary dd {
+  margin: 0;
+  color: var(--text-muted);
+}
+.help-glossary .is-highlighted {
+  background: var(--accent-soft);
+}
+.help-shortcuts {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.help-shortcuts li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.help-shortcuts .keys {
+  display: inline-flex;
+  gap: 4px;
+  min-width: 96px;
+}
+kbd {
+  padding: 1px 6px;
+  border: 1px solid var(--border-strong);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  background: var(--surface-2);
+  font-family: var(--mono);
+  font-size: 0.8rem;
+}
+
+/* ---------- Help overlay ---------- */
+.help-overlay {
+  display: grid;
+  gap: 12px;
+}
+.help-search {
+  position: relative;
+}
+.help-search .input {
+  width: 100%;
+  padding-left: 34px;
+}
+.help-search svg {
+  position: absolute;
+  top: 50%;
+  left: 10px;
+  color: var(--text-faint);
+  transform: translateY(-50%);
+}
+.help-results {
+  display: grid;
+  gap: 2px;
+  max-height: 40vh;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  list-style: none;
+}
+.help-results a {
+  display: grid;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: var(--radius-sm);
+  color: inherit;
+  text-decoration: none;
+}
+.help-results a:hover,
+.help-results a:focus-visible {
+  background: var(--surface-2);
+}
+.help-results .kind {
+  color: var(--text-faint);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Guided tour ---------- */
+.tour-shade {
+  position: fixed;
+  z-index: 80;
+  background: rgb(10 12 18 / 55%);
+}
+.tour-ring {
+  position: fixed;
+  z-index: 81;
+  border-radius: var(--radius-sm);
+  box-shadow: 0 0 0 3px var(--accent);
+  pointer-events: none;
+  transition:
+    top 0.2s ease,
+    left 0.2s ease,
+    width 0.2s ease,
+    height 0.2s ease;
+}
+.tour-bubble {
+  position: fixed;
+  z-index: 82;
+  display: grid;
+  gap: 8px;
+  width: min(340px, calc(100vw - 16px));
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow-lg);
+}
+.tour-bubble h2 {
+  margin: 0;
+  font-size: 1.02rem;
+}
+.tour-bubble h2:focus {
+  outline: none;
+}
+.tour-bubble p {
+  margin: 0;
+}
+.tour-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tour-ring {
+    transition: none;
+  }
+}
+
+/* ---------- Welcome dialog and checklist ---------- */
+.welcome-actions {
+  display: grid;
+  gap: 8px;
+}
+.checklist {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 16px;
+  padding: 14px 16px;
+}
+.checklist-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.checklist-head h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+.checklist-progress {
+  height: 6px;
+  overflow: hidden;
+  border-radius: 3px;
+  background: var(--surface-2);
+}
+.checklist-progress > span {
+  display: block;
+  height: 100%;
+  border-radius: 3px;
+  background: var(--accent);
+}
+.checklist ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.checklist li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.checklist .check {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 50%;
+}
+.checklist .is-done .check {
+  border-color: var(--success);
+  background: var(--success);
+  color: var(--surface);
+}
+.checklist .is-done .label {
+  color: var(--text-muted);
+  text-decoration: line-through;
+}
+/* A form field label with a "?" next to it; the "?" sits outside the <label>. */
+.field-label {
+  gap: 0;
+}
+@media (pointer: fine) {
+  .field-label .help-btn {
+    width: 20px;
+    height: 20px;
+  }
+}
+.what-is {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 0;
+  color: var(--text-muted);
+}

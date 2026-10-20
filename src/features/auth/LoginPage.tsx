@@ -11,6 +11,7 @@ import { useAuth } from './AuthContext'
 import { Highlights, HowItWorks, LandingHero } from './Landing'
 import { PublicHeader } from './PublicHeader'
 import { SignInForm } from './SignInForm'
+import { requestTourAfterSignIn } from '../help/tourStore'
 
 const SIGN_IN_ID = 'sign-in'
 
@@ -33,6 +34,10 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
   }, [vaultStatus, plain, openRecent])
 
   const startDemo = () => void login({ mode: 'demo' }, false)
+  const startDemoWithTour = () => {
+    requestTourAfterSignIn()
+    startDemo()
+  }
 
   const showSignIn = () => {
     const form = document.getElementById(SIGN_IN_ID)
@@ -73,6 +78,9 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
               <button type="button" className="btn btn-primary btn-lg" onClick={startDemo}>
                 <Icon name="play" size={16} filled />
                 {t('landing.demo')}
+              </button>
+              <button type="button" className="btn btn-lg" onClick={startDemoWithTour}>
+                {t('help.demoTour')}
               </button>
               <Link to="/setup" className="btn btn-lg">
                 <Icon name="settings" size={16} />
@@ -117,7 +125,7 @@ export function LoginPage({ notice }: { notice?: 'invalidInvite' }) {
           }
           footer={() => (
             <>
-              <Link to="/token-help" target="_blank" rel="noreferrer" className="small">
+              <Link to="/help/token" target="_blank" rel="noreferrer" className="small">
                 {t('login.help.title')} <span aria-hidden="true">↗</span>
               </Link>
 

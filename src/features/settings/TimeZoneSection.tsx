@@ -14,6 +14,7 @@ import {
 import { useSessionData } from '../auth/AuthContext'
 import { useAccess, useSetTeamTimeZone, useWorkspace } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
+import { HelpButton } from '../help/Term'
 
 export const TIME_ZONE_SECTION_ID = 'time-zone'
 
@@ -137,7 +138,10 @@ export function TimeZoneSection() {
 
   return (
     <section className="section" id={TIME_ZONE_SECTION_ID} ref={ref}>
-      <h2>{t('timeZone.title')}</h2>
+      <div className="head-with-help">
+        <h2>{t('timeZone.title')}</h2>
+        <HelpButton topic="time-zone" />
+      </div>
       <div className="card settings-list">
         <div className="settings-row">
           <span>{t('timeZone.inUse')}</span>

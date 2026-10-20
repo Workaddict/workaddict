@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type FormEvent, type ReactNode } from 'react'
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { Icon } from '../../components/Icon'
 import { useI18n } from '../../i18n'
@@ -12,6 +12,7 @@ import { useAuth } from './AuthContext'
 import { tokenKind } from './session'
 import { signInAttempt, type SignInFrom } from './signInAttempt'
 import { savesProfile, useSignIn } from './useSignIn'
+import { HelpButton } from '../help/Term'
 
 /** The token offered for reuse: one of the repository owner's before a classic one (design D8). */
 function pickReusable(tokens: VaultToken[], owner: string): VaultToken | undefined {
@@ -73,6 +74,8 @@ export function SignInForm({
   const [triedCreate, setTriedCreate] = useState(false)
   const { submit: signIn, busy } = useSignIn()
   const formRef = useRef<HTMLFormElement>(null)
+  const repoId = useId()
+  const tokenId = useId()
 
   // "Change token or repository" on the fix page brings the user back here.
   const focusForm = (location.state as { resume?: boolean } | null)?.resume === true
@@ -146,9 +149,13 @@ export function SignInForm({
     <form ref={formRef} id={id} className={className} onSubmit={submit}>
       {header}
 
-      <label className="field">
-        <span>{t('login.repo')}</span>
+      <div className="field">
+        <span className="row field-label">
+          <label htmlFor={repoId}>{t('login.repo')}</label>
+          <HelpButton topic="token" newTab />
+        </span>
         <input
+          id={repoId}
           className="input"
           required
           autoComplete="off"
@@ -158,7 +165,7 @@ export function SignInForm({
           value={repo}
           onChange={(e) => setRepo(e.target.value)}
         />
-      </label>
+      </div>
       {repoLocked && from !== 'profile' && (
         <button
           type="button"
@@ -197,9 +204,13 @@ export function SignInForm({
         </fieldset>
       )}
       {!reusing && (
-        <label className="field">
-          <span>{t('login.token')}</span>
+        <div className="field">
+          <span className="row field-label">
+            <label htmlFor={tokenId}>{t('login.token')}</label>
+            <HelpButton topic="token" newTab />
+          </span>
           <input
+            id={tokenId}
             className="input"
             required
             type="password"
@@ -210,7 +221,7 @@ export function SignInForm({
             value={token}
             onChange={(e) => setToken(e.target.value)}
           />
-        </label>
+        </div>
       )}
       {tokenKind(reusing?.token ?? token) === 'classic' && (
         <div className="banner banner-warning" role="note">

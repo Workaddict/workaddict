@@ -4,6 +4,8 @@ import { isIssueRef, issueUrl, type IssueParse } from '../../domain/issueRef'
 import { useI18n } from '../../i18n'
 import { InlineEdit } from './InlineFields'
 import { useParseIssue, useResolveIssue } from './useResolveIssue'
+import { TipButton } from '../../components/InfoTip'
+import { HelpButton } from '../help/Term'
 
 function useIssueErrorText() {
   const { t } = useI18n()
@@ -64,6 +66,7 @@ export function IssueField({
           if (result.ok && (result.ref ?? undefined) !== value) onChange(result.ref ?? undefined)
         }}
       />
+      <HelpButton topic="issue-links" />
       {error && (
         <span className="form-error inline-error" role="alert">
           {error}
@@ -102,15 +105,14 @@ export function InlineIssue({
       <span className="entry-issue">
         <IssueLink value={shown} />
         {editable && (
-          <button
+          <TipButton
             type="button"
             className="btn btn-icon btn-xs"
-            aria-label={t('issue.edit')}
-            title={t('issue.edit')}
+            tip={t('issue.edit')}
             onClick={onStart}
           >
             <Icon name="edit" size={12} />
-          </button>
+          </TipButton>
         )}
       </span>
     )

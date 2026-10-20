@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
+import { useIsExpert } from '../hintLevel'
 import type { Member, Project } from '../domain/types'
 import { Icon, type IconName } from './Icon'
 
@@ -14,22 +16,42 @@ export function Spinner({ label }: { label?: string }) {
   )
 }
 
+/** The next step an empty state offers: a link or a button. */
+export type EmptyAction = { label: string } & ({ to: string } | { onClick: () => void })
+
+/**
+ * Shown where there is nothing yet. The hint explains what will appear (hidden in Expert mode);
+ * the action offers the next step, only where the user may take it.
+ */
 export function EmptyState({
   icon = 'clock',
   title,
   hint,
+  action,
   children,
 }: {
   icon?: IconName
   title: string
   hint?: string
+  action?: EmptyAction
   children?: ReactNode
 }) {
+  const expert = useIsExpert()
   return (
     <div className="empty">
       <Icon name={icon} size={32} />
       <strong>{title}</strong>
-      {hint && <span className="small">{hint}</span>}
+      {hint && !expert && <span className="small">{hint}</span>}
+      {action &&
+        ('to' in action ? (
+          <Link className="btn btn-sm empty-action" to={action.to}>
+            {action.label}
+          </Link>
+        ) : (
+          <button type="button" className="btn btn-sm empty-action" onClick={action.onClick}>
+            {action.label}
+          </button>
+        ))}
       {children}
     </div>
   )

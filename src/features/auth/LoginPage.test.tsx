@@ -41,9 +41,12 @@ describe('landing page', () => {
     expect(login).toHaveBeenCalledWith({ mode: 'demo' }, false)
   })
 
-  it('offers the demo only once, in the intro', () => {
+  it('offers the demo only in the intro, with and without the tour', () => {
     renderLanding()
-    expect(screen.getAllByRole('button', { name: /demo/i })).toHaveLength(1)
+    expect(screen.getAllByRole('button', { name: /demo/i }).map((b) => b.textContent)).toEqual([
+      'Try the demo',
+      'Demo with tour',
+    ])
     expect(screen.getByRole('heading', { name: 'Already set up? Sign in' })).toBeInTheDocument()
   })
 
@@ -68,7 +71,7 @@ describe('landing page', () => {
     expect(screen.queryByRole('group')).toBeNull()
     for (const name of ['How do I get a token?', 'Show me how']) {
       const link = screen.getByRole('link', { name })
-      expect(link).toHaveAttribute('href', '/token-help')
+      expect(link).toHaveAttribute('href', '/help/token')
       expect(link).toHaveAttribute('target', '_blank')
       expect(link).toHaveAttribute('rel', 'noreferrer')
     }

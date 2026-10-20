@@ -17,9 +17,12 @@ import { reportError } from './features/auth/authEvents'
 import './i18n'
 import { isStorageError } from './storage'
 import './styles/global.css'
+import './styles/help.css'
 import { applyTheme } from './theme'
+import { initFirstVersion } from './features/help/newFeatures'
 
 applyTheme()
+initFirstVersion()
 void initPresence()
 
 // TanStack Query v5 only reacts to `visibilitychange`, which never fires when switching between

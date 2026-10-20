@@ -5,6 +5,7 @@ import { useI18n } from '../../i18n'
 import { browserZone, reportsUtc, useZoneInfo } from '../../timeZone'
 import { useAccess, useWorkspace } from '../data/hooks'
 import { TIME_ZONE_SECTION_ID } from '../settings/TimeZoneSection'
+import { TipButton } from '../../components/InfoTip'
 
 const DISMISSED_KEY = 'workaddict.utcNoticeDismissed'
 
@@ -48,14 +49,13 @@ export function UtcZoneNotice() {
           {t('timeZone.noticeLeader')}
         </Link>
       )}
-      <button
+      <TipButton
         className="btn btn-icon btn-sm"
         onClick={dismiss}
-        aria-label={t('timeZone.noticeDismiss')}
-        title={t('timeZone.noticeDismiss')}
+        tip={t('timeZone.noticeDismiss')}
       >
         <Icon name="x" size={14} />
-      </button>
+      </TipButton>
     </div>
   )
 }

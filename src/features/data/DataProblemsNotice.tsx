@@ -4,6 +4,7 @@ import { Icon } from '../../components/Icon'
 import { useI18n } from '../../i18n'
 import type { DataProblem } from '../../storage'
 import { useSessionData } from '../auth/AuthContext'
+import { TipButton } from '../../components/InfoTip'
 
 const MAX_LISTED = 5
 
@@ -23,9 +24,7 @@ export function DataProblemsNotice() {
   useEffect(() => {
     const refresh = () => {
       const next = adapter.dataProblems().filter((p) => !dismissed.current.has(keyOf(p)))
-      setProblems((cur) =>
-        cur.map(keyOf).join('|') === next.map(keyOf).join('|') ? cur : next,
-      )
+      setProblems((cur) => (cur.map(keyOf).join('|') === next.map(keyOf).join('|') ? cur : next))
     }
     refresh()
     return qc.getQueryCache().subscribe((event) => {
@@ -56,14 +55,9 @@ export function DataProblemsNotice() {
         <span className="muted">{t('dataProblems.hint')}</span>
       </div>
       <span className="spacer" />
-      <button
-        className="btn btn-icon btn-sm"
-        onClick={dismiss}
-        aria-label={t('common.close')}
-        title={t('common.close')}
-      >
+      <TipButton className="btn btn-icon btn-sm" onClick={dismiss} tip={t('common.close')}>
         <Icon name="x" size={14} />
-      </button>
+      </TipButton>
     </div>
   )
 }

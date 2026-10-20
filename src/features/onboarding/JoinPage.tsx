@@ -7,6 +7,7 @@ import { LoginPage } from '../auth/LoginPage'
 import { PublicHeader } from '../auth/PublicHeader'
 import { signInAttempt } from '../auth/signInAttempt'
 import { SignInForm } from '../auth/SignInForm'
+import { HelpShot } from '../help/HelpShot'
 import { githubLinks, ownerPageLink } from './githubLinks'
 import { ownerMessage } from './messages'
 import { joinTarget } from './names'
@@ -86,6 +87,7 @@ function JoinFlow({ owner, repo, personal }: { owner: string; repo: string; pers
                 </p>
               </>
             )}
+            <HelpShot id="invitation" />
           </Step>
 
           <Step n={2} title={t('onboarding.join.accessTitle')} done={unlocked}>
@@ -136,13 +138,18 @@ function JoinFlow({ owner, repo, personal }: { owner: string; repo: string; pers
           <Step
             n={3}
             title={t('onboarding.join.tokenTitle')}
+            whatIs={{ term: 'token', topic: 'token' }}
             locked={!unlocked}
             lockedText={t('onboarding.join.tokenLocked')}
           >
             {personal ? (
               <ClassicTokenChecklist owner={owner} />
             ) : (
-              <TokenChecklist owner={owner} repo={full} />
+              <>
+                <TokenChecklist owner={owner} repo={full} />
+                <HelpShot id="token-form" />
+                <HelpShot id="token-permissions" />
+              </>
             )}
           </Step>
 

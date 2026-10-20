@@ -23,6 +23,7 @@ import { InlineIssue } from './IssueInput'
 import { aiClientLabel } from '../../domain/aiClient'
 import { isIssueRef } from '../../domain/issueRef'
 import { useTimerActions } from './useTimerActions'
+import { TipButton } from '../../components/InfoTip'
 
 interface DayGroup {
   day: Date
@@ -162,10 +163,9 @@ function EntryRow({
           onCommit={saveTime('duration')}
         />
         <div className="entry-actions">
-          <button
+          <TipButton
             className="btn btn-icon"
-            title={t('entries.continue')}
-            aria-label={t('entries.continue')}
+            tip={t('entries.continue')}
             disabled={busy || adapter.readOnly}
             onClick={() =>
               startTimer({
@@ -177,21 +177,19 @@ function EntryRow({
             }
           >
             <Icon name="play" size={16} />
-          </button>
+          </TipButton>
           {editable && (
             <>
-              <button
+              <TipButton
                 className="btn btn-icon"
-                title={t('common.edit')}
-                aria-label={t('common.edit')}
+                tip={t('common.edit')}
                 onClick={() => onEdit(entry)}
               >
                 <Icon name="edit" size={16} />
-              </button>
-              <button
+              </TipButton>
+              <TipButton
                 className="btn btn-icon"
-                title={t('common.delete')}
-                aria-label={t('common.delete')}
+                tip={t('common.delete')}
                 onClick={async () => {
                   if (await confirm({ message: t('entries.deleteConfirm') })) {
                     del.mutate(entry)
@@ -199,7 +197,7 @@ function EntryRow({
                 }}
               >
                 <Icon name="trash" size={16} />
-              </button>
+              </TipButton>
             </>
           )}
         </div>
@@ -273,8 +271,12 @@ export function EntryList({ entries, showMember }: { entries: TimeEntry[]; showM
 
   return (
     <>
-      {groups.map((g) => (
-        <section key={g.day.getTime()} className="card day-group">
+      {groups.map((g, i) => (
+        <section
+          key={g.day.getTime()}
+          className="card day-group"
+          data-tour={i === 0 ? 'entries' : undefined}
+        >
           <div className="day-head">
             <span>{dayLabel(g.day)}</span>
             <span className="num">

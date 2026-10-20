@@ -30,6 +30,7 @@ import {
   type StatsFilters,
 } from './stats'
 import { pruneFilters, useStatsState } from './statsState'
+import { HelpButton } from '../help/Term'
 
 function BreakdownTable({ title, rows, note }: { title: string; rows: BreakdownRow[]; note?: string }) {
   const { t } = useI18n()
@@ -292,14 +293,18 @@ export default function StatsPage() {
   return (
     <>
       <div className="page-head">
-        <h1>{t('stats.title')}</h1>
-        <ExportMenu exporting={exporting} disabled={filtered.length === 0} onExport={runExport} />
+        <h1 data-tour="stats">{t('stats.title')}</h1>
+        <span className="head-with-help" data-tour="export">
+          <ExportMenu exporting={exporting} disabled={filtered.length === 0} onExport={runExport} />
+          <HelpButton topic="export" />
+        </span>
       </div>
 
       <section className="card filters">
         <label className="field">
           <span>{t('stats.range')}</span>
           <select
+            id="stats-range"
             className="select"
             value={preset}
             onChange={(e) => setPreset(e.target.value as RangePreset | 'custom')}
@@ -364,7 +369,15 @@ export default function StatsPage() {
         <Spinner label={t('common.loading')} />
       ) : filtered.length === 0 ? (
         <div className="card">
-          <EmptyState icon="chart" title={t('stats.empty')} />
+          <EmptyState
+            icon="chart"
+            title={t('stats.empty')}
+            hint={t('stats.emptyHint')}
+            action={{
+              label: t('stats.emptyAction'),
+              onClick: () => document.getElementById('stats-range')?.focus(),
+            }}
+          />
         </div>
       ) : (
         <>

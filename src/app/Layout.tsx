@@ -2,6 +2,7 @@ import { Suspense, useEffect, useRef, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Avatar, Spinner } from '../components/bits'
 import { Icon, type IconName } from '../components/Icon'
+import { TipButton } from '../components/InfoTip'
 import { useConfirm } from '../components/Modal'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useToast } from '../components/Toasts'
@@ -22,13 +23,16 @@ import { MigrationNotice } from '../features/profiles/MigrationNotice'
 import { useRunningTimers } from '../features/profiles/timerProbe'
 import { tokenOf } from '../features/profiles/vault'
 import { useVault } from '../features/profiles/vaultStore'
+import { useOpenHelp } from '../features/help/HelpOverlayProvider'
 import { PageErrorBoundary } from './lazyPage'
+import { Tour } from '../features/help/Tour'
+import { Welcome } from '../features/help/Welcome'
 
-const NAV: { to: string; key: string; icon: IconName }[] = [
-  { to: '/', key: 'nav.tracker', icon: 'clock' },
-  { to: '/stats', key: 'nav.stats', icon: 'chart' },
-  { to: '/groups', key: 'nav.workGroups', icon: 'folder' },
-  { to: '/settings', key: 'nav.settings', icon: 'settings' },
+const NAV: { to: string; key: string; icon: IconName; tour: string }[] = [
+  { to: '/', key: 'nav.tracker', icon: 'clock', tour: 'nav-tracker' },
+  { to: '/stats', key: 'nav.stats', icon: 'chart', tour: 'nav-stats' },
+  { to: '/groups', key: 'nav.workGroups', icon: 'folder', tour: 'nav-groups' },
+  { to: '/settings', key: 'nav.settings', icon: 'settings', tour: 'nav-settings' },
 ]
 
 function HeaderTimer() {
@@ -42,15 +46,14 @@ function HeaderTimer() {
       <span className="clock" aria-live="off">
         {formatClock(now - new Date(timer.start).getTime())}
       </span>
-      <button
+      <TipButton
         className="stop-btn"
         onClick={stopTimer}
         disabled={busy || timer.id === 'pending'}
-        aria-label={t('timer.stop')}
-        title={t('timer.stop')}
+        tip={t('timer.stop')}
       >
         <Icon name="stop" size={14} filled />
-      </button>
+      </TipButton>
     </div>
   )
 }
@@ -79,6 +82,7 @@ function WorkspaceChip({ open, onToggle }: { open: boolean; onToggle: () => void
       <button
         type="button"
         className="project-chip-btn"
+        data-tour="workspace"
         onClick={onToggle}
         aria-haspopup="menu"
         aria-expanded={open}
@@ -107,6 +111,7 @@ function UserMenu() {
   const navigate = useNavigate()
   const toast = useToast()
   const confirm = useConfirm()
+  const openHelp = useOpenHelp()
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
 
@@ -152,15 +157,16 @@ function UserMenu() {
   return (
     <div className="user-menu" ref={ref}>
       <WorkspaceChip open={open} onToggle={() => setOpen((o) => !o)} />
-      <button
+      <TipButton
         className="btn btn-icon"
+        data-tour="menu"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-label={user.login}
+        tip={user.login}
       >
         <Avatar member={user} large />
-      </button>
+      </TipButton>
       {open && (
         <div className="menu" role="menu">
           <div className="menu-label">
@@ -228,6 +234,17 @@ function UserMenu() {
             <Icon name="settings" size={16} />
             {t('nav.settings')}
           </Link>
+          <button
+            className="menu-item"
+            role="menuitem"
+            onClick={() => {
+              close()
+              openHelp()
+            }}
+          >
+            <Icon name="help" size={16} />
+            {t('help.title')}
+          </button>
           {profileId ? (
             <>
               <button className="menu-item" role="menuitem" onClick={() => void remove()}>
@@ -286,21 +303,16 @@ function RolesHint() {
       <Link className="btn btn-sm" to="/settings" state={{ scrollTo: TEAM_SECTION_ID }}>
         {t('roles.bannerAction')}
       </Link>
-      <button
-        className="btn btn-icon btn-sm"
-        onClick={dismiss}
-        aria-label={t('common.close')}
-        title={t('common.close')}
-      >
+      <TipButton className="btn btn-icon btn-sm" onClick={dismiss} tip={t('common.close')}>
         <Icon name="x" size={14} />
-      </button>
+      </TipButton>
     </div>
   )
 }
 
 export function Layout() {
   const { t } = useI18n()
-  const { adapter } = useSessionData()
+  const { adapter, session } = useSessionData()
   const { pathname } = useLocation()
   useStoppedByNotice()
   useTimerTitle()
@@ -314,7 +326,7 @@ export function Layout() {
         </Link>
         <nav className="nav" aria-label="Main">
           {NAV.map((n) => (
-            <NavLink key={n.to} to={n.to} end={n.to === '/'}>
+            <NavLink key={n.to} to={n.to} end={n.to === '/'} data-tour={n.tour}>
               <Icon name={n.icon} size={17} />
               {t(n.key)}
             </NavLink>
@@ -340,9 +352,12 @@ export function Layout() {
         </PageErrorBoundary>
       </main>
 
+      <Welcome isDemo={session.mode === 'demo'} />
+      <Tour isDemo={session.mode === 'demo'} />
+
       <nav className="bottom-nav" aria-label="Main">
         {NAV.map((n) => (
-          <NavLink key={n.to} to={n.to} end={n.to === '/'}>
+          <NavLink key={n.to} to={n.to} end={n.to === '/'} data-tour={n.tour}>
             <Icon name={n.icon} size={20} />
             <span>{t(n.key)}</span>
           </NavLink>

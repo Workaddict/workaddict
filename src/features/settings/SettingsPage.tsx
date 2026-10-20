@@ -31,6 +31,8 @@ import { ShiftEntriesModal } from './ShiftEntries'
 import { RoleBadge, TeamRolesSection } from './TeamRoles'
 import { TimeZoneSection } from './TimeZoneSection'
 import { AiSection } from './AiSection'
+import { HelpGuideSection } from '../help/HelpGuideSection'
+import { HelpButton, Term } from '../help/Term'
 
 const ImportWizard = lazyWithReload(() => import('../import/ImportWizard'))
 
@@ -78,7 +80,9 @@ export default function SettingsPage() {
             </div>
           ) : (
             <div className="settings-row">
-              <span>{t('settings.repo')}</span>
+              <span>
+                <Term id="data-repo">{t('settings.repo')}</Term>
+              </span>
               <a href={`https://github.com/${session.repo}`} target="_blank" rel="noreferrer">
                 <code>{session.repo}</code>
               </a>
@@ -99,7 +103,9 @@ export default function SettingsPage() {
             <span className="row">
               <Avatar member={user} />
               <strong>{user.login}</strong>
-              <RoleBadge role={access.role} owner={access.owner} />
+              <Term id={access.owner ? 'owner' : access.role}>
+                <RoleBadge role={access.role} owner={access.owner} />
+              </Term>
             </span>
           </div>
         </div>
@@ -169,6 +175,8 @@ export default function SettingsPage() {
         </div>
       </section>
 
+      <HelpGuideSection />
+
       <TeamRolesSection />
       <AiSection />
       <TeamHelper />
@@ -178,7 +186,7 @@ export default function SettingsPage() {
         <div className="card settings-list">
           <div className="settings-row">
             <span className="muted small" style={{ flex: '1 1 260px' }}>
-              {t('settings.backupHint')}
+              <Term id="backup" /> · {t('settings.backupHint')}
             </span>
             <button className="btn" onClick={backup} disabled={backingUp}>
               <Icon name="download" size={16} />
@@ -189,6 +197,7 @@ export default function SettingsPage() {
             <div className="settings-row">
               <span className="muted small" style={{ flex: '1 1 260px' }}>
                 {t('import.settingsHint')}
+                <HelpButton topic="clockify-import" />
                 {repoEmpty === false && (
                   <>
                     <br />

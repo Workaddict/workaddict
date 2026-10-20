@@ -3,6 +3,8 @@ import { CopyText } from '../../components/CopyText'
 import { Icon } from '../../components/Icon'
 import { useI18n } from '../../i18n'
 import { githubLinks } from './githubLinks'
+import { WhatIs } from '../help/Term'
+import type { TopicId } from '../help/topics'
 
 /** A link to a GitHub page, with the menu path that leads to the same page if GitHub moves it. */
 export function GitHubLink({
@@ -44,10 +46,13 @@ export function Step({
   onDone,
   locked,
   lockedText,
+  whatIs,
   children,
 }: {
   n: number
   title: string
+  /** Explains the step's main term ("What is a token?") with a link to its help topic. */
+  whatIs?: { term: 'data-repo' | 'token' | 'workspace'; topic: TopicId }
   done?: boolean
   onDone?: (done: boolean) => void
   locked?: boolean
@@ -62,6 +67,7 @@ export function Step({
           {done ? <Icon name="check" size={16} /> : n}
         </span>
         <h2>{title}</h2>
+        {whatIs && <WhatIs term={whatIs.term} topic={whatIs.topic} />}
         {onDone && !locked && (
           <label className="checkbox ob-done">
             <input type="checkbox" checked={!!done} onChange={(e) => onDone(e.target.checked)} />

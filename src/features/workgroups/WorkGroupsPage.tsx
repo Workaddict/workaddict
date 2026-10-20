@@ -17,6 +17,9 @@ import {
 } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
 import { nextProjectColor, useWorkspaceActions } from '../data/workspaceActions'
+import { TipButton } from '../../components/InfoTip'
+import { HelpButton, Term } from '../help/Term'
+import { NewDot } from '../help/newFeatures'
 
 interface Usage {
   ms: number
@@ -222,15 +225,14 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
             })}
           </a>
           {canManage && (
-            <button
+            <TipButton
               type="button"
               className="chip-remove"
-              aria-label={t('workGroups.unlinkBoard')}
-              title={t('workGroups.unlinkBoard')}
+              tip={t('workGroups.unlinkBoard')}
               onClick={() => setProjectBoard(project, null).catch(onError)}
             >
               <Icon name="x" size={12} />
-            </button>
+            </TipButton>
           )}
         </span>
       )}
@@ -243,25 +245,25 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
             <span className="repo-default">{t('workGroups.repoDefault')}</span>
           )}
           {i > 0 && canManage && (
-            <button
+            <TipButton
+              tip={t('workGroups.makeDefaultHint', { repo: r })}
+              aria-label={t('workGroups.makeDefault')}
               type="button"
               className="repo-make-default"
-              title={t('workGroups.makeDefaultHint', { repo: r })}
               onClick={() => setDefaultRepo(project, r).catch(onError)}
             >
               {t('workGroups.makeDefault')}
-            </button>
+            </TipButton>
           )}
           {canManage && (
-            <button
+            <TipButton
               type="button"
               className="chip-remove"
-              aria-label={t('workGroups.unlinkRepo', { repo: r })}
-              title={t('workGroups.unlinkRepo', { repo: r })}
+              tip={t('workGroups.unlinkRepo', { repo: r })}
               onClick={() => setProjectRepo(project, r, false).catch(onError)}
             >
               <Icon name="x" size={12} />
-            </button>
+            </TipButton>
           )}
         </span>
       ))}
@@ -294,6 +296,7 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
                   ? 'workGroups.addRepo'
                   : 'workGroups.linkRepo',
             )}
+            {!board && <NewDot feature="project-board" />}
           </button>
         ))}
       {!adding && (
@@ -301,6 +304,7 @@ function ProjectRepos({ project, canManage }: { project: Project; canManage: boo
           {repos.length
             ? t('workGroups.repoHint', { repo: repos[0]!.slice(repos[0]!.indexOf('/') + 1) })
             : t(board ? 'workGroups.boardHint' : 'workGroups.repoHintEmpty')}
+          <HelpButton topic="issue-links" />
         </span>
       )}
     </div>
@@ -478,32 +482,21 @@ function RowActions(props: {
   const archiveLabel = props.archived ? t('workGroups.unarchive') : t('workGroups.archive')
   return (
     <div className="entry-actions">
-      <button
-        className="btn btn-icon"
-        title={t('common.edit')}
-        aria-label={t('common.edit')}
-        onClick={props.onEdit}
-      >
+      <TipButton className="btn btn-icon" tip={t('common.edit')} onClick={props.onEdit}>
         <Icon name="edit" size={16} />
-      </button>
-      <button
-        className="btn btn-icon"
-        title={archiveLabel}
-        aria-label={archiveLabel}
-        onClick={props.onArchive}
-      >
+      </TipButton>
+      <TipButton className="btn btn-icon" tip={archiveLabel} onClick={props.onArchive}>
         <Icon name={props.archived ? 'restore' : 'archive'} size={16} />
-      </button>
-      <button
+      </TipButton>
+      <TipButton
         className="btn btn-icon"
-        title={t('common.delete')}
-        aria-label={t('common.delete')}
+        tip={t('common.delete')}
         disabled={props.deleting}
         aria-busy={props.deleting}
         onClick={props.onDelete}
       >
         <Icon name="trash" size={16} />
-      </button>
+      </TipButton>
     </div>
   )
 }
@@ -552,7 +545,10 @@ export default function WorkGroupsPage() {
   return (
     <>
       <div className="page-head">
-        <h1>{t('workGroups.title')}</h1>
+        <div className="head-with-help" data-tour="work-groups">
+          <h1>{t('workGroups.title')}</h1>
+          <HelpButton topic="work-groups" />
+        </div>
         <div className="row wrap">
           {totals === 'hidden' && (
             <button
@@ -581,7 +577,9 @@ export default function WorkGroupsPage() {
       <div className="wg-grid">
         <section className="card">
           <div className="card-head">
-            <h2>{t('workGroups.projects')}</h2>
+            <h2>
+              <Term id="project">{t('workGroups.projects')}</Term>
+            </h2>
           </div>
           {canManage && (
             <NameForm
@@ -600,7 +598,11 @@ export default function WorkGroupsPage() {
             <EmptyState
               icon="folder"
               title={t('workGroups.projects')}
-              hint={t('workGroups.emptyProjects')}
+              hint={
+                canManage
+                  ? t('workGroups.emptyProjects')
+                  : `${t('workGroups.emptyProjects')} ${t('workGroups.emptyWorker')}`
+              }
             />
           ) : (
             visibleProjects.map((p) => (
@@ -618,7 +620,9 @@ export default function WorkGroupsPage() {
 
         <section className="card">
           <div className="card-head">
-            <h2>{t('workGroups.tags')}</h2>
+            <h2>
+              <Term id="tag">{t('workGroups.tags')}</Term>
+            </h2>
           </div>
           {canManage && (
             <NameForm
@@ -629,7 +633,15 @@ export default function WorkGroupsPage() {
             />
           )}
           {visibleTags.length === 0 ? (
-            <EmptyState icon="tag" title={t('workGroups.tags')} hint={t('workGroups.emptyTags')} />
+            <EmptyState
+              icon="tag"
+              title={t('workGroups.tags')}
+              hint={
+                canManage
+                  ? t('workGroups.emptyTags')
+                  : `${t('workGroups.emptyTags')} ${t('workGroups.emptyWorker')}`
+              }
+            />
           ) : (
             visibleTags.map((x) => (
               <TagRow

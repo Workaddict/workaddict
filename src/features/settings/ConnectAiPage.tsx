@@ -1,10 +1,11 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { CopyText } from '../../components/CopyText'
 import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
 import { githubLinks } from '../onboarding/githubLinks'
 import { TokenChecklist } from '../onboarding/parts'
+import { markConnectAiOpened } from '../help/checklistState'
 import { claudeMcpAdd, envCommands, mcpJson, PLUGIN_INSTALL, type Shell } from './connectAi'
 
 function Snippet({ text, label }: { text: string; label: string }) {
@@ -19,6 +20,8 @@ function Snippet({ text, label }: { text: string; label: string }) {
 /** How to let an AI assistant use Workaddict through the MCP server, with this team's data repo filled in. */
 export default function ConnectAiPage() {
   const { t } = useI18n()
+  // Opening this page ticks off the optional "Connect an AI assistant" first step.
+  useEffect(markConnectAiOpened, [])
   const { session } = useSessionData()
   const repo = session.mode === 'github' ? session.repo : 'owner/repo'
   const [owner = '', name = ''] = repo.split('/')

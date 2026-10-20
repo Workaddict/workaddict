@@ -33,6 +33,8 @@ import {
 import { useErrorToast } from '../data/useErrorText'
 import { usePref } from '../../prefs'
 import { useNow } from './useNow'
+import { TipButton } from '../../components/InfoTip'
+import { HelpButton } from '../help/Term'
 
 /**
  * "Team now": what every other member is tracking right now, their total for today, and — for
@@ -95,8 +97,9 @@ export function TeamNow() {
       className={`card team-now${hidden === 'yes' ? ' is-collapsed' : ''}`}
       aria-labelledby="team-now-title"
     >
-      <div className="card-head">
+      <div className="card-head" data-tour="team-now">
         <h2 id="team-now-title">{t('team.title')}</h2>
+        <HelpButton topic="team-now" />
         <span className="small muted">{t('team.tracking', { count: tracking })}</span>
         <button
           type="button"
@@ -195,22 +198,20 @@ function TeamNowRow({
         </div>
         {canAct && timer && (
           <div className="entry-actions">
-            <button
+            <TipButton
               className="btn btn-icon"
-              title={t('team.stop', { login: member.login })}
-              aria-label={t('team.stop', { login: member.login })}
+              tip={t('team.stop', { login: member.login })}
               onClick={() => onStop(timer)}
             >
               <Icon name="stop" size={16} filled />
-            </button>
-            <button
+            </TipButton>
+            <TipButton
               className="btn btn-icon"
-              title={t('team.discard', { login: member.login })}
-              aria-label={t('team.discard', { login: member.login })}
+              tip={t('team.discard', { login: member.login })}
               onClick={() => onDiscard(timer)}
             >
               <Icon name="trash" size={16} />
-            </button>
+            </TipButton>
           </div>
         )}
       </div>

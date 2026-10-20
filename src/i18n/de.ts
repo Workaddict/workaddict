@@ -1,6 +1,8 @@
+import help from './help.de'
 import type { Resources } from './en'
 
 const de: Resources = {
+  help,
   common: {
     appName: 'Workaddict',
     save: 'Speichern',
@@ -826,6 +828,7 @@ const de: Resources = {
     loadingOlder: 'Ältere Einträge werden geladen…',
     empty: 'Noch keine Zeiteinträge',
     emptyHint: 'Starte den Timer oder füge einen Eintrag manuell hinzu.',
+    emptyAction: 'Ersten Timer starten',
     continue: 'Fortsetzen',
     editTitle: 'Zeiteintrag bearbeiten',
     deleteConfirm: 'Diesen Zeiteintrag löschen?',
@@ -883,6 +886,7 @@ const de: Resources = {
       'Noch keine Projekte. Projekte gruppieren Einträge, z. B. nach Kunde oder Produkt.',
     emptyTags:
       'Noch keine Labels. Labels beschreiben die Art der Arbeit, z. B. „Meeting“ oder „Bugfix“.',
+    emptyWorker: 'Bearbeiter und die Teamleitung legen sie an.',
   },
   stats: {
     title: 'Statistik',
@@ -915,6 +919,8 @@ const de: Resources = {
     chartHours: 'Erfasste Zeit',
     chartShare: 'Anteil nach Projekt',
     empty: 'Keine Einträge entsprechen den gewählten Filtern.',
+    emptyHint: 'Die Statistik zeigt die erfasste Zeit im gewählten Zeitraum, für die gewählten Mitglieder, Projekte und Labels.',
+    emptyAction: 'Anderen Zeitraum wählen',
     details: 'Einträge',
     date: 'Datum',
     member: 'Mitglied',

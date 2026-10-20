@@ -1,11 +1,15 @@
 import { Link } from 'react-router-dom'
+import { Icon } from '../../components/Icon'
+import { TipButton } from '../../components/InfoTip'
 import { LanguageSwitch } from '../../components/LanguageSwitch'
 import { ThemeToggle } from '../../components/ThemeToggle'
 import { useI18n } from '../../i18n'
+import { useOpenHelp } from '../help/HelpOverlayProvider'
 
 /** Header of the logged-out pages: start page, setup wizard and join flow. */
 export function PublicHeader() {
   const { t } = useI18n()
+  const openHelp = useOpenHelp()
   return (
     <header className="row landing-top">
       <Link to="/" className="brand brand-link">
@@ -14,6 +18,9 @@ export function PublicHeader() {
       </Link>
       <span className="spacer" />
       <LanguageSwitch />
+      <TipButton className="btn btn-icon" onClick={openHelp} tip={t('help.title')}>
+        <Icon name="help" size={18} />
+      </TipButton>
       <ThemeToggle />
     </header>
   )

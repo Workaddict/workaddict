@@ -7,7 +7,9 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Icon } from './Icon'
+import { TipButton } from './InfoTip'
 
 type Kind = 'info' | 'error'
 /** A button in the toast, e.g. to retry; clicking it also closes the toast. */
@@ -29,6 +31,7 @@ interface ToastApi {
 const ToastContext = createContext<ToastApi | null>(null)
 
 export function ToastProvider({ children }: { children: ReactNode }) {
+  const { t: translate } = useTranslation()
   const [toasts, setToasts] = useState<Toast[]>([])
   const nextId = useRef(0)
 
@@ -67,9 +70,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 {t.action.label}
               </button>
             )}
-            <button onClick={() => dismiss(t.id)} aria-label="×">
+            <TipButton onClick={() => dismiss(t.id)} tip={translate('common.close')}>
               <Icon name="x" size={16} />
-            </button>
+            </TipButton>
           </div>
         ))}
       </div>

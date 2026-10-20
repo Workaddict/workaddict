@@ -7,6 +7,7 @@ import { useI18n } from '../../i18n'
 import { useSessionData } from '../auth/AuthContext'
 import { useAccess, useSetRole, useTeamRoles } from '../data/hooks'
 import { useErrorToast } from '../data/useErrorText'
+import { HelpButton } from '../help/Term'
 
 export const TEAM_SECTION_ID = 'team'
 
@@ -38,8 +39,11 @@ export function TeamRolesSection() {
   }, [scrollTo])
 
   return (
-    <section className="section" id={TEAM_SECTION_ID} ref={ref}>
-      <h2>{t('roles.title')}</h2>
+    <section className="section" id={TEAM_SECTION_ID} ref={ref} data-tour="roles">
+      <div className="head-with-help">
+        <h2>{t('roles.title')}</h2>
+        <HelpButton topic="roles" />
+      </div>
       <div className="card settings-list">
         {(team.data?.members ?? []).map((m) => (
           <div className="settings-row" key={m.login}>

@@ -9,7 +9,7 @@ import { AuthContext, type AuthContextValue } from '../auth/AuthContext'
 import { FixPage } from '../auth/FixPage'
 import { LoginPage } from '../auth/LoginPage'
 import { signInAttempt } from '../auth/signInAttempt'
-import { TokenHelpPage } from '../auth/TokenHelpPage'
+import HelpPage from '../help/HelpPage'
 import { ApprovePage } from './ApprovePage'
 import { JoinPage } from './JoinPage'
 import { forgetLookups } from './publicGitHub'
@@ -26,7 +26,7 @@ function renderAt(path: string) {
           <Routes>
             <Route path="setup" element={<SetupPage />} />
             <Route path="join" element={<JoinPage />} />
-            <Route path="token-help" element={<TokenHelpPage />} />
+            <Route path="help/:topic" element={<HelpPage shell="public" />} />
             <Route path="fix" element={<FixPage />} />
             <Route path="approve" element={<ApprovePage />} />
             <Route path="*" element={<LoginPage />} />
@@ -85,9 +85,12 @@ describe('start page', () => {
   })
 
   it('explains order, owner and approval on the token help page', () => {
-    renderAt('/token-help')
+    renderAt('/help/token')
     expect(
-      screen.getByRole('heading', { level: 1, name: 'How do I get a token?' }),
+      screen.getByRole('heading', { level: 1, name: 'Token & data repository' }),
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('heading', { level: 2, name: 'How do I get a token?' }),
     ).toBeInTheDocument()
     const help = screen.getByRole('main')
     expect(
@@ -99,8 +102,16 @@ describe('start page', () => {
       'href',
       expect.stringContaining('name=Workaddict'),
     )
-    expect(within(help).getByRole('link', { name: /Back to sign-in/ })).toHaveAttribute('href', '/')
-    expect(within(help).getByRole('button', { name: 'Back to sign-in' })).toBeInTheDocument()
+    expect(within(help).getByRole('link', { name: /All help topics/ })).toHaveAttribute(
+      'href',
+      '/help',
+    )
+    expect(within(help).getByRole('button', { name: 'Back to the app' })).toBeInTheDocument()
+    expect(within(help).getByRole('img', { name: /fine-grained token form/ })).toHaveAttribute(
+      'src',
+      expect.stringMatching(/img\/help\/token-form\.webp$/),
+    )
+    expect(within(help).getByRole('img', { name: /Read and write/ })).toBeInTheDocument()
   })
 })
 
