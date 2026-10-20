@@ -1150,7 +1150,7 @@ button.entry-duration,
 }
 
 /* ---------- Empty / loading ---------- */
-.empty {
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1159,7 +1159,7 @@ button.entry-duration,
   text-align: center;
   color: var(--text-muted);
 }
-.empty svg {
+.empty-state svg {
   color: var(--text-faint);
 }
 .spinner {
@@ -2357,6 +2357,10 @@ a.btn {
   display: inline-flex;
   flex-direction: column;
   gap: 2px;
+}
+.issue-row {
+  display: inline-flex;
+  align-items: center;
 }
 .issue-input {
   width: 11rem;

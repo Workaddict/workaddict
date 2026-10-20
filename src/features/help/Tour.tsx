@@ -67,8 +67,12 @@ function TourStepView({ index, isDemo }: { index: number; isDemo: boolean }) {
     else setTourIndex(next)
   }
 
+  // The page must not scroll under the spotlight; only the tour itself moves it to the next step.
   useEffect(() => {
     returnFocus.current = document.activeElement
+    const root = document.documentElement
+    root.classList.add('tour-lock')
+    return () => root.classList.remove('tour-lock')
   }, [])
 
   // Open the step's page, then wait for its element; skip the step when it never shows up.

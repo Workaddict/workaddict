@@ -292,6 +292,15 @@ kbd {
 }
 
 /* ---------- Guided tour ---------- */
+/* No manual scrolling during the tour; the gutter keeps the layout from shifting sideways. */
+html.tour-lock,
+html.tour-lock body {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+html.tour-lock {
+  scrollbar-gutter: stable;
+}
 .tour-shade {
   position: fixed;
   z-index: 80;

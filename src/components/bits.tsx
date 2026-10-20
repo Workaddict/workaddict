@@ -38,7 +38,7 @@ export function EmptyState({
 }) {
   const expert = useIsExpert()
   return (
-    <div className="empty">
+    <div className="empty-state">
       <Icon name={icon} size={32} />
       <strong>{title}</strong>
       {hint && !expert && <span className="small">{hint}</span>}

@@ -50,23 +50,25 @@ export function IssueField({
 
   return (
     <span className="issue-field">
-      <input
-        className="input issue-input"
-        placeholder={t('issue.placeholder')}
-        aria-label={t('issue.label')}
-        aria-invalid={error !== null}
-        value={value ?? ''}
-        disabled={disabled}
-        onChange={(e) => {
-          setTouched(false)
-          onChange(e.target.value || undefined)
-        }}
-        onBlur={() => {
-          setTouched(true)
-          if (result.ok && (result.ref ?? undefined) !== value) onChange(result.ref ?? undefined)
-        }}
-      />
-      <HelpButton topic="issue-links" />
+      <span className="issue-row">
+        <input
+          className="input issue-input"
+          placeholder={t('issue.placeholder')}
+          aria-label={t('issue.label')}
+          aria-invalid={error !== null}
+          value={value ?? ''}
+          disabled={disabled}
+          onChange={(e) => {
+            setTouched(false)
+            onChange(e.target.value || undefined)
+          }}
+          onBlur={() => {
+            setTouched(true)
+            if (result.ok && (result.ref ?? undefined) !== value) onChange(result.ref ?? undefined)
+          }}
+        />
+        <HelpButton topic="issue-links" />
+      </span>
       {error && (
         <span className="form-error inline-error" role="alert">
           {error}
