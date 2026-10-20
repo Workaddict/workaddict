@@ -15,10 +15,10 @@
   },
   "dependencies": {
     "@date-fns/tz": "^1.5.0",
-    "@tanstack/react-query": "^5.104.1",
+    "@tanstack/react-query": "^5.104.2",
     "date-fns": "^4.4.0",
     "exceljs": "^4.4.0",
-    "i18next": "^26.4.2",
+    "i18next": "^26.4.4",
     "idb-keyval": "^6.3.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",
@@ -35,7 +35,7 @@
     "@eslint/js": "^10.0.1",
     "@testing-library/jest-dom": "^7.0.1",
     "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.7",
+    "@testing-library/user-event": "^14.6.8",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "@vitejs/plugin-react": "^6.1.2",
@@ -45,11 +45,11 @@
     "fake-indexeddb": "^6.2.5",
     "globals": "^17.13.0",
     "jsdom": "^30.1.2",
-    "prettier": "^3.9.9",
+    "prettier": "^3.9.10",
     "typescript": "^6.0.3",
-    "typescript-eslint": "^8.71.1",
-    "vite": "^8.3.3",
-    "vitest": "^5.0.3"
+    "typescript-eslint": "^8.71.2",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.4"
   },
   "workspaces": [
     "mcp"
