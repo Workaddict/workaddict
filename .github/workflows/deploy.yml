@@ -16,11 +16,21 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      previous: ${{ steps.version.outputs.previous }}
+      release: ${{ steps.version.outputs.release }}
     steps:
       # Actions are pinned to full commit SHAs (tags can be moved); Dependabot keeps them current.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+          # Full history and tags: the version is computed from the commits since the last v* tag.
+          fetch-depth: 0
+
+      # feat → minor, fix/perf → patch, `!`/BREAKING CHANGE → major; chores alone keep the version.
+      - id: version
+        run: node scripts/next-version.mjs >> "$GITHUB_OUTPUT"
 
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
@@ -33,6 +43,8 @@ jobs:
       - run: npm audit --omit=dev --audit-level=high
       - run: npm test
       - run: npm run build
+        env:
+          APP_VERSION: ${{ steps.version.outputs.version }}
 
       - uses: actions/upload-pages-artifact@fc324d3547104276b827a68afc52ff2a11cc49c9 # v5.0.0
         with:
@@ -50,3 +62,20 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@368f82528645a54fb793d4d04e342629a3f51346 # v5.0.1
+
+  # Tags the deployed commit and publishes a GitHub release with notes generated from the merged
+  # PRs and commits. Only after a successful deploy, so a failed one is retried with the same version.
+  release:
+    needs: [build, deploy]
+    if: needs.build.outputs.release == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - run: >-
+          gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA"
+          --title "v$VERSION" --generate-notes --notes-start-tag "$PREVIOUS"
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+          PREVIOUS: ${{ needs.build.outputs.previous }}
+          GH_TOKEN: ${{ github.token }}

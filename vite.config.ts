@@ -4,6 +4,9 @@ import react from '@vitejs/plugin-react'
 import pkg from './package.json' with { type: 'json' }
 import { SEO_PAGE_FILES } from './src/app/seoPages.ts'
 
+// The config runs in Node; the app's tsconfig has no Node types, so declare the one global used.
+declare const process: { env: Record<string, string | undefined> }
+
 // Strict CSP for the production build only (the dev server relies on inline scripts).
 // Scripts only from our own origin, network only to the GitHub API and Clockify (one-time import).
 // Trusted Types: no string may reach an HTML/script sink, and no policy may be created.
@@ -40,9 +43,10 @@ export default defineConfig({
   plugins: [react(), cspPlugin()],
   // Relative base: works on any GitHub Pages path (hash routing, so no deep-link rewrites needed).
   base: './',
-  // Only the version string reaches the bundle, not the whole manifest.
+  // Only the version string reaches the bundle, not the whole manifest. Deploys pass the next
+  // release version (scripts/next-version.mjs); local builds fall back to package.json.
   define: {
-    __APP_VERSION__: JSON.stringify(pkg.version),
+    __APP_VERSION__: JSON.stringify(process.env.APP_VERSION || pkg.version),
   },
   build: {
     chunkSizeWarningLimit: 1500,
