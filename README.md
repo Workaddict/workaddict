@@ -188,8 +188,10 @@ Use a classic token only if the data repo is owned by **another person's persona
 
 1. Push this repository to GitHub, as a **public** repo.
 2. Go to **Settings → Pages → Build and deployment → Source:** select **GitHub Actions**.
-3. Push to `main`. The workflow in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `npm ci` → `npm test` → `npm run build` and deploys `dist/`. If tests fail, nothing is deployed and the previous version stays live.
+3. Push to `main`. The workflow in [`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) runs `npm ci` → `npm test` → `npm run build` and deploys `dist/`. If tests fail, nothing is deployed and the previous version stays live. After a successful deploy it tags the commit and publishes a GitHub release when the version changed (see [Versions and releases](#versions-and-releases)).
 4. The app is available at `https://<user-or-org>.github.io/<app-repo>/`.
+
+Pull requests to `main` are checked by [`.github/workflows/ci.yml`](.github/workflows/ci.yml) (audit, lint, tests, build) before they can be merged.
 
 The build uses a relative base path and hash routing (`#/stats`), so it works under any repo name and page reloads never 404.
 
@@ -342,7 +344,7 @@ Read this before you use the app with real data. To report a vulnerability, see 
 - **Content Security Policy.** The production build ships a strict CSP: scripts only from the app's own origin, and network requests only to `https://api.github.com` and, for the one-time Clockify import, `https://*.clockify.me`. Trusted Types are enforced and inline styles are not allowed. Nothing is sent anywhere else: no analytics, no third-party scripts at runtime.
 - **No framing.** The app refuses to run inside another page (clickjacking protection) and offers a link to open it in its own tab.
 - **Repository data is treated as untrusted.** Every file is validated before use. Broken or suspicious records (for example an entry in bob's file that claims to be alice's) are not shown, are listed in a notice, and are kept unchanged when the app writes the file. Files over 2 MB are not loaded.
-- **Build pipeline.** GitHub Actions are pinned to commit SHAs, dependencies install without install scripts, the deploy fails on known high-severity vulnerabilities, and Dependabot proposes updates after a 7-day waiting period.
+- **Build pipeline.** GitHub Actions are pinned to commit SHAs, dependencies install without install scripts, the deploy fails on known high-severity vulnerabilities, and Dependabot proposes updates after a 7-day waiting period. Grouped minor and patch updates are merged automatically once CI passes; major updates stay manual.
 - **The app repo contains no data or secrets.** It is safe for it to be public.
 
 ---
@@ -364,14 +366,35 @@ npm run preview    # serve the production build (with CSP) locally
 
 ```
 src/
+  app/           shell, routing, frame guard, static search pages, project links
+  components/    shared UI building blocks
   domain/        types, time/duration helpers, month keys (pure, unit-tested)
   storage/       StorageAdapter interface, memory adapter, GitHub adapter
-  features/      auth, tracker, workgroups, stats, export, settings
+  features/      auth, tracker, workgroups, stats, export, import, data, settings,
+                 onboarding, profiles, help (help pages, tour, "New" dots)
   i18n/          English and German texts
   styles/        design tokens, light/dark themes
+mcp/             Workaddict MCP server (npm package workaddict-mcp)
+plugin/          Claude Code plugin with the /workaddict:* skills
+scripts/         build and release helpers
 ```
 
-All data access goes through the `StorageAdapter` interface (`src/storage/types.ts`). UI code never calls GitHub directly. That makes it possible to swap the backend later (e.g. for Supabase), and the JSON backup format serves as the migration path.
+All data access goes through the `StorageAdapter` interface (`src/storage/types.ts`). UI code never calls GitHub directly. That makes it possible to swap the backend later (e.g. for Supabase), and the JSON backup format serves as the migration path. The MCP server reuses the same storage and domain code, so `src/storage` and `src/domain` must not use browser APIs.
+
+### Versions and releases
+
+The app's version is set automatically from the commit messages, which follow [Conventional Commits](https://www.conventionalcommits.org/). On every deploy, [`scripts/next-version.mjs`](scripts/next-version.mjs) looks at the commits since the last `v*` tag:
+
+| Commits since the last release                            | Next version (from 1.1.0) |
+| --------------------------------------------------------- | ------------------------- |
+| at least one `feat:`                                      | 1.2.0                     |
+| only `fix:` or `perf:` (plus others)                      | 1.1.1                     |
+| `feat!:`, `fix!:` … or a `BREAKING CHANGE:` footer        | 2.0.0                     |
+| only `chore:`, `docs:`, `ci:`, `test:`, `refactor:` …     | no new version            |
+
+The build shows that version under **Settings → About**, and after a successful deploy the workflow creates the tag and a GitHub release with generated notes. Nothing is committed back to `main`; `version` in `package.json` is only used for local builds. When you add a feature to `NEW_FEATURES` (`src/features/help/newFeatures.tsx`) for a "New" dot, use the next minor version.
+
+The MCP server and the plugin have their own versions and are published by hand (`.github/workflows/publish-mcp.yml`).
 
 ## License
 
