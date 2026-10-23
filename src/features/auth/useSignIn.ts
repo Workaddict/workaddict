@@ -14,9 +14,16 @@ export interface SignInInput {
   newVault?: NewVault
 }
 
+/**
+ * Flows that add a workspace next to the signed-in one: "Add workspace", and the setup wizard or
+ * the join flow opened while signed in (design D4).
+ */
+export const addsWorkspace = (from: SignInFrom, signedIn: boolean) =>
+  from === 'add' || (signedIn && (from === 'setup' || from === 'join'))
+
 /** Flows that always end in a saved profile. */
-export const savesProfile = (input: Pick<SignInInput, 'save' | 'from'>) =>
-  input.save || input.from === 'add' || input.from === 'profile'
+export const savesProfile = (input: Pick<SignInInput, 'save' | 'from'>, signedIn = false) =>
+  input.save || input.from === 'profile' || addsWorkspace(input.from, signedIn)
 
 /**
  * The fix page for a failed sign-in. Only non-secret facts go into the URL: the error, the entered
@@ -37,7 +44,8 @@ export function fixPath(input: Pick<SignInInput, 'repo' | 'from'>, failure: Logi
  * signed-in profile stays signed in.
  */
 export function useSignIn() {
-  const { login } = useAuth()
+  const { login, state } = useAuth()
+  const signedIn = state.status === 'ready'
   const navigate = useNavigate()
   const [busy, setBusy] = useState(false)
 
@@ -57,7 +65,7 @@ export function useSignIn() {
               ...(res.scopes ? { scopes: res.scopes } : {}),
               ...(res.ownerType ? { ownerType: res.ownerType } : {}),
             },
-            savesProfile(input)
+            savesProfile(input, signedIn)
               ? {
                   login: res.user.login,
                   replaceProfileId: input.from === 'profile' ? input.profileId : undefined,
@@ -78,7 +86,7 @@ export function useSignIn() {
       signInAttempt.set({ ...input, failure })
       navigate(fixPath(input, failure), { replace: opts.replace })
     },
-    [login, navigate],
+    [login, navigate, signedIn],
   )
 
   return { submit, busy }

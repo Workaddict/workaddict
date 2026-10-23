@@ -35,3 +35,17 @@ export function joinTarget(value: string | null): { owner: string; repo: string 
   const parsed = value ? parseRepo(value) : null
   return parsed && isLogin(parsed.owner) && isRepoName(parsed.repo) ? parsed : null
 }
+
+/**
+ * The join flow path for a pasted invite link (`…/#/join?repo=a/b&kind=user`) or a plain
+ * `owner/name`. Only `repo` and `kind` are taken from a link; anything else is dropped.
+ */
+export function joinPathFor(value: string): string | null {
+  const text = value.trim()
+  const query = /[#/]join\?([^#]*)$/.exec(text)?.[1]
+  const params = query !== undefined ? new URLSearchParams(query) : null
+  const target = joinTarget(params ? params.get('repo') : text)
+  if (!target) return null
+  const kind = params?.get('kind') === 'user' ? '&kind=user' : ''
+  return `/join?repo=${target.owner}/${target.repo}${kind}`
+}

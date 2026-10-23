@@ -4,6 +4,7 @@ import { CopyText } from '../../components/CopyText'
 import { Icon } from '../../components/Icon'
 import { SiteFooter } from '../../components/SiteFooter'
 import { useI18n } from '../../i18n'
+import { useAuth } from '../auth/AuthContext'
 import { PublicHeader } from '../auth/PublicHeader'
 import { SignInForm } from '../auth/SignInForm'
 import { DEFAULT_REPO_NAME, ghCommands, githubLinks, inviteLink } from './githubLinks'
@@ -75,6 +76,8 @@ const LOOKUP_DELAY_MS = 500
  */
 export function SetupPage() {
   const { t } = useI18n()
+  // Signed in, the wizard adds a workspace; "Back" returns to "Add workspace".
+  const signedIn = useAuth().state.status === 'ready'
   const [state, setState] = useSetupState()
   const [params, setParams] = useSearchParams()
   const [users, setUsers] = useState('')
@@ -625,8 +628,8 @@ export function SetupPage() {
     <div className="landing">
       <PublicHeader />
       <main className="ob-main">
-        <Link to="/" className="ob-back">
-          ← {t('onboarding.back')}
+        <Link to={signedIn ? '/add-project' : '/'} className="ob-back">
+          ← {t(signedIn ? 'profiles.back' : 'onboarding.back')}
         </Link>
         <div className="stack" style={{ gap: 6 }}>
           <h1>{t(solo ? 'onboarding.setup.soloTitle' : 'onboarding.setup.title')}</h1>

@@ -11,7 +11,7 @@ import { useVault } from '../profiles/vaultStore'
 import { useAuth } from './AuthContext'
 import { tokenKind } from './session'
 import { signInAttempt, type SignInFrom } from './signInAttempt'
-import { savesProfile, useSignIn } from './useSignIn'
+import { addsWorkspace, savesProfile, useSignIn } from './useSignIn'
 import { HelpButton } from '../help/Term'
 
 /** The token offered for reuse: one of the repository owner's before a classic one (design D8). */
@@ -57,6 +57,8 @@ export function SignInForm({
   const { t } = useI18n()
   const location = useLocation()
   const { status, data, mode: savedMode, vault } = useVault()
+  const signedIn = useAuth().state.status === 'ready'
+  const adds = addsWorkspace(from, signedIn)
   const [resume] = useState(() => {
     const held = signInAttempt.get()
     return held?.from === from ? held : null
@@ -88,16 +90,16 @@ export function SignInForm({
 
   const owner = parseRepo(repo)?.owner
   const reusable =
-    from === 'add' && status === 'unlocked' && data && owner
+    adds && status === 'unlocked' && data && owner
       ? pickReusable(reusableTokens(data, owner), owner)
       : undefined
   const reusing = reusable && choice === 'reuse' ? reusable : undefined
   // One profile per repository: adding it again opens the existing one (or replaces its token).
   const existing =
-    from === 'add' && status === 'unlocked' && data && parseRepo(repo)
+    adds && status === 'unlocked' && data && parseRepo(repo)
       ? profileForRepo(data, repo.trim())
       : undefined
-  const wantsSave = savesProfile({ save, from })
+  const wantsSave = savesProfile({ save, from }, signedIn)
 
   const run = (newVault?: { passphrase: string; mode: 'ask' | 'stay' }) =>
     signIn({
@@ -242,7 +244,7 @@ export function SignInForm({
           </button>
         </section>
       ) : (
-        from !== 'add' &&
+        !adds &&
         from !== 'profile' && (
           <div className="stack" style={{ gap: 2 }}>
             <label className="checkbox">

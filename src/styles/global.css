@@ -1373,6 +1373,20 @@ a.btn {
   font-size: 0.9rem;
   text-decoration: none;
 }
+/* The form card of a task page (add workspace, replace token): padded like the sign-in card. */
+.task-card {
+  width: 100%;
+  max-width: 440px;
+  padding: 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+@media (max-width: 560px) {
+  .task-card {
+    padding: 20px;
+  }
+}
 .ob-mode-card,
 .ob-names {
   display: flex;

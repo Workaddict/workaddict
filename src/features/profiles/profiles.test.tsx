@@ -319,6 +319,86 @@ describe('adding a project', () => {
     ).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Add workspace' })).toBeDisabled()
   })
+
+  it('offers the setup wizard and invite links next to an existing repository', async () => {
+    await signedInToAcme()
+    await goToAdd('acme/other-data')
+    expect(screen.getByLabelText(/Existing data repository/)).toBeChecked()
+
+    fireEvent.click(screen.getByLabelText(/Set up a new data repository/))
+    expect(screen.queryByLabelText('Data repository')).toBeNull()
+    fireEvent.click(screen.getByRole('link', { name: 'Start setup →' }))
+    expect(await screen.findByRole('heading', { level: 1, name: 'Set up a team' })).toBeVisible()
+    expect(screen.queryByRole('navigation', { name: 'Main' })).toBeNull()
+    fireEvent.click(screen.getByRole('link', { name: '← Back' }))
+
+    fireEvent.click(await screen.findByLabelText(/I have an invite link/))
+    const field = screen.getByLabelText('Invite link')
+    fireEvent.change(field, { target: { value: 'not a repo' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Open invite' }))
+    expect(screen.getByRole('alert')).toHaveTextContent(/neither an invite link/)
+    expect(window.location.hash).toBe('#/add-project')
+
+    fireEvent.change(field, {
+      target: { value: 'https://workaddict.me/#/join?repo=globex/hours&kind=user' },
+    })
+    fireEvent.click(screen.getByRole('button', { name: 'Open invite' }))
+    expect(
+      await screen.findByRole('heading', { level: 1, name: 'Join globex/hours' }),
+    ).toBeVisible()
+    expect(window.location.hash).toBe('#/join?repo=globex/hours&kind=user')
+  })
+
+  it('adds the repository of a join link as a workspace while signed in', async () => {
+    const store = await signedInToAcme()
+    window.location.hash = '#/join?repo=globex/hours'
+    fireEvent.click(await screen.findByRole('button', { name: 'I can see it' }))
+    expect(screen.queryByLabelText('Save as a workspace on this device')).toBeNull()
+    fireEvent.change(screen.getByLabelText('GitHub token'), { target: { value: GLOBEX } })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(async () => expect(await currentRepo()).toContain('globex/hours'))
+    const data = store.getSnapshot().data!
+    expect(data.profiles.map((p) => p.repo).sort()).toEqual(['acme/time-data', 'globex/hours'])
+  })
+
+  it('keeps the current workspace when the join sign-in fails', async () => {
+    await signedInToAcme()
+    window.location.hash = '#/join?repo=globex/hours'
+    fireEvent.click(await screen.findByRole('button', { name: 'I can see it' }))
+    fireEvent.change(screen.getByLabelText('GitHub token'), { target: { value: 'github_pat_bad' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    await screen.findByRole('heading', { level: 1, name: /GitHub rejected this token/ })
+    expect(window.location.hash).toBe('#/fix?e=invalidToken&repo=globex/hours&from=join')
+    fireEvent.click(screen.getByRole('link', { name: 'Change token or repository' }))
+    expect(await screen.findByLabelText('GitHub token')).toHaveValue('github_pat_bad')
+    fireEvent.click(screen.getByRole('link', { name: '← Back' }))
+    expect(await screen.findByLabelText(/Existing data repository/)).toBeChecked()
+    window.location.hash = '#/'
+    expect(await currentRepo()).toContain('acme/time-data')
+  })
+
+  it('shows the invalid invite notice on the add page while signed in', async () => {
+    await signedInToAcme()
+    window.location.hash = '#/join?repo=not%20a%20repo'
+    expect(await screen.findByRole('heading', { level: 1, name: 'Add a workspace' })).toBeVisible()
+    expect(screen.getByRole('note')).toHaveTextContent(/This invite link is invalid/)
+  })
+
+  it('adds the repository from the setup wizard with the reused token', async () => {
+    localStorage.setItem(
+      'workaddict.setup',
+      '{"mode":"team","org":"acme","repo":"other-data","done":["org","repo","base","approval","invite","token","share"]}',
+    )
+    const store = await signedInToAcme()
+    window.location.hash = '#/setup?step=signIn'
+    expect(await screen.findByLabelText('Use your token for acme')).toBeChecked()
+    expect(screen.queryByLabelText('Save as a workspace on this device')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Sign in' }))
+    await waitFor(async () => expect(await currentRepo()).toContain('acme/other-data'))
+    const data = store.getSnapshot().data!
+    expect(data.tokens).toHaveLength(1)
+    expect(data.profiles.map((p) => p.repo).sort()).toEqual(['acme/other-data', 'acme/time-data'])
+  })
 })
 
 describe('replacing a rejected token', () => {

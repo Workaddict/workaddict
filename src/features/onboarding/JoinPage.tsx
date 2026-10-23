@@ -3,25 +3,33 @@ import { Link, useSearchParams } from 'react-router-dom'
 import { CopyText } from '../../components/CopyText'
 import { SiteFooter } from '../../components/SiteFooter'
 import { useI18n } from '../../i18n'
+import { useAuth } from '../auth/AuthContext'
 import { LoginPage } from '../auth/LoginPage'
 import { PublicHeader } from '../auth/PublicHeader'
 import { signInAttempt } from '../auth/signInAttempt'
 import { SignInForm } from '../auth/SignInForm'
 import { HelpShot } from '../help/HelpShot'
+import { AddProjectPage } from '../profiles/ProfilePages'
 import { githubLinks, ownerPageLink } from './githubLinks'
 import { ownerMessage } from './messages'
 import { joinTarget } from './names'
 import { ClassicTokenChecklist, GitHubLink, Step, TokenChecklist } from './parts'
 
 /**
- * A logged-out page opened from an invite link: invitation, access check, token, sign-in.
- * `&kind=user` marks a repository in a personal account: members are collaborators there and need
- * a classic token.
+ * The page opened from an invite link: invitation, access check, token, sign-in. Signed in, the
+ * sign-in step adds the repository as a workspace. `&kind=user` marks a repository in a personal
+ * account: members are collaborators there and need a classic token.
  */
 export function JoinPage() {
   const [params] = useSearchParams()
+  const signedIn = useAuth().state.status === 'ready'
   const target = joinTarget(params.get('repo'))
-  if (!target) return <LoginPage notice="invalidInvite" />
+  if (!target)
+    return signedIn ? (
+      <AddProjectPage notice="invalidInvite" />
+    ) : (
+      <LoginPage notice="invalidInvite" />
+    )
   return (
     <JoinFlow owner={target.owner} repo={target.repo} personal={params.get('kind') === 'user'} />
   )
@@ -29,6 +37,7 @@ export function JoinPage() {
 
 function JoinFlow({ owner, repo, personal }: { owner: string; repo: string; personal: boolean }) {
   const { t } = useI18n()
+  const signedIn = useAuth().state.status === 'ready'
   const full = `${owner}/${repo}`
   // Back from the fix page: the member already got past the invitation and the access check.
   const [resumed] = useState(() => signInAttempt.get()?.from === 'join')
@@ -44,8 +53,8 @@ function JoinFlow({ owner, repo, personal }: { owner: string; repo: string; pers
     <div className="landing">
       <PublicHeader />
       <main className="ob-main">
-        <Link to="/" className="ob-back">
-          ← {t('onboarding.back')}
+        <Link to={signedIn ? '/add-project' : '/'} className="ob-back">
+          ← {t(signedIn ? 'profiles.back' : 'onboarding.back')}
         </Link>
         <div className="stack" style={{ gap: 6 }}>
           <h1>{t('onboarding.join.title', { repo: full })}</h1>

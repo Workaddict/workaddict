@@ -60,6 +60,9 @@ export function App() {
             <Route path="approve" element={<ApprovePage />} />
             {/* Adding a project or replacing a token keeps the current profile signed in. */}
             <Route path="add-project" element={<AddProjectPage />} />
+            {/* Setting up or joining another repository adds it as a workspace. */}
+            <Route path="setup" element={<SetupPage />} />
+            <Route path="join" element={<JoinPage />} />
             <Route path="replace-token" element={<ReplaceTokenPage />} />
             <Route path="fix" element={<FixPage />} />
             {/* The public start page, for signed-in users; it has no app chrome. */}

@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import i18n from '../../i18n'
 import { ghCommands, githubLinks, inviteLink, ownerPageLink } from './githubLinks'
 import { inviteMessage, memberNote, ownerMessage } from './messages'
-import { isLogin, isRepoName, joinTarget, parseUsernames } from './names'
+import { isLogin, isRepoName, joinPathFor, joinTarget, parseUsernames } from './names'
 import { emptySetup, loadSetup, saveSetup, SETUP_STEPS, stepsFor } from './setupState'
 
 const t = i18n.getFixedT('en')
@@ -42,6 +42,23 @@ describe('names', () => {
     expect(joinTarget('not a repo')).toBeNull()
     expect(joinTarget('my--team/x')).toBeNull()
     expect(joinTarget(null)).toBeNull()
+  })
+
+  it('turns a pasted invite link or repository into the join path', () => {
+    expect(joinPathFor('https://workaddict.me/#/join?repo=my-team/time-data')).toBe(
+      '/join?repo=my-team/time-data',
+    )
+    expect(joinPathFor(' https://workaddict.me/#/join?repo=ben/time-data&kind=user ')).toBe(
+      '/join?repo=ben/time-data&kind=user',
+    )
+    expect(joinPathFor('https://x.github.io/app/#/join?repo=a/b&kind=org&evil=1')).toBe(
+      '/join?repo=a/b',
+    )
+    expect(joinPathFor('my-team/time-data')).toBe('/join?repo=my-team/time-data')
+    expect(joinPathFor('not a repo')).toBeNull()
+    expect(joinPathFor('https://workaddict.me/#/join?repo=not%20a%20repo')).toBeNull()
+    expect(joinPathFor('https://workaddict.me/#/join')).toBeNull()
+    expect(joinPathFor('')).toBeNull()
   })
 })
 
